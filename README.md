@@ -45,6 +45,8 @@ orelio-ts/
 │   ├── components/
 │   │   ├── cash_and_bank/
 │   │   │   ├── Deposits.tsx               # Active & Matured Deposits view
+│   │   │   ├── AddEditDepositModal.tsx     # Standalone Add / Edit Deposit modal component
+│   │   │   ├── DeleteDepositModal.tsx      # Standalone Delete Deposit confirmation modal
 │   │   │   └── BankAccounts.tsx           # Bank Accounts list view
 │   │   ├── locker/
 │   │   │   └── Notes.tsx                  # Locker notes & documents view

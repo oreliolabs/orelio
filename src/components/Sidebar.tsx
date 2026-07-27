@@ -45,11 +45,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { name: 'Other Assets', id: 'other-assets' }
       ]
     },
-    {
-      name: 'Retirement',
-      icon: 'elderly',
-      id: 'retirement'
-    },
+    // This one is a P2
+    // {
+    //   name: 'Retirement', 
+    //   icon: 'elderly',
+    //   id: 'retirement'
+    // },
     {
       name: 'Cash & Bank',
       icon: 'account_balance',
@@ -62,11 +63,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { name: 'Deposits', id: 'fds' }
       ]
     },
-    {
-      name: 'Loans & Credit',
-      icon: 'credit_card',
-      id: 'loans-credit'
-    },
+    // This one is a P1
+    // {
+    //   name: 'Loans & Credit',
+    //   icon: 'credit_card',
+    //   id: 'loans-credit'
+    // },
     {
       name: 'Insurance',
       icon: 'verified_user',
@@ -80,9 +82,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       isOpen: lockerOpen,
       setIsOpen: setLockerOpen,
       submenu: [
-        { name: 'Documents', id: 'documents' },
+        // { name: 'Documents', id: 'documents' }, // This one is a P1
         { name: 'Notes', id: 'notes' },
-        { name: 'Passwords', id: 'passwords' }
+        // { name: 'Passwords', id: 'passwords' } // This one is a P1
       ]
     },
     {
@@ -140,11 +142,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             if (item.hasSubmenu) {
               return (
-                <div key={item.id} className="space-y-0.5">
+                <div key={item.id} className="space-y-0">
                   <button
                     onClick={() => item.setIsOpen(!item.isOpen)}
                     className={`
-                      w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
+                      w-full flex items-center justify-between px-3 py-2 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
                       ${isTabActive ? 'text-black' : 'text-[#707975] hover:text-black'}
                     `}
                   >
@@ -164,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   {/* Collapsible Submenu */}
                   {item.isOpen && (
-                    <div className="pl-11 pr-2 py-1 space-y-1 mt-0.5 transition-all duration-200">
+                    <div className="pl-11 pr-2 -mt-1 space-y-0.5 transition-all duration-200">
                       {item.submenu?.map((sub) => {
                         const isSubActive = activeTab === sub.id;
                         return (
@@ -172,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             key={sub.id}
                             onClick={() => handleTabClick(sub.id)}
                             className={`
-                              w-full text-left block py-1.5 text-[14px] font-semibold transition-colors duration-200
+                              w-full text-left block py-1.5 text-[16px] font-semibold transition-colors duration-200
                               ${isSubActive
                                 ? 'text-black font-bold'
                                 : 'text-[#707975] hover:text-black'

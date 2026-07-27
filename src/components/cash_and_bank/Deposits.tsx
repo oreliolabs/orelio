@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { AddEditDepositModal } from './AddEditDepositModal';
+import type { DepositFormData } from './AddEditDepositModal';
+import { DeleteDepositModal } from './DeleteDepositModal';
 
 export interface Deposit {
   id: string;
@@ -35,7 +37,8 @@ const INITIAL_DEPOSITS: Deposit[] = [
     maturityDate: '24 Oct, 2025',
     daysRemaining: 245,
     progressPercent: 65,
-    status: 'active'
+    status: 'active',
+    nominee: 'Priya Sharma'
   },
   {
     id: 'dep-2',
@@ -49,7 +52,8 @@ const INITIAL_DEPOSITS: Deposit[] = [
     maturityDate: '12 Oct, 2025',
     daysRemaining: 245,
     progressPercent: 75,
-    status: 'active'
+    status: 'active',
+    nominee: 'Rohan Sharma'
   },
   {
     id: 'dep-3',
@@ -77,7 +81,8 @@ const INITIAL_DEPOSITS: Deposit[] = [
     maturityDate: '18 Dec, 2026',
     daysRemaining: 510,
     progressPercent: 40,
-    status: 'active'
+    status: 'active',
+    nominee: 'Aarav Sharma'
   },
   {
     id: 'dep-5',
@@ -106,7 +111,8 @@ const INITIAL_DEPOSITS: Deposit[] = [
     daysRemaining: 0,
     progressPercent: 100,
     status: 'matured',
-    maturedDate: '15 Jan, 2025'
+    maturedDate: '15 Jan, 2025',
+    nominee: 'Priya Sharma'
   },
   {
     id: 'dep-m2',
@@ -128,8 +134,9 @@ const INITIAL_DEPOSITS: Deposit[] = [
 export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
   const [deposits, setDeposits] = useState<Deposit[]>(INITIAL_DEPOSITS);
 
-  // Context Menu State
+  // Context Menu & Expansion State
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [expandedDepositId, setExpandedDepositId] = useState<string | null>(null);
 
   // Pagination states
   const [activePage, setActivePage] = useState<number>(1);
@@ -142,18 +149,8 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
   const [deletingDeposit, setDeletingDeposit] = useState<Deposit | null>(null);
 
-  // Add/Edit Form Fields
-  const [formType, setFormType] = useState<'FD' | 'RD'>('FD');
-  const [formNickname, setFormNickname] = useState<string>('');
-  const [formBankName, setFormBankName] = useState<string>('');
-  const [formAccountNumber, setFormAccountNumber] = useState<string>('');
-  const [formAmount, setFormAmount] = useState<string>('');
-  const [formInterestRate, setFormInterestRate] = useState<string>('');
-  const [formMaturityDate, setFormMaturityDate] = useState<string>('');
-  const [formTenureYears, setFormTenureYears] = useState<string>('');
-  const [formTenureMonths, setFormTenureMonths] = useState<string>('');
-  const [formHasNominee, setFormHasNominee] = useState<boolean>(false);
-  const [formNomineeName, setFormNomineeName] = useState<string>('');
+  // Filter state for FD / RD
+  const [filterType, setFilterType] = useState<'ALL' | 'FD' | 'RD'>('ALL');
 
   // Format Helper
   const formatVal = (val: string | number) => (isPrivate ? '••••' : val);
@@ -184,82 +181,83 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
     };
   }, [isAddEditOpen, isDeleteOpen]);
 
-  // Calculations for summary cards
-  const activeDepositsList = deposits.filter(d => d.status === 'active');
-  const maturedDepositsList = deposits.filter(d => d.status === 'matured');
+  // Calculations for summary cards & filtering
+  const rawActiveDeposits = deposits.filter(d => d.status === 'active');
+  const rawMaturedDeposits = deposits.filter(d => d.status === 'matured');
 
-  const totalCurrentValue = activeDepositsList.reduce((acc, curr) => acc + curr.currentValue, 0);
-  const fixedDeposits = activeDepositsList.filter(d => d.type === 'FD');
-  const recurringDeposits = activeDepositsList.filter(d => d.type === 'RD');
+  const activeDepositsList = rawActiveDeposits.filter(d => {
+    if (filterType === 'FD') return d.type === 'FD';
+    if (filterType === 'RD') return d.type === 'RD';
+    return true;
+  });
+
+  const maturedDepositsList = rawMaturedDeposits.filter(d => {
+    if (filterType === 'FD') return d.type === 'FD';
+    if (filterType === 'RD') return d.type === 'RD';
+    return true;
+  });
+
+  // Pagination logic (max 5 cards per page)
+  const ITEMS_PER_PAGE = 5;
+
+  const activeTotalPages = Math.ceil(activeDepositsList.length / ITEMS_PER_PAGE) || 1;
+  const paginatedActiveDeposits = activeDepositsList.slice(
+    (activePage - 1) * ITEMS_PER_PAGE,
+    activePage * ITEMS_PER_PAGE
+  );
+
+  const maturedTotalPages = Math.ceil(maturedDepositsList.length / ITEMS_PER_PAGE) || 1;
+  const paginatedMaturedDeposits = maturedDepositsList.slice(
+    (maturedPage - 1) * ITEMS_PER_PAGE,
+    maturedPage * ITEMS_PER_PAGE
+  );
+
+  const totalCurrentValue = rawActiveDeposits.reduce((acc, curr) => acc + curr.currentValue, 0);
+  const fixedDeposits = rawActiveDeposits.filter(d => d.type === 'FD');
+  const recurringDeposits = rawActiveDeposits.filter(d => d.type === 'RD');
 
   // Form Handlers
   const handleOpenAdd = () => {
     setEditingDeposit(null);
-    setFormType('FD');
-    setFormNickname('');
-    setFormBankName('');
-    setFormAccountNumber('');
-    setFormAmount('');
-    setFormInterestRate('');
-    setFormMaturityDate('');
-    setFormTenureYears('');
-    setFormTenureMonths('');
-    setFormHasNominee(false);
-    setFormNomineeName('');
     setIsAddEditOpen(true);
   };
 
   const handleOpenEdit = (deposit: Deposit) => {
     setEditingDeposit(deposit);
-    setFormType(deposit.type);
-    setFormNickname(deposit.nickname);
-    setFormBankName(deposit.bankName || '');
-    setFormAccountNumber(deposit.accountNumber);
-    setFormAmount(deposit.principalOrMonthly.toString());
-    setFormInterestRate(deposit.interestRate.toString());
-    setFormMaturityDate(deposit.maturityDate);
-    setFormTenureYears('1');
-    setFormTenureMonths('0');
-    setFormHasNominee(!!deposit.nominee);
-    setFormNomineeName(deposit.nominee || '');
     setIsAddEditOpen(true);
   };
 
-  const handleSaveDeposit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const amountNum = parseFloat(formAmount) || 100000;
-    const rateNum = parseFloat(formInterestRate) || 7.5;
-
+  const handleSaveDeposit = (formData: DepositFormData) => {
     if (editingDeposit) {
       // Edit existing
       setDeposits(deposits.map(d => d.id === editingDeposit.id ? {
         ...d,
-        type: formType,
-        nickname: formNickname || (formType === 'FD' ? 'Fixed Deposit' : 'Recurring Deposit'),
-        bankName: formBankName || 'Bank',
-        accountNumber: formAccountNumber || '**** 8829',
-        principalOrMonthly: amountNum,
-        interestRate: rateNum,
-        currentValue: amountNum * 1.08,
-        maturityDate: formMaturityDate || '24 Oct, 2025',
-        nominee: formHasNominee ? formNomineeName : undefined
+        type: formData.type,
+        nickname: formData.nickname,
+        bankName: formData.bankName,
+        accountNumber: formData.accountNumber,
+        principalOrMonthly: formData.amount,
+        interestRate: formData.interestRate,
+        currentValue: formData.amount * 1.08,
+        maturityDate: formData.maturityDate,
+        nominee: formData.nominee
       } : d));
     } else {
       // Add new
       const newDep: Deposit = {
         id: `dep-${Date.now()}`,
-        type: formType,
-        nickname: formNickname || (formType === 'FD' ? 'Fixed Deposit' : 'Recurring Deposit'),
-        bankName: formBankName || 'HDFC Bank',
-        accountNumber: formAccountNumber ? (formAccountNumber.startsWith('****') ? formAccountNumber : `**** ${formAccountNumber.slice(-4)}`) : '**** 8829',
-        interestRate: rateNum,
-        currentValue: amountNum,
-        principalOrMonthly: amountNum,
-        maturityDate: formMaturityDate || '24 Oct, 2026',
+        type: formData.type,
+        nickname: formData.nickname,
+        bankName: formData.bankName,
+        accountNumber: formData.accountNumber.startsWith('****') ? formData.accountNumber : `**** ${formData.accountNumber.slice(-4)}`,
+        interestRate: formData.interestRate,
+        currentValue: formData.amount,
+        principalOrMonthly: formData.amount,
+        maturityDate: formData.maturityDate,
         daysRemaining: 365,
         progressPercent: 10,
         status: 'active',
-        nominee: formHasNominee ? formNomineeName : undefined
+        nominee: formData.nominee
       };
       setDeposits([newDep, ...deposits]);
     }
@@ -368,561 +366,459 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
 
       </div>
 
-      {/* Active Deposits Section */}
-      <div className="space-y-6 pt-4">
-
-        {/* Active Section Header */}
-        <div className="flex items-center gap-4 w-full">
-          <h2 className="text-xl font-semibold text-[#00162A] tracking-tight whitespace-nowrap">
-            Active Deposits
-          </h2>
-          <div className="flex-1 h-[1px] bg-[#C3C6CE]/30" />
-          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-[#74777F] bg-[#F2F4F5] uppercase tracking-wider whitespace-nowrap">
-            {activeDepositsList.length} ITEMS
-          </span>
-        </div>
-
-        {/* Active Deposits List Cards */}
-        <div className="space-y-5">
-          {activeDepositsList.map((deposit) => {
-            const isMenuOpen = activeMenuId === deposit.id;
-
-            return (
-              <div
-                key={deposit.id}
-                className={`group bg-white rounded-3xl p-5 md:p-6 border border-[#C3C6CE]/30 shadow-xs hover:border-2 hover:border-[#006A65] hover:-translate-y-1 hover:shadow-[0_12px_28px_-2px_rgba(0,106,101,0.05)] transition-all duration-300 ease-out relative flex flex-col md:flex-row md:items-start justify-between gap-5 ${isMenuOpen ? 'z-50' : 'z-0'}`}
-              >
-                {/* Left Side: Icon & Deposit Info */}
-                <div className="flex items-start gap-4 min-w-[240px]">
-                  <div className="w-12 h-12 rounded-2xl bg-[#F0F4F8] text-[#00162A] group-hover:bg-[#006A65] group-hover:text-white group-hover:scale-105 flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-out">
-                    {deposit.type === 'FD' ? (
-                      <span className="material-symbols-outlined select-none transition-transform duration-300 group-hover:scale-100 group-hover:-rotate-12" style={{ fontSize: '24px' }}>savings</span>
-                    ) : (
-                      <span className="material-symbols-outlined select-none transition-transform duration-500 group-hover:rotate-180" style={{ fontSize: '24px' }}>refresh</span>
-                    )}
-                  </div>
-
-                  <div>
-                    <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
-                      {deposit.type === 'FD' ? 'FD NICKNAME' : 'RD NICKNAME'}
-                    </span>
-                    <h3 className="text-base font-bold text-[#00162A]">
-                      {deposit.nickname}
-                    </h3>
-                    <span className="block text-xs font-medium text-[#74777F] mt-1.5">
-                      Account No.: {deposit.accountNumber}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Column 2: Interest Rate */}
-                <div className="min-w-[110px]">
-                  <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
-                    INTEREST RATE
-                  </span>
-                  <span className="block text-base font-extrabold text-[#00162A]">
-                    {deposit.interestRate}% p.a.
-                  </span>
-                </div>
-
-                {/* Column 3: Current Value */}
-                <div className="min-w-[150px]">
-                  <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
-                    CURRENT VALUE
-                  </span>
-                  <span className="block text-base font-extrabold text-[#00162A]">
-                    {formatVal(formatCurrency(deposit.currentValue))}
-                  </span>
-                  <span className="block text-xs font-medium text-[#74777F] mt-1.5">
-                    {deposit.type === 'FD' ? `Principal: ${formatVal(formatCurrency(deposit.principalOrMonthly))}` : `Monthly: ${formatVal(formatCurrency(deposit.principalOrMonthly))}`}
-                  </span>
-                </div>
-
-                {/* Column 4: Maturity Progress */}
-                <div className="min-w-[200px] flex-1 max-w-xs">
-                  <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-3 transition-colors duration-300">
-                    MATURITY PROGRESS
-                  </span>
-                  <div className="w-full bg-[#E5E8EB] h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-[#006A65] h-full rounded-full transition-all duration-500"
-                      style={{ width: `${deposit.progressPercent}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-xs font-medium text-[#74777F] mt-1.5">
-                    <span>Matures {deposit.maturityDate}</span>
-                    <span>{deposit.daysRemaining} days remaining</span>
-                  </div>
-                </div>
-
-                {/* Column 5: More Options Button & Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveMenuId(isMenuOpen ? null : deposit.id);
-                    }}
-                    className="w-9 h-9 rounded-full text-[#74777F] hover:bg-[#F2F4F5] hover:text-[#00162A] transition-colors flex items-center justify-center"
-                    aria-label="More menu"
-                  >
-                    <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>more_vert</span>
-                  </button>
-
-                  {/* Context Menu / Popover */}
-                  {isMenuOpen && (
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute right-0 top-10 z-50 w-44 bg-white rounded-2xl shadow-xl border border-[#C3C6CE]/30 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                    >
-                      <button
-                        onClick={() => {
-                          setActiveMenuId(null);
-                          handleOpenEdit(deposit);
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm font-semibold text-[#3F4945] hover:bg-[#F2F4F5] transition-colors"
-                      >
-                        {deposit.type === 'FD' ? 'Edit FD' : 'Edit RD'}
-                      </button>
-
-                      <div className="border-t border-[#C3C6CE]/20" />
-
-                      <button
-                        onClick={() => {
-                          setActiveMenuId(null);
-                          setDeletingDeposit(deposit);
-                          setIsDeleteOpen(true);
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm font-semibold text-[#BA1A1A] hover:bg-[#FFF8F7] transition-colors"
-                      >
-                        {deposit.type === 'FD' ? 'Delete FD' : 'Delete RD'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Active Deposits Pagination */}
-        <div className="flex items-center justify-center gap-2 pt-4">
+      {/* Deposit Filter Switcher Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+        <div className="bg-[#F2F4F5] p-1 rounded-2xl inline-flex items-center gap-1 text-xs font-bold w-fit">
           <button
-            disabled={activePage === 1}
-            onClick={() => setActivePage(prev => Math.max(prev - 1, 1))}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#74777F] hover:bg-[#F2F4F5] disabled:opacity-40"
+            onClick={() => setFilterType('ALL')}
+            className={`px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${filterType === 'ALL'
+              ? 'bg-white text-[#00162A] shadow-xs font-extrabold'
+              : 'text-[#74777F] hover:text-[#00162A]'
+              }`}
           >
-            ‹ Previous
+            All Deposits ({rawActiveDeposits.length + rawMaturedDeposits.length})
           </button>
           <button
-            onClick={() => setActivePage(1)}
-            className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${activePage === 1 ? 'bg-[#00162A] text-white' : 'bg-[#F2F4F5] text-[#00162A]'}`}
+            onClick={() => setFilterType('FD')}
+            className={`px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${filterType === 'FD'
+              ? 'bg-white text-[#00162A] shadow-xs font-extrabold'
+              : 'text-[#74777F] hover:text-[#00162A]'
+              }`}
           >
-            1
+            <span className="material-symbols-outlined select-none text-[16px]">savings</span>
+            Fixed Deposits (FD)
           </button>
           <button
-            onClick={() => setActivePage(2)}
-            className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${activePage === 2 ? 'bg-[#00162A] text-white' : 'bg-[#F2F4F5] text-[#00162A]'}`}
+            onClick={() => setFilterType('RD')}
+            className={`px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${filterType === 'RD'
+              ? 'bg-white text-[#00162A] shadow-xs font-extrabold'
+              : 'text-[#74777F] hover:text-[#00162A]'
+              }`}
           >
-            2
-          </button>
-          <button
-            onClick={() => setActivePage(3)}
-            className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${activePage === 3 ? 'bg-[#00162A] text-white' : 'bg-[#F2F4F5] text-[#00162A]'}`}
-          >
-            3
-          </button>
-          <button
-            onClick={() => setActivePage(prev => Math.min(prev + 1, 3))}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#74777F] hover:bg-[#F2F4F5]"
-          >
-            Next ›
+            <span className="material-symbols-outlined select-none text-[16px]">refresh</span>
+            Recurring Deposits (RD)
           </button>
         </div>
-
       </div>
+
+      {/* Active Deposits Section */}
+      {activeDepositsList.length > 0 && (
+        <div className="space-y-6 pt-4">
+
+          {/* Active Section Header */}
+          <div className="flex items-center gap-4 w-full">
+            <h2 className="text-xl font-semibold text-[#00162A] tracking-tight whitespace-nowrap">
+              Active Deposits
+            </h2>
+            <div className="flex-1 h-[1px] bg-[#C3C6CE]/30" />
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-[#74777F] bg-[#F2F4F5] uppercase tracking-wider whitespace-nowrap">
+              {activeDepositsList.length} ITEMS
+            </span>
+          </div>
+
+          {/* Active Deposits List Cards */}
+          <div className="space-y-5">
+            {paginatedActiveDeposits.map((deposit) => {
+              const isMenuOpen = activeMenuId === deposit.id;
+              const isExpanded = expandedDepositId === deposit.id;
+
+              return (
+                <div
+                  key={deposit.id}
+                  onClick={() => setExpandedDepositId(isExpanded ? null : deposit.id)}
+                  className={`group bg-white rounded-3xl p-5 md:p-6 border border-[#C3C6CE]/30 shadow-xs hover:border-2 hover:border-[#006A65] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-2px_rgba(0,106,101,0.05)] transition-all duration-300 ease-out relative flex flex-col cursor-pointer ${isMenuOpen ? 'z-50' : 'z-0'
+                    } ${isExpanded ? 'border-[#006A65]/60 shadow-[0_4px_20px_0_rgba(0,106,101,0.08)]' : ''}`}
+                >
+                  {/* Main Row */}
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 w-full">
+                    {/* Left Side: Icon & Deposit Info */}
+                    <div className="flex items-start gap-4 min-w-[240px]">
+                      <div className="w-12 h-12 rounded-2xl bg-[#F0F4F8] text-[#00162A] group-hover:bg-[#006A65] group-hover:text-white group-hover:scale-105 flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-out">
+                        {deposit.type === 'FD' ? (
+                          <span className="material-symbols-outlined select-none transition-transform duration-300 group-hover:scale-100 group-hover:-rotate-12" style={{ fontSize: '24px' }}>savings</span>
+                        ) : (
+                          <span className="material-symbols-outlined select-none transition-transform duration-500 group-hover:rotate-180" style={{ fontSize: '24px' }}>refresh</span>
+                        )}
+                      </div>
+
+                      <div>
+                        <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
+                          {deposit.type === 'FD' ? 'FD NICKNAME' : 'RD NICKNAME'}
+                        </span>
+                        <h3 className="text-base font-bold text-[#00162A]">
+                          {deposit.nickname}
+                        </h3>
+                        <span className="block text-xs font-medium text-[#74777F] mt-1.5">
+                          Deposit No.: {deposit.accountNumber}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Column 2: Interest Rate */}
+                    <div className="min-w-[110px]">
+                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
+                        INTEREST RATE
+                      </span>
+                      <span className="block text-base font-extrabold text-[#00162A]">
+                        {deposit.interestRate}% p.a.
+                      </span>
+                    </div>
+
+                    {/* Column 3: Current Value */}
+                    <div className="min-w-[150px]">
+                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
+                        CURRENT VALUE
+                      </span>
+                      <span className="block text-base font-extrabold text-[#00162A]">
+                        {formatVal(formatCurrency(deposit.currentValue))}
+                      </span>
+                      <span className="block text-xs font-medium text-[#74777F] mt-1.5">
+                        {deposit.type === 'FD' ? `Principal: ${formatVal(formatCurrency(deposit.principalOrMonthly))}` : `Monthly: ${formatVal(formatCurrency(deposit.principalOrMonthly))}`}
+                      </span>
+                    </div>
+
+                    {/* Column 4: Maturity Progress */}
+                    <div className="min-w-[200px] flex-1 max-w-xs">
+                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-3 transition-colors duration-300">
+                        MATURITY PROGRESS
+                      </span>
+                      <div className="w-full bg-[#E5E8EB] h-2 rounded-full overflow-hidden">
+                        <div
+                          className="bg-[#006A65] h-full rounded-full transition-all duration-500"
+                          style={{ width: `${deposit.progressPercent}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-xs font-medium text-[#74777F] mt-1.5">
+                        <span>Matures {deposit.maturityDate}</span>
+                        <span>{deposit.daysRemaining} days remaining</span>
+                      </div>
+                    </div>
+
+                    {/* Column 5: Expand Chevron & Context Menu Button */}
+                    <div className="flex items-center gap-1.5 relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedDepositId(isExpanded ? null : deposit.id);
+                        }}
+                        className="w-9 h-9 rounded-full text-[#74777F] hover:bg-[#F2F4F5] hover:text-[#00162A] transition-colors flex items-center justify-center"
+                        aria-label="Expand card details"
+                        title={isExpanded ? "Collapse details" : "Expand details"}
+                      >
+                        <span className={`material-symbols-outlined select-none transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[#006A65]' : ''}`} style={{ fontSize: '22px' }}>
+                          expand_more
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuId(isMenuOpen ? null : deposit.id);
+                        }}
+                        className="w-9 h-9 rounded-full text-[#74777F] hover:bg-[#F2F4F5] hover:text-[#00162A] transition-colors flex items-center justify-center"
+                        aria-label="More menu"
+                      >
+                        <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>more_vert</span>
+                      </button>
+
+                      {/* Context Menu / Popover */}
+                      {isMenuOpen && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute right-0 top-10 z-50 w-44 bg-white rounded-2xl shadow-xl border border-[#C3C6CE]/30 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                        >
+                          <button
+                            onClick={() => {
+                              setActiveMenuId(null);
+                              handleOpenEdit(deposit);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm font-semibold text-[#3F4945] hover:bg-[#F2F4F5] transition-colors"
+                          >
+                            {deposit.type === 'FD' ? 'Edit FD' : 'Edit RD'}
+                          </button>
+
+                          <div className="border-t border-[#C3C6CE]/20" />
+
+                          <button
+                            onClick={() => {
+                              setActiveMenuId(null);
+                              setDeletingDeposit(deposit);
+                              setIsDeleteOpen(true);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm font-semibold text-[#BA1A1A] hover:bg-[#FFF8F7] transition-colors"
+                          >
+                            {deposit.type === 'FD' ? 'Delete FD' : 'Delete RD'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Expanded Details Section */}
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className={`grid transition-[grid-template-rows,opacity,margin-top] duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0 mt-0'
+                      }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="w-full pt-4 border-t border-[#C3C6CE]/30 flex flex-col md:flex-row md:items-start gap-5">
+                        {/* Bank Name aligned with FD NICKNAME */}
+                        <div className="flex items-start gap-4 min-w-[240px]">
+                          <div className="w-12 flex-shrink-0" />
+                          <div className="space-y-1">
+                            <span className="block text-[10px] font-bold text-[#73777E] group-hover:text-[#006A65] uppercase transition-colors duration-300" style={{ letterSpacing: '1px' }}>
+                              Bank Name
+                            </span>
+                            <span className="block text-sm font-bold text-[#00162A]" style={{ letterSpacing: '1px' }}>
+                              {deposit.bankName?.trim() ? deposit.bankName : '-'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Nominee Name aligned with INTEREST RATE */}
+                        <div className="min-w-[110px] space-y-1">
+                          <span className="block text-[10px] font-bold text-[#73777E] group-hover:text-[#006A65] uppercase transition-colors duration-300" style={{ letterSpacing: '1px' }}>
+                            Nominee Name
+                          </span>
+                          <span className="block text-sm font-bold text-[#00162A]" style={{ letterSpacing: '1px' }}>
+                            {deposit.nominee?.trim() ? deposit.nominee : '-'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Active Deposits Pagination */}
+          {activeTotalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <button
+                disabled={activePage === 1}
+                onClick={() => setActivePage(prev => Math.max(prev - 1, 1))}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#74777F] hover:bg-[#F2F4F5] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+              >
+                ‹ Previous
+              </button>
+              {Array.from({ length: activeTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setActivePage(pageNum)}
+                  className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${activePage === pageNum ? 'bg-[#00162A] text-white' : 'bg-[#F2F4F5] text-[#00162A]'
+                    }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+              <button
+                disabled={activePage === activeTotalPages}
+                onClick={() => setActivePage(prev => Math.min(prev + 1, activeTotalPages))}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#74777F] hover:bg-[#F2F4F5] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+              >
+                Next ›
+              </button>
+            </div>
+          )}
+
+        </div>
+      )}
 
       {/* Matured Deposits Section */}
-      <div className="space-y-6 pt-6">
+      {maturedDepositsList.length > 0 && (
+        <div className="space-y-6 pt-6">
 
-        {/* Matured Section Header */}
-        <div className="flex items-center gap-4 w-full">
-          <h2 className="text-xl font-semibold text-[#43474D] tracking-tight whitespace-nowrap">
-            Matured Deposits
-          </h2>
-          <div className="flex-1 h-[1px] bg-[#C3C6CE]/30" />
-          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-[#74777F] bg-[#F2F4F5] uppercase tracking-wider whitespace-nowrap">
-            {maturedDepositsList.length} ITEMS
-          </span>
-        </div>
-
-        {/* Matured Deposits Cards */}
-        <div className="space-y-5">
-          {maturedDepositsList.map((deposit) => (
-            <div
-              key={deposit.id}
-              className="group bg-[#F2F4F5] rounded-3xl p-5 md:p-6 border border-[#BFC9C4]/10 transition-all flex flex-col md:flex-row md:items-start justify-between gap-5"
-            >
-              {/* Icon & Title */}
-              <div className="flex items-start gap-4 min-w-[240px]">
-                <div className="w-12 h-12 rounded-2xl bg-white text-[#00162A] group-hover:bg-[#E6F4F1] group-hover:text-[#006A65] flex items-center justify-center flex-shrink-0 transition-colors duration-300">
-                  <span className="material-symbols-outlined select-none font-bold" style={{ fontSize: '22px' }}>check</span>
-                </div>
-                <div>
-                  <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
-                    FD NICKNAME
-                  </span>
-                  <h3 className="text-base font-bold text-[#00162A]">
-                    {deposit.nickname}
-                  </h3>
-                  <span className="block text-xs font-medium text-[#74777F] mt-1.5">
-                    Account No.: {deposit.accountNumber}
-                  </span>
-                </div>
-              </div>
-
-              {/* Final Rate */}
-              <div className="min-w-[110px]">
-                <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
-                  FINAL RATE
-                </span>
-                <span className="block text-base font-extrabold text-[#00162A]">
-                  {deposit.interestRate}% p.a.
-                </span>
-              </div>
-
-              {/* Maturity Value */}
-              <div className="min-w-[150px]">
-                <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
-                  MATURITY VALUE
-                </span>
-                <span className="block text-base font-extrabold text-[#00162A]">
-                  {formatVal(formatCurrency(deposit.currentValue))}
-                </span>
-              </div>
-
-              {/* Matured On */}
-              <div className="min-w-[140px]">
-                <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
-                  MATURED ON
-                </span>
-                <span className="block text-sm font-bold text-[#00162A]">
-                  {deposit.maturedDate || '15 Jan, 2025'}
-                </span>
-              </div>
-
-              {/* Reinvest Action */}
-              <div>
-                <button
-                  onClick={() => handleReinvest(deposit)}
-                  className="px-5 py-2.5 rounded-xl border border-[#C3C6CE]/50 bg-white text-[#00162A] font-extrabold text-xs tracking-wider uppercase hover:bg-[#F2F4F5] active:scale-98 transition-all"
-                >
-                  REINVEST
-                </button>
-              </div>
-
-            </div>
-          ))}
-        </div>
-
-        {/* Matured Deposits Pagination */}
-        <div className="flex items-center justify-center gap-2 pt-4">
-          <button
-            disabled={maturedPage === 1}
-            onClick={() => setMaturedPage(prev => Math.max(prev - 1, 1))}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#74777F] hover:bg-[#F2F4F5] disabled:opacity-40"
-          >
-            ‹ Previous
-          </button>
-          <button
-            onClick={() => setMaturedPage(1)}
-            className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${maturedPage === 1 ? 'bg-[#00162A] text-white' : 'bg-[#F2F4F5] text-[#00162A]'}`}
-          >
-            1
-          </button>
-          <button
-            onClick={() => setMaturedPage(2)}
-            className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${maturedPage === 2 ? 'bg-[#00162A] text-white' : 'bg-[#F2F4F5] text-[#00162A]'}`}
-          >
-            2
-          </button>
-          <button
-            onClick={() => setMaturedPage(3)}
-            className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${maturedPage === 3 ? 'bg-[#00162A] text-white' : 'bg-[#F2F4F5] text-[#00162A]'}`}
-          >
-            3
-          </button>
-          <button
-            onClick={() => setMaturedPage(prev => Math.min(prev + 1, 3))}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#74777F] hover:bg-[#F2F4F5]"
-          >
-            Next ›
-          </button>
-        </div>
-
-      </div>
-
-      {/* Add / Edit Deposit Modal (Add Deposit.svg) */}
-      {isAddEditOpen && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-[#C3C6CE]/30 max-h-[90vh] overflow-y-auto no-scrollbar relative space-y-6">
-
-            {/* Modal Close Button */}
-            <button
-              onClick={() => setIsAddEditOpen(false)}
-              className="absolute top-6 right-6 p-2 rounded-xl text-[#74777F] hover:bg-[#F2F4F5] transition-colors"
-            >
-              <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
-            </button>
-
-            {/* Modal Header */}
-            <div>
-              <h2 className="text-2xl font-extrabold text-[#00162A] tracking-tight">
-                {editingDeposit ? 'Edit Deposit' : 'Add New Deposit'}
-              </h2>
-            </div>
-
-            {/* Deposit Type Switcher */}
-            <div className="bg-[#F2F4F5] p-1.5 rounded-2xl grid grid-cols-2 gap-1 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setFormType('FD')}
-                className={`py-3 rounded-xl transition-all ${formType === 'FD' ? 'bg-white text-[#00162A] shadow-sm' : 'text-[#74777F] hover:text-[#00162A]'}`}
-              >
-                Fixed Deposit
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormType('RD')}
-                className={`py-3 rounded-xl transition-all ${formType === 'RD' ? 'bg-white text-[#00162A] shadow-sm' : 'text-[#74777F] hover:text-[#00162A]'}`}
-              >
-                Recurring Deposit
-              </button>
-            </div>
-
-            {/* Form Fields */}
-            <form onSubmit={handleSaveDeposit} className="space-y-4">
-
-              {/* Deposit Nickname */}
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                  DEPOSIT NICKNAME
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Retirement Alpha Fund, Goldman Sachs"
-                  value={formNickname}
-                  onChange={(e) => setFormNickname(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                />
-              </div>
-
-              {/* Institution Name & Account Number */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                    INSTITUTION / BANK NAME
-                  </label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3.5 top-3.5 text-[#74777F] select-none" style={{ fontSize: '18px' }}>account_balance</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. HDFC Bank"
-                      value={formBankName}
-                      onChange={(e) => setFormBankName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                    DEPOSIT NUMBER
-                  </label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3.5 top-3.5 text-[#74777F] select-none" style={{ fontSize: '18px' }}>tag</span>
-                    <input
-                      type="text"
-                      placeholder="#### #### ####"
-                      value={formAccountNumber}
-                      onChange={(e) => setFormAccountNumber(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Principal Amount & Interest Rate */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                    {formType === 'FD' ? 'PRINCIPAL AMOUNT' : 'MONTHLY DEPOSIT'}
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-3 text-sm font-bold text-[#74777F]">₹</span>
-                    <input
-                      type="number"
-                      required
-                      placeholder="0.00"
-                      value={formAmount}
-                      onChange={(e) => setFormAmount(e.target.value)}
-                      className="w-full pl-8 pr-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                    INTEREST RATE (%)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="7.85"
-                      value={formInterestRate}
-                      onChange={(e) => setFormInterestRate(e.target.value)}
-                      className="w-full pl-4 pr-8 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                    />
-                    <span className="absolute right-3.5 top-3 text-sm font-bold text-[#74777F]">%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Maturity Date & Tenure */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                    MATURITY DATE
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="dd/mm/yyyy"
-                    value={formMaturityDate}
-                    onChange={(e) => setFormMaturityDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                    TENURE
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="number"
-                      placeholder="Years"
-                      value={formTenureYears}
-                      onChange={(e) => setFormTenureYears(e.target.value)}
-                      className="w-full px-3 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65]"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Months"
-                      value={formTenureMonths}
-                      onChange={(e) => setFormTenureMonths(e.target.value)}
-                      className="w-full px-3 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Nominee Option */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => setFormHasNominee(!formHasNominee)}
-                  className="text-xs font-bold text-[#006A65] hover:underline flex items-center gap-1.5 uppercase tracking-wider"
-                >
-                  <span className="material-symbols-outlined select-none" style={{ fontSize: '16px' }}>add</span>
-                  <span>{formHasNominee ? 'REMOVE NOMINEE' : 'ADD NOMINEE'}</span>
-                </button>
-
-                {formHasNominee && (
-                  <div className="mt-3">
-                    <input
-                      type="text"
-                      placeholder="Nominee Full Name"
-                      value={formNomineeName}
-                      onChange={(e) => setFormNomineeName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65]"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-[#C3C6CE]/20">
-                <button
-                  type="button"
-                  onClick={() => setIsAddEditOpen(false)}
-                  className="px-5 py-3 rounded-2xl text-sm font-bold text-[#00162A] hover:bg-[#F2F4F5] transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-3 rounded-2xl bg-[#006A65] text-white font-bold text-sm shadow-sm hover:bg-[#006A65]/90 active:scale-98 transition-all"
-                >
-                  Save Deposit
-                </button>
-              </div>
-
-            </form>
-
+          {/* Matured Section Header */}
+          <div className="flex items-center gap-4 w-full">
+            <h2 className="text-xl font-semibold text-[#43474D] tracking-tight whitespace-nowrap">
+              Matured Deposits
+            </h2>
+            <div className="flex-1 h-[1px] bg-[#C3C6CE]/30" />
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-[#74777F] bg-[#F2F4F5] uppercase tracking-wider whitespace-nowrap">
+              {maturedDepositsList.length} ITEMS
+            </span>
           </div>
-        </div>,
-        document.body
+
+          {/* Matured Deposits Cards */}
+          <div className="space-y-5">
+            {paginatedMaturedDeposits.map((deposit) => {
+              const isExpanded = expandedDepositId === deposit.id;
+
+              return (
+                <div
+                  key={deposit.id}
+                  onClick={() => setExpandedDepositId(isExpanded ? null : deposit.id)}
+                  className={`group bg-[#F2F4F5] rounded-3xl p-5 md:p-6 border border-[#BFC9C4]/20 transition-all duration-300 ease-out flex flex-col cursor-pointer ${isExpanded ? 'border-[#006A65]/40 shadow-xs' : ''
+                    }`}
+                >
+                  {/* Main Row */}
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 w-full">
+                    {/* Icon & Title */}
+                    <div className="flex items-start gap-4 min-w-[240px]">
+                      <div className="w-12 h-12 rounded-2xl bg-[#BFC9C4]/20 text-[#74777F] flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined select-none font-bold" style={{ fontSize: '22px' }}>task_alt</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
+                          {deposit.type === 'FD' ? 'FD NICKNAME' : 'RD NICKNAME'}
+                        </span>
+                        <h3 className="text-base font-bold text-[#74777F]">
+                          {deposit.nickname}
+                        </h3>
+                        <span className="block text-xs font-medium text-[#74777F] mt-1.5">
+                          Deposit No.: {deposit.accountNumber}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Final Rate */}
+                    <div className="min-w-[110px]">
+                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
+                        FINAL RATE
+                      </span>
+                      <span className="block text-base font-extrabold text-[#74777F]">
+                        {deposit.interestRate}% p.a.
+                      </span>
+                    </div>
+
+                    {/* Maturity Value */}
+                    <div className="min-w-[150px]">
+                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
+                        MATURITY VALUE
+                      </span>
+                      <span className="block text-base font-extrabold text-[#74777F]">
+                        {formatVal(formatCurrency(deposit.currentValue))}
+                      </span>
+                    </div>
+
+                    {/* Matured On */}
+                    <div className="min-w-[140px]">
+                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
+                        MATURED ON
+                      </span>
+                      <span className="block text-sm font-bold text-[#74777F]">
+                        {deposit.maturedDate || '15 Jan, 2025'}
+                      </span>
+                    </div>
+
+                    {/* Reinvest Action & Expand Chevron */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReinvest(deposit);
+                        }}
+                        className="px-5 py-2.5 rounded-xl border border-[#C3C6CE]/50 bg-white text-[#00162A] font-bold text-xs tracking-wider uppercase hover:scale-105 active:scale-95 transition-all duration-200 ease-out cursor-pointer"
+                      >
+                        REINVEST
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedDepositId(isExpanded ? null : deposit.id);
+                        }}
+                        className="w-9 h-9 rounded-full text-[#74777F] hover:bg-white/80 hover:text-[#00162A] transition-colors flex items-center justify-center"
+                        aria-label="Expand card details"
+                        title={isExpanded ? "Collapse details" : "Expand details"}
+                      >
+                        <span className={`material-symbols-outlined select-none transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[#006A65]' : ''}`} style={{ fontSize: '22px' }}>
+                          expand_more
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expanded Details Section */}
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className={`grid transition-[grid-template-rows,opacity,margin-top] duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0 mt-0'
+                      }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="w-full pt-4 border-t border-[#BFC9C4]/30 flex flex-col md:flex-row md:items-start gap-5">
+                        {/* Bank Name aligned with FD NICKNAME */}
+                        <div className="flex items-start gap-4 min-w-[240px]">
+                          <div className="w-12 flex-shrink-0" />
+                          <div className="space-y-1">
+                            <span className="block text-[10px] font-bold text-[#73777E] uppercase" style={{ letterSpacing: '1px' }}>
+                              Bank Name
+                            </span>
+                            <span className="block text-sm font-bold text-[#74777F]" style={{ letterSpacing: '1px' }}>
+                              {deposit.bankName?.trim() ? deposit.bankName : '-'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Nominee Name aligned with FINAL RATE */}
+                        <div className="min-w-[110px] space-y-1">
+                          <span className="block text-[10px] font-bold text-[#73777E] uppercase" style={{ letterSpacing: '1px' }}>
+                            Nominee Name
+                          </span>
+                          <span className="block text-sm font-bold text-[#74777F]" style={{ letterSpacing: '1px' }}>
+                            {deposit.nominee?.trim() ? deposit.nominee : '-'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Matured Deposits Pagination */}
+          {maturedTotalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <button
+                disabled={maturedPage === 1}
+                onClick={() => setMaturedPage(prev => Math.max(prev - 1, 1))}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#74777F] hover:bg-[#F2F4F5] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+              >
+                ‹ Previous
+              </button>
+              {Array.from({ length: maturedTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setMaturedPage(pageNum)}
+                  className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${maturedPage === pageNum ? 'bg-[#00162A] text-white' : 'bg-[#F2F4F5] text-[#00162A]'
+                    }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+              <button
+                disabled={maturedPage === maturedTotalPages}
+                onClick={() => setMaturedPage(prev => Math.min(prev + 1, maturedTotalPages))}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#74777F] hover:bg-[#F2F4F5] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+              >
+                Next ›
+              </button>
+            </div>
+          )}
+
+        </div>
       )}
 
-      {/* Delete Deposit Modal (Delete.svg) */}
-      {isDeleteOpen && deletingDeposit && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-[#C3C6CE]/30 relative space-y-5">
+      {/* Add / Edit Deposit Modal */}
+      <AddEditDepositModal
+        isOpen={isAddEditOpen}
+        onClose={() => {
+          setIsAddEditOpen(false);
+          setEditingDeposit(null);
+        }}
+        editingDeposit={editingDeposit}
+        onSave={handleSaveDeposit}
+      />
 
-            <button
-              onClick={() => setIsDeleteOpen(false)}
-              className="absolute top-6 right-6 p-2 rounded-xl text-[#74777F] hover:bg-[#F2F4F5] transition-colors"
-            >
-              <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
-            </button>
-
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-              <span className="material-symbols-outlined select-none" style={{ fontSize: '24px' }}>delete</span>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-extrabold text-[#00162A] tracking-tight">
-                Delete {deletingDeposit.type === 'FD' ? 'FD' : 'RD'}?
-              </h2>
-              <p className="text-sm font-medium text-[#74777F] mt-1.5 leading-relaxed">
-                Are you sure you want to delete <span className="font-bold text-[#00162A]">{deletingDeposit.nickname}</span> ({deletingDeposit.accountNumber})? This action cannot be undone.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#C3C6CE]/20">
-              <button
-                type="button"
-                onClick={() => setIsDeleteOpen(false)}
-                className="px-5 py-2.5 rounded-2xl text-sm font-bold text-[#00162A] hover:bg-[#F2F4F5] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className="px-6 py-2.5 rounded-2xl bg-rose-600 text-white font-bold text-sm shadow-sm hover:bg-rose-700 active:scale-98 transition-all"
-              >
-                Delete
-              </button>
-            </div>
-
-          </div>
-        </div>,
-        document.body
-      )}
-
+      {/* Delete Deposit Modal */}
+      <DeleteDepositModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        deletingDeposit={deletingDeposit}
+        onConfirmDelete={handleConfirmDelete}
+      />
     </div>
   );
 };
