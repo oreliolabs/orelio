@@ -1,0 +1,233 @@
+import React, { useState } from 'react';
+
+interface SidebarProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  activeTab,
+  setActiveTab,
+  isOpen,
+  setIsOpen
+}) => {
+  // Submenu states
+  const [assetsOpen, setAssetsOpen] = useState(true);
+  const [cashBankOpen, setCashBankOpen] = useState(false);
+  const [lockerOpen, setLockerOpen] = useState(false);
+
+  const handleTabClick = (tabName: string) => {
+    setActiveTab(tabName);
+    // Close sidebar on mobile after clicking
+    if (window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  };
+
+  const navItems = [
+    {
+      name: 'Overview',
+      icon: 'dashboard',
+      id: 'overview'
+    },
+    {
+      name: 'Assets',
+      icon: 'business_center',
+      id: 'assets',
+      hasSubmenu: true,
+      isOpen: assetsOpen,
+      setIsOpen: setAssetsOpen,
+      submenu: [
+        { name: 'Stocks', id: 'stocks' },
+        { name: 'Mutual Funds', id: 'mutual-funds' },
+        { name: 'Other Assets', id: 'other-assets' }
+      ]
+    },
+    {
+      name: 'Retirement',
+      icon: 'elderly',
+      id: 'retirement'
+    },
+    {
+      name: 'Cash & Bank',
+      icon: 'account_balance',
+      id: 'cash-bank',
+      hasSubmenu: true,
+      isOpen: cashBankOpen,
+      setIsOpen: setCashBankOpen,
+      submenu: [
+        { name: 'Bank Accounts', id: 'savings' },
+        { name: 'Deposits', id: 'fds' }
+      ]
+    },
+    {
+      name: 'Loans & Credit',
+      icon: 'credit_card',
+      id: 'loans-credit'
+    },
+    {
+      name: 'Insurance',
+      icon: 'verified_user',
+      id: 'insurance'
+    },
+    {
+      name: 'Locker',
+      icon: 'lock',
+      id: 'locker',
+      hasSubmenu: true,
+      isOpen: lockerOpen,
+      setIsOpen: setLockerOpen,
+      submenu: [
+        { name: 'Documents', id: 'documents' },
+        { name: 'Notes', id: 'notes' },
+        { name: 'Passwords', id: 'passwords' }
+      ]
+    },
+    {
+      name: 'Manage Family',
+      icon: 'family_group',
+      id: 'manage-family'
+    },
+    {
+      name: 'Settings',
+      icon: 'settings',
+      id: 'settings'
+    }
+  ];
+
+  return (
+    <>
+      {/* Mobile Drawer Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <aside className={`
+        fixed top-0 bottom-0 left-0 z-50 flex flex-col w-[260px] bg-white border-r border-[#C3C6CE]/30 
+        transition-transform duration-300 ease-in-out lg:translate-x-0
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {/* Brand Logo & Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[#C3C6CE]/20">
+          <div className="flex items-center gap-3">
+            {/* Custom SVG logo representing a golden ledger stack from Menu.svg */}
+            <svg width="40" height="40" viewBox="26 34 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+              <rect x="26" y="34" width="40" height="40" rx="16" fill="black" />
+              <path d="M39 60V53H41V60H39ZM45 60V53H47V60H45ZM36 64V62H56V64H36ZM51 60V53H53V60H51ZM36 51V49L46 44L56 49V51H36Z" fill="white" />
+            </svg>
+            <div>
+              <span className="block text-lg font-bold tracking-tight text-black font-sans leading-none">Orelio</span>
+              <span className="block text-[9px] font-bold tracking-widest text-[#707975] uppercase mt-1">Wealth Ledger</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 lg:hidden flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
+          </button>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-1 no-scrollbar">
+          {navItems.map((item) => {
+            const isTabActive = activeTab === item.id || (item.submenu?.some(sub => sub.id === activeTab));
+
+            if (item.hasSubmenu) {
+              return (
+                <div key={item.id} className="space-y-0.5">
+                  <button
+                    onClick={() => item.setIsOpen(!item.isOpen)}
+                    className={`
+                      w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
+                      ${isTabActive ? 'text-black' : 'text-[#707975] hover:text-black'}
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`material-symbols-outlined select-none ${isTabActive ? 'font-bold' : ''}`}
+                        style={{ fontSize: '20px' }}
+                      >
+                        {item.icon}
+                      </span>
+                      <span>{item.name}</span>
+                    </div>
+                    <span className="material-symbols-outlined select-none text-[#707975]" style={{ fontSize: '20px' }}>
+                      {item.isOpen ? 'expand_more' : 'chevron_right'}
+                    </span>
+                  </button>
+
+                  {/* Collapsible Submenu */}
+                  {item.isOpen && (
+                    <div className="pl-11 pr-2 py-1 space-y-1 mt-0.5 transition-all duration-200">
+                      {item.submenu?.map((sub) => {
+                        const isSubActive = activeTab === sub.id;
+                        return (
+                          <button
+                            key={sub.id}
+                            onClick={() => handleTabClick(sub.id)}
+                            className={`
+                              w-full text-left block py-1.5 text-[14px] font-semibold transition-colors duration-200
+                              ${isSubActive
+                                ? 'text-black font-bold'
+                                : 'text-[#707975] hover:text-black'
+                              }
+                            `}
+                          >
+                            {sub.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleTabClick(item.id)}
+                className={`
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
+                  ${isTabActive
+                    ? 'text-black'
+                    : 'text-[#707975] hover:text-black'
+                  }
+                `}
+              >
+                <span
+                  className={`material-symbols-outlined select-none ${isTabActive ? 'font-bold' : ''}`}
+                  style={{ fontSize: '20px' }}
+                >
+                  {item.icon}
+                </span>
+                <span>{item.name}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* User Footer Profile */}
+        <div className="p-5 border-t border-[#C3C6CE]/20 bg-white">
+          <div className="flex items-center gap-3">
+            <img
+              src="/alexander_bloom_avatar.png"
+              alt="Alexander Bloom"
+              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <span className="block text-sm font-bold text-black truncate leading-tight">Alexander Bloom</span>
+              <span className="block text-[9px] font-bold tracking-widest text-[#707975] uppercase mt-1">PREMIUM TIER</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+};

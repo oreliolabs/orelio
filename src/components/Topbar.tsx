@@ -1,0 +1,133 @@
+import React, { useState } from 'react';
+import { Search, Eye, EyeOff, ChevronDown, Menu, Users, Bell } from 'lucide-react';
+
+interface TopbarProps {
+  isPrivate: boolean;
+  setIsPrivate: (val: boolean) => void;
+  onMenuClick: () => void;
+  memberCount: number;
+}
+
+export const Topbar: React.FC<TopbarProps> = ({ 
+  isPrivate, 
+  setIsPrivate, 
+  onMenuClick,
+  memberCount
+}) => {
+  const [familyDropdownOpen, setFamilyDropdownOpen] = useState(false);
+  const [selectedFamily, setSelectedFamily] = useState(`All Members (${memberCount})`);
+  
+  React.useEffect(() => {
+    setSelectedFamily(`All Members (${memberCount})`);
+  }, [memberCount]);
+
+  const familyMembers = [
+    `All Members (${memberCount})`,
+    'Self (Sejal)',
+    'Spouse (Amit)',
+    'Child (Kavya)',
+    'Parents (Joint)'
+  ];
+
+  const handleFamilySelect = (member: string) => {
+    setSelectedFamily(member);
+    setFamilyDropdownOpen(false);
+  };
+
+  return (
+    <header className="sticky top-0 z-30 flex items-center justify-between w-full h-[80px] px-6 md:px-8 bg-white/80 backdrop-blur-md border-b border-[#C3C6CE]/20">
+      
+      {/* Left: Mobile Menu Toggle & Search Bar */}
+      <div className="flex items-center flex-1 max-w-md gap-4">
+        <button 
+          onClick={onMenuClick}
+          className="p-2 -ml-2 rounded-xl text-orelio-text hover:bg-orelio-light-gray hover:text-orelio-navy lg:hidden"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-orelio-gray">
+            <Search size={16} />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Search assets, banks, policies..."
+            className="w-full h-11 pl-11 pr-4 rounded-xl bg-orelio-light-gray/60 border border-[#C3C6CE]/15 font-medium text-sm text-orelio-navy placeholder-orelio-gray focus:outline-none focus:bg-white focus:border-orelio-darkgreen/40 transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Right: Quick Action Controls */}
+      <div className="flex items-center gap-2 md:gap-4 pl-4">
+        
+        {/* Privacy eye toggle with tooltip */}
+        <button 
+          onClick={() => setIsPrivate(!isPrivate)}
+          className={`
+            p-2.5 rounded-xl border border-[#C3C6CE]/20 transition-all duration-200
+            ${isPrivate 
+              ? 'bg-orelio-darkgreen text-white border-orelio-darkgreen hover:bg-orelio-darkgreen/90' 
+              : 'bg-white text-orelio-navy hover:bg-orelio-light-gray'
+            }
+          `}
+          title={isPrivate ? "Show financial figures" : "Hide financial figures (Privacy Mode)"}
+        >
+          {isPrivate ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+
+        {/* Notifications badge */}
+        <button className="hidden sm:block p-2.5 rounded-xl border border-[#C3C6CE]/20 bg-white text-orelio-navy hover:bg-orelio-light-gray relative transition-all">
+          <Bell size={18} />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+        </button>
+
+        {/* Divider */}
+        <div className="hidden sm:block h-6 w-px bg-[#C3C6CE]/35" />
+
+        {/* Interactive Family Selector Dropdown */}
+        <div className="relative">
+          <button 
+            onClick={() => setFamilyDropdownOpen(!familyDropdownOpen)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#C3C6CE]/25 bg-white text-orelio-navy text-sm font-semibold hover:bg-orelio-light-gray/40 active:scale-98 transition-all"
+          >
+            <Users size={16} className="text-orelio-darkgreen" />
+            <span className="max-w-[120px] truncate">{selectedFamily}</span>
+            <ChevronDown size={14} className="text-orelio-gray" />
+          </button>
+
+          {familyDropdownOpen && (
+            <>
+              {/* Dropdown Backdrop to close on click outside */}
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setFamilyDropdownOpen(false)} 
+              />
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-[#C3C6CE]/30 shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-4 py-1.5 text-xs font-bold text-orelio-gray tracking-wider uppercase border-b border-[#C3C6CE]/15 mb-1.5">
+                  Select Profile
+                </div>
+                {familyMembers.map((member) => (
+                  <button
+                    key={member}
+                    onClick={() => handleFamilySelect(member)}
+                    className={`
+                      w-full text-left px-4 py-2 text-[13px] font-medium transition-colors
+                      ${selectedFamily === member 
+                        ? 'text-orelio-darkgreen bg-orelio-lightgreen/20 font-bold' 
+                        : 'text-orelio-text hover:bg-orelio-light-gray hover:text-orelio-navy'
+                      }
+                    `}
+                  >
+                    {member}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+      </div>
+    </header>
+  );
+};
