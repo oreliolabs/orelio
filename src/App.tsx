@@ -6,6 +6,7 @@ import { ManageFamily, EditMemberModal, RemoveMemberModal } from './components/m
 import { Notes } from './components/locker/Notes';
 import { BankAccounts } from './components/cash_and_bank/BankAccounts';
 import Deposits from './components/cash_and_bank/Deposits';
+import { Insurance } from './components/insurance/Insurance';
 import { Briefcase, ArrowUpRight } from 'lucide-react';
 
 interface FamilyMember {
@@ -178,6 +179,9 @@ function App() {
 
       case 'fds':
         return <Deposits isPrivate={isPrivate} />;
+
+      case 'insurance':
+        return <Insurance isPrivate={isPrivate} />;
 
       case 'manage-family':
         return (

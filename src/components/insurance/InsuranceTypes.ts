@@ -1,0 +1,34 @@
+export type PolicyType = 
+  | 'Property Insurance' 
+  | 'Life Insurance' 
+  | 'Health Insurance' 
+  | 'Motor Insurance' 
+  | 'Term Insurance'
+  | 'Travel Insurance';
+
+export type PremiumFrequency = 'Annual' | 'Monthly' | 'Quarterly' | 'Half-Yearly';
+
+export interface Policy {
+  id: string;
+  policyType: PolicyType;
+  policyName: string;
+  policyNumber?: string;
+  provider?: string;
+  sumInsured: number;
+  annualPremium: number;
+  premiumFrequency: PremiumFrequency;
+  startDate: string; // YYYY-MM-DD or formatted string
+  expiryDate: string; // YYYY-MM-DD or formatted string
+}
+
+export interface PolicyFormData {
+  policyType: PolicyType;
+  policyName: string;
+  policyNumber?: string;
+  provider?: string;
+  sumInsured: string;
+  annualPremium: string;
+  premiumFrequency: PremiumFrequency;
+  startDate: string;
+  expiryDate: string;
+}
