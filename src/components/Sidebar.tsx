@@ -63,12 +63,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { name: 'Deposits', id: 'fds' }
       ]
     },
-    // This one is a P1
-    // {
-    //   name: 'Loans & Credit',
-    //   icon: 'credit_card',
-    //   id: 'loans-credit'
-    // },
+    {
+      name: 'Loans & Credit',
+      icon: 'credit_card',
+      id: 'loans-credit'
+    },
     {
       name: 'Insurance',
       icon: 'verified_user',
@@ -117,11 +116,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Logo & Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#C3C6CE]/20">
           <div className="flex items-center gap-3">
-            {/* Custom SVG logo representing a golden ledger stack from Menu.svg */}
-            <svg width="40" height="40" viewBox="26 34 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-              <rect x="26" y="34" width="40" height="40" rx="16" fill="black" />
-              <path d="M39 60V53H41V60H39ZM45 60V53H47V60H45ZM36 64V62H56V64H36ZM51 60V53H53V60H51ZM36 51V49L46 44L56 49V51H36Z" fill="white" />
-            </svg>
+            <div className="w-10 h-10 bg-black rounded-[14px] flex items-center justify-center p-2 flex-shrink-0">
+              <img src="/logo.svg" alt="Orelio Logo" className="w-full h-full object-contain" />
+            </div>
             <div>
               <span className="block text-lg font-bold tracking-tight text-black font-sans leading-none">Orelio</span>
               <span className="block text-[9px] font-bold tracking-widest text-[#707975] uppercase mt-1">Wealth Ledger</span>

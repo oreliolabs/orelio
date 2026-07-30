@@ -130,8 +130,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                 type="button"
                 onClick={() => setFormType('FD')}
                 className={`py-3 rounded-xl transition-all ${formType === 'FD'
-                    ? 'bg-white text-[#00162A] shadow-sm'
-                    : 'text-[#74777F] hover:text-[#00162A]'
+                  ? 'bg-white text-[#00162A] shadow-sm'
+                  : 'text-[#74777F] hover:text-[#00162A]'
                   }`}
               >
                 Fixed Deposit
@@ -140,8 +140,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                 type="button"
                 onClick={() => setFormType('RD')}
                 className={`py-3 rounded-xl transition-all ${formType === 'RD'
-                    ? 'bg-white text-[#00162A] shadow-sm'
-                    : 'text-[#74777F] hover:text-[#00162A]'
+                  ? 'bg-white text-[#00162A] shadow-sm'
+                  : 'text-[#74777F] hover:text-[#00162A]'
                   }`}
               >
                 Recurring Deposit
