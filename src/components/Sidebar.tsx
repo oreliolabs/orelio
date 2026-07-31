@@ -143,13 +143,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     onClick={() => item.setIsOpen(!item.isOpen)}
                     className={`
-                      w-full flex items-center justify-between px-3 py-2 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
+                      group w-full flex items-center justify-between px-3 py-2 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
                       ${isTabActive ? 'text-black' : 'text-[#707975] hover:text-black'}
                     `}
                   >
                     <div className="flex items-center gap-3">
                       <span
-                        className={`material-symbols-outlined select-none ${isTabActive ? 'font-bold' : ''}`}
+                        className={`material-symbols-outlined select-none transition-transform duration-200 group-hover:scale-110 ${isTabActive ? 'font-bold' : ''}`}
                         style={{ fontSize: '20px' }}
                       >
                         {item.icon}
@@ -193,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 key={item.id}
                 onClick={() => handleTabClick(item.id)}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
+                  group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
                   ${isTabActive
                     ? 'text-black'
                     : 'text-[#707975] hover:text-black'
@@ -201,7 +201,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 `}
               >
                 <span
-                  className={`material-symbols-outlined select-none ${isTabActive ? 'font-bold' : ''}`}
+                  className={`material-symbols-outlined select-none transition-transform duration-200 group-hover:scale-110 ${isTabActive ? 'font-bold' : ''}`}
                   style={{ fontSize: '20px' }}
                 >
                   {item.icon}

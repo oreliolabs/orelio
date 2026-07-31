@@ -64,6 +64,38 @@ export const formatDisplayDate = (str?: string): string => {
   return trimmed;
 };
 
+/** Returns a human-readable tenure string from two date strings (dd/mm/yyyy or yyyy-mm-dd) */
+export const formatTenure = (startDateStr?: string, maturityDateStr?: string): string => {
+  if (!startDateStr || !maturityDateStr) return '-';
+
+  const parseDate = (str: string): Date | null => {
+    const trimmed = str.trim();
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+      const [d, m, y] = trimmed.split('/');
+      return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split('-');
+      return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+    }
+    const ts = Date.parse(trimmed.replace(',', ''));
+    return isNaN(ts) ? null : new Date(ts);
+  };
+
+  const start = parseDate(startDateStr);
+  const end = parseDate(maturityDateStr);
+  if (!start || !end) return '-';
+
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+  if (months < 0) { years--; months += 12; }
+
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} yr${years > 1 ? 's' : ''}`);
+  if (months > 0) parts.push(`${months} mo${months > 1 ? 's' : ''}`);
+  return parts.length > 0 ? parts.join(' ') : '< 1 month';
+};
+
 export const calculateDepositMetrics = (
   maturityDateStr: string,
   startDateStr?: string,
@@ -481,7 +513,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {/* Net Current Value Card */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 md:p-8 border border-[#C3C6CE]/10 shadow-[0_4px_20px_0_rgba(0,0,0,0.02)] relative overflow-hidden flex flex-col justify-between min-h-[190px]">
+        <div className="lg:col-span-7 bg-white rounded-3xl p-6 md:p-8 border border-[#C3C6CE]/10 relative overflow-hidden flex flex-col justify-between min-h-[190px]" style={{ boxShadow: '0px 4px 6px -1px rgba(0, 0, 0, 0.02)' }}>
           <div className="relative z-10 space-y-3">
             <span className="block text-xs font-extrabold tracking-widest text-[#006A65] uppercase" style={{ letterSpacing: '2.4px' }}>
               NET CURRENT VALUE
@@ -607,9 +639,9 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                     } ${isExpanded ? 'border-[#006A65]/60 shadow-[0_4px_20px_0_rgba(0,106,101,0.08)]' : ''}`}
                 >
                   {/* Main Card Grid Row */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
                     {/* Column 1: Icon & Title & Deposit No */}
-                    <div className="flex items-center gap-4 min-w-[240px]">
+                    <div className="flex items-start gap-4 min-w-[240px]">
                       <div className="w-12 h-12 rounded-2xl bg-[#F0F4F8] text-[#00162A] group-hover:bg-[#006A65] group-hover:text-white group-hover:scale-105 flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-out">
                         <span
                           className={`material-symbols-outlined select-none transition-transform duration-300 ${deposit.type === 'FD' ? 'group-hover:scale-100 group-hover:-rotate-12' : 'group-hover:rotate-180'
@@ -870,18 +902,21 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                       </span>
                     </div>
 
-                    {/* Matured On */}
+                    {/* Matured On + Tenure */}
                     <div className="min-w-[140px]">
-                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
+                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-1">
                         MATURED ON
                       </span>
                       <span className="block text-sm font-bold text-[#74777F]">
                         {formatDisplayDate(deposit.maturedDate || deposit.maturityDate)}
                       </span>
+                      <span className="block text-xs font-medium text-[#74777F] mt-1.5">
+                        Tenure: {formatTenure(deposit.startDate, deposit.maturityDate)}
+                      </span>
                     </div>
 
-                    {/* Reinvest Action & Expand Chevron */}
-                    <div className="flex items-center gap-2">
+                    {/* Reinvest, More Menu & Expand Chevron */}
+                    <div className="flex items-center gap-2 relative">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -891,6 +926,38 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                       >
                         REINVEST
                       </button>
+
+                      {/* More Menu */}
+                      <div className="relative" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuId(activeMenuId === deposit.id ? null : deposit.id);
+                          }}
+                          className="w-9 h-9 rounded-full text-[#74777F] hover:bg-[#F2F4F5] hover:text-[#00162A] transition-colors flex items-center justify-center"
+                          aria-label="More options"
+                        >
+                          <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>more_vert</span>
+                        </button>
+
+                        {activeMenuId === deposit.id && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute right-0 top-10 z-50 w-44 bg-white rounded-2xl shadow-xl border border-[#C3C6CE]/30 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                          >
+                            <button
+                              onClick={() => {
+                                setActiveMenuId(null);
+                                setDeletingDeposit(deposit);
+                                setIsDeleteOpen(true);
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm font-semibold text-[#BA1A1A] hover:bg-[#FFF8F7] transition-colors"
+                            >
+                              {deposit.type === 'FD' ? 'Delete FD' : 'Delete RD'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
                       <button
                         onClick={(e) => {
