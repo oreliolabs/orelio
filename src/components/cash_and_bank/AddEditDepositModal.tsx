@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Deposit } from './Deposits';
 import { SaveButton } from '../common/SaveButton';
+import { CancelButton } from '../common/CancelButton';
 
 export interface DepositFormData {
   type: 'FD' | 'RD';
@@ -316,13 +317,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
 
           {/* Fixed Footer Buttons */}
           <div className="flex items-center justify-end gap-3 p-4 md:px-8 md:py-4 border-t border-[#C3C6CE]/20 flex-shrink-0 bg-white">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-3 rounded-2xl text-sm font-bold text-[#00162A] hover:bg-[#F2F4F5] active:scale-98 transition-all cursor-pointer"
-            >
-              Cancel
-            </button>
+            <CancelButton onClick={onClose} />
             <SaveButton type="submit">
               Save Deposit
             </SaveButton>

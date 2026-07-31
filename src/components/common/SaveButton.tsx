@@ -24,7 +24,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
     <button
       type={type}
       disabled={disabled || isSaving}
-      className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-[#006A65] hover:bg-[#00524E] rounded-xl shadow-sm transition-colors duration-150 active:scale-95 cursor-pointer disabled:opacity-50 disabled:pointer-events-none ${className}`}
+      className={`inline-flex items-center justify-center gap-2 h-9 px-5 text-sm font-bold text-white bg-[#006A65] hover:bg-[#00524E] rounded-xl shadow-sm transition-colors duration-150 active:scale-95 cursor-pointer disabled:opacity-50 disabled:pointer-events-none ${className}`}
       {...props}
     >
       {activeIcon && (

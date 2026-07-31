@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Note } from './Notes';
 import { SaveButton } from '../common/SaveButton';
+import { CancelButton } from '../common/CancelButton';
 
 export interface AddEditNoteModalProps {
   isOpen: boolean;
@@ -94,13 +95,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
         {/* Footer Buttons */}
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C3C6CE]/15 flex-shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-bold text-[#3F4945] bg-transparent rounded-xl hover:bg-orelio-light-gray transition-colors"
-          >
-            Cancel
-          </button>
+          <CancelButton onClick={onClose} />
           <SaveButton type="submit" disabled={!formTitle.trim() || !formContent.trim()}>
             Save
           </SaveButton>

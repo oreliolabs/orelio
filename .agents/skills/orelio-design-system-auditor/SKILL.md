@@ -42,6 +42,31 @@ Always import and use common UI components from `src/components/common/` rather 
   ```
 - **Features**: Standalone modal submit button with `rounded-xl` corners, clean hover background (`hover:bg-[#00524E]`), no hover scale enlargement, and optional built-in `isSaving` state.
 
+### C. Modal Cancel Button (`CancelButton`)
+- **Import**: `import { CancelButton } from '../common/CancelButton';`
+- **Usage**: Modal cancel action buttons next to save/delete actions.
+- **Example**:
+  ```tsx
+  <CancelButton onClick={onClose} />
+  ```
+- **Features**: Pre-styled `#3F4945` text, subtle hover fill (`hover:bg-[#F2F4F5]`), and `rounded-xl` corners matching modal buttons.
+
+### D. Delete Confirmation Modal (`DeleteConfirmationModal`)
+- **Import**: `import { DeleteConfirmationModal } from '../common/DeleteConfirmationModal';`
+- **Usage**: All confirmation dialogs for deletion/removal across the application.
+- **Example**:
+  ```tsx
+  <DeleteConfirmationModal
+    isOpen={isOpen}
+    onClose={onClose}
+    onConfirm={onConfirm}
+    title="Delete Policy?"
+    subtitle="Are you sure you want to delete this policy?"
+    confirmText="Delete Policy"
+  />
+  ```
+- **Features**: Standard warning graphic, title, subtitle, backdrop portal management, and integrated `CancelButton` and destructive confirm action.
+
 ---
 
 ## 3. Mandatory Design Rules

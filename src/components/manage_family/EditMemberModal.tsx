@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Info, X } from 'lucide-react';
 import type { FamilyMember } from './ManageFamily';
 import { SaveButton } from '../common/SaveButton';
+import { CancelButton } from '../common/CancelButton';
 
 interface EditMemberModalProps {
   isOpen: boolean;
@@ -239,13 +240,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
 
           {/* Action buttons */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C3C6CE]/15 mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-bold text-orelio-navy bg-transparent rounded-xl hover:bg-orelio-light-gray transition-colors"
-            >
-              Cancel
-            </button>
+            <CancelButton onClick={onClose} />
             <SaveButton
               type="submit"
               onClick={handleSaveClick}

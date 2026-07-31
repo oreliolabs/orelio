@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Policy, PolicyFormData, PolicyType, PremiumFrequency } from './InsuranceTypes';
 import { SaveButton } from '../common/SaveButton';
+import { CancelButton } from '../common/CancelButton';
 
 interface AddEditPolicyModalProps {
   isOpen: boolean;
@@ -274,13 +275,7 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
 
           {/* Fixed Modal Footer Actions */}
           <div className="p-6 sm:px-8 sm:py-4 border-t border-[#C3C6CE]/20 bg-white flex-shrink-0 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl font-bold text-sm text-[#707975] hover:text-black transition-colors"
-            >
-              Cancel
-            </button>
+            <CancelButton onClick={onClose} />
             <SaveButton type="submit">
               Save Policy
             </SaveButton>
