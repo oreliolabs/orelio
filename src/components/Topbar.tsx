@@ -1,36 +1,51 @@
 import React, { useState } from 'react';
 import { Search, Eye, EyeOff, ChevronDown, Menu, Users, Bell } from 'lucide-react';
 
+interface FamilyMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
 interface TopbarProps {
   isPrivate: boolean;
   setIsPrivate: (val: boolean) => void;
   onMenuClick: () => void;
-  memberCount: number;
+  members: FamilyMember[];
 }
 
 export const Topbar: React.FC<TopbarProps> = ({ 
   isPrivate, 
   setIsPrivate, 
   onMenuClick,
-  memberCount
+  members
 }) => {
   const [familyDropdownOpen, setFamilyDropdownOpen] = useState(false);
-  const [selectedFamily, setSelectedFamily] = useState(`All Members (${memberCount})`);
-  
-  React.useEffect(() => {
-    setSelectedFamily(`All Members (${memberCount})`);
-  }, [memberCount]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | 'all'>('all');
 
-  const familyMembers = [
-    `All Members (${memberCount})`,
-    'Self (Sejal)',
-    'Spouse (Amit)',
-    'Child (Kavya)',
-    'Parents (Joint)'
+  const allOption = `All Members (${members.length})`;
+
+  // Build dropdown options from live members list
+  const familyOptions: { id: string | 'all'; label: string }[] = [
+    { id: 'all', label: allOption },
+    ...members.map(m => ({
+      id: m.id,
+      label: `${m.role} (${m.firstName})`
+    }))
   ];
 
-  const handleFamilySelect = (member: string) => {
-    setSelectedFamily(member);
+  // If selected member was removed, reset to "All"
+  React.useEffect(() => {
+    if (selectedMemberId !== 'all' && !members.find(m => m.id === selectedMemberId)) {
+      setSelectedMemberId('all');
+    }
+  }, [members, selectedMemberId]);
+
+  const selectedLabel = familyOptions.find(o => o.id === selectedMemberId)?.label ?? allOption;
+
+  const handleFamilySelect = (id: string | 'all') => {
+    setSelectedMemberId(id);
     setFamilyDropdownOpen(false);
   };
 
@@ -92,7 +107,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#C3C6CE]/25 bg-white text-orelio-navy text-sm font-semibold hover:bg-orelio-light-gray/40 active:scale-98 transition-all"
           >
             <Users size={16} className="text-orelio-darkgreen" />
-            <span className="max-w-[120px] truncate">{selectedFamily}</span>
+            <span className="max-w-[120px] truncate">{selectedLabel}</span>
             <ChevronDown size={14} className="text-orelio-gray" />
           </button>
 
@@ -107,19 +122,19 @@ export const Topbar: React.FC<TopbarProps> = ({
                 <div className="px-4 py-1.5 text-xs font-bold text-orelio-gray tracking-wider uppercase border-b border-[#C3C6CE]/15 mb-1.5">
                   Select Profile
                 </div>
-                {familyMembers.map((member) => (
+                {familyOptions.map((option) => (
                   <button
-                    key={member}
-                    onClick={() => handleFamilySelect(member)}
+                    key={option.id}
+                    onClick={() => handleFamilySelect(option.id)}
                     className={`
                       w-full text-left px-4 py-2 text-[13px] font-medium transition-colors
-                      ${selectedFamily === member 
+                      ${selectedMemberId === option.id 
                         ? 'text-orelio-darkgreen bg-orelio-lightgreen/20 font-bold' 
                         : 'text-orelio-text hover:bg-orelio-light-gray hover:text-orelio-navy'
                       }
                     `}
                   >
-                    {member}
+                    {option.label}
                   </button>
                 ))}
               </div>

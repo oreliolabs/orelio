@@ -294,7 +294,7 @@ function App() {
           isPrivate={isPrivate} 
           setIsPrivate={setIsPrivate} 
           onMenuClick={() => setMobileSidebarOpen(true)}
-          memberCount={members.length}
+          members={members}
         />
 
         {/* Dynamic Inner Page Content */}

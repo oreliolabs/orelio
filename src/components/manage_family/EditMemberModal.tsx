@@ -28,13 +28,6 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   const [showTooltip, setShowTooltip] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveClick = () => {
-    // Only animate if all required fields are filled
-    if (!formFirstName.trim() || !formLastName.trim() || !formDob.trim()) return;
-    setIsSaving(true);
-    setTimeout(() => setIsSaving(false), 700);
-  };
-
   // Sync state with selectedMember when it changes or modal opens
   React.useEffect(() => {
     if (isOpen) {
@@ -78,6 +71,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       return;
     }
 
+    setIsSaving(true);
+
     const calculatedAge = calculateAge(formDob);
     let avatarGrad = 'from-teal-500 to-cyan-600';
     if (formGender === 'Female') {
@@ -98,7 +93,11 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       avatarColor: selectedMember?.avatarColor || avatarGrad
     };
 
-    onSave(memberData);
+    // Brief save animation then call onSave
+    setTimeout(() => {
+      setIsSaving(false);
+      onSave(memberData);
+    }, 600);
   };
 
   if (!isOpen) return null;
@@ -243,7 +242,6 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
             <CancelButton onClick={onClose} />
             <SaveButton
               type="submit"
-              onClick={handleSaveClick}
               isSaving={isSaving}
             >
               Save Profile

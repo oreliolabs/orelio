@@ -83,7 +83,7 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
               <div className="flex items-center gap-4 min-w-0">
                 {/* Square Avatar Badge with First Letter */}
                 <div className={`w-[45px] h-[45px] rounded-[15px] ${avatarStyle.bg} ${avatarStyle.text} flex items-center justify-center text-lg font-bold flex-shrink-0`}>
-                  {member.firstName.charAt(0)}
+                  {member.firstName.charAt(0).toUpperCase()}
                 </div>
 
                 <div className="min-w-0">
