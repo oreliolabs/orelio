@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { Deposit } from './Deposits';
 import { SaveButton } from '../common/SaveButton';
@@ -11,6 +11,7 @@ export interface DepositFormData {
   accountNumber: string;
   amount: number;
   interestRate: number;
+  startDate: string;
   maturityDate: string;
   nominee?: string;
 }
@@ -21,6 +22,73 @@ interface AddEditDepositModalProps {
   editingDeposit: Deposit | null;
   onSave: (formData: DepositFormData) => void;
 }
+
+export const normalizeToDDMMYYYY = (str?: string): string => {
+  if (!str) return '';
+  const trimmed = str.trim();
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) return trimmed;
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+    const parts = trimmed.split('/');
+    const d = parts[0].padStart(2, '0');
+    const m = parts[1].padStart(2, '0');
+    return `${d}/${m}/${parts[2]}`;
+  }
+  const ts = Date.parse(trimmed.replace(',', ''));
+  if (!isNaN(ts)) {
+    const dt = new Date(ts);
+    const d = String(dt.getDate()).padStart(2, '0');
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const y = dt.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+  return trimmed;
+};
+
+export const isValidDDMMYYYY = (str: string): { valid: boolean; error?: string } => {
+  if (!str || !str.trim()) {
+    return { valid: false, error: 'Date is required' };
+  }
+  const trimmed = str.trim();
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+    return { valid: false, error: 'Enter date in dd/mm/yyyy format' };
+  }
+  const [dStr, mStr, yStr] = trimmed.split('/');
+  const d = parseInt(dStr, 10);
+  const m = parseInt(mStr, 10);
+  const y = parseInt(yStr, 10);
+
+  if (m < 1 || m > 12) {
+    return { valid: false, error: 'Invalid month (01 - 12)' };
+  }
+  if (y < 1900 || y > 2100) {
+    return { valid: false, error: 'Invalid year' };
+  }
+
+  const daysInMonth = new Date(y, m, 0).getDate();
+  if (d < 1 || d > daysInMonth) {
+    return { valid: false, error: `Invalid day for month (01 - ${daysInMonth})` };
+  }
+
+  return { valid: true };
+};
+
+export const parseDDMMYYYY = (str: string): Date | null => {
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(str.trim())) return null;
+  const [d, m, y] = str.trim().split('/').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+export const isoToDDMMYYYY = (iso: string): string => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso.trim())) return '';
+  const [y, m, d] = iso.trim().split('-');
+  return `${d}/${m}/${y}`;
+};
+
+export const ddmmYYYYToISO = (ddmm: string): string => {
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(ddmm.trim())) return '';
+  const [d, m, y] = ddmm.trim().split('/');
+  return `${y}-${m}-${d}`;
+};
 
 export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
   isOpen,
@@ -34,11 +102,18 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
   const [formAccountNumber, setFormAccountNumber] = useState('');
   const [formAmount, setFormAmount] = useState('');
   const [formInterestRate, setFormInterestRate] = useState('');
+  const [formStartDate, setFormStartDate] = useState('');
   const [formMaturityDate, setFormMaturityDate] = useState('');
-  const [formTenureYears, setFormTenureYears] = useState('1');
-  const [formTenureMonths, setFormTenureMonths] = useState('0');
   const [formHasNominee, setFormHasNominee] = useState(false);
   const [formNomineeName, setFormNomineeName] = useState('');
+
+  // Validation Error States
+  const [startDateError, setStartDateError] = useState('');
+  const [maturityDateError, setMaturityDateError] = useState('');
+
+  // Native Date Picker Refs
+  const startDatePickerRef = useRef<HTMLInputElement>(null);
+  const maturityDatePickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingDeposit) {
@@ -48,11 +123,12 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       setFormAccountNumber(editingDeposit.accountNumber);
       setFormAmount(editingDeposit.principalOrMonthly.toString());
       setFormInterestRate(editingDeposit.interestRate.toString());
-      setFormMaturityDate(editingDeposit.maturityDate);
-      setFormTenureYears('1');
-      setFormTenureMonths('0');
+      setFormStartDate(normalizeToDDMMYYYY(editingDeposit.startDate));
+      setFormMaturityDate(normalizeToDDMMYYYY(editingDeposit.maturityDate));
       setFormHasNominee(!!editingDeposit.nominee);
       setFormNomineeName(editingDeposit.nominee || '');
+      setStartDateError('');
+      setMaturityDateError('');
     } else {
       setFormType('FD');
       setFormNickname('');
@@ -60,15 +136,16 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       setFormAccountNumber('');
       setFormAmount('');
       setFormInterestRate('');
+      setFormStartDate('');
       setFormMaturityDate('');
-      setFormTenureYears('');
-      setFormTenureMonths('');
       setFormHasNominee(false);
       setFormNomineeName('');
+      setStartDateError('');
+      setMaturityDateError('');
     }
   }, [editingDeposit, isOpen]);
 
-  const formatMaturityDateInput = (value: string) => {
+  const formatDateInput = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 8);
     if (digits.length <= 2) {
       return digits;
@@ -79,8 +156,76 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
   };
 
+  const handleStartDateChange = (val: string) => {
+    const formatted = formatDateInput(val);
+    setFormStartDate(formatted);
+    if (startDateError) setStartDateError('');
+  };
+
+  const handleMaturityDateChange = (val: string) => {
+    const formatted = formatDateInput(val);
+    setFormMaturityDate(formatted);
+    if (maturityDateError) setMaturityDateError('');
+  };
+
+  const calculatedTenure = useMemo(() => {
+    if (!formStartDate || !formMaturityDate) return '';
+    const d1 = parseDDMMYYYY(formStartDate);
+    const d2 = parseDDMMYYYY(formMaturityDate);
+    if (!d1 || !d2 || isNaN(d1.getTime()) || isNaN(d2.getTime()) || d2 <= d1) return '';
+
+    let years = d2.getFullYear() - d1.getFullYear();
+    let months = d2.getMonth() - d1.getMonth();
+    if (d2.getDate() < d1.getDate()) {
+      months--;
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    const parts = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? 'Year' : 'Years'}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? 'Month' : 'Months'}`);
+    if (parts.length === 0) {
+      const days = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+      return `${days} Days`;
+    }
+
+    return parts.join(' ');
+  }, [formStartDate, formMaturityDate]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate Start Date
+    const startVal = isValidDDMMYYYY(formStartDate);
+    if (!startVal.valid) {
+      setStartDateError(startVal.error!);
+    } else {
+      setStartDateError('');
+    }
+
+    // Validate Maturity Date
+    const matVal = isValidDDMMYYYY(formMaturityDate);
+    if (!matVal.valid) {
+      setMaturityDateError(matVal.error!);
+    } else {
+      setMaturityDateError('');
+    }
+
+    if (!startVal.valid || !matVal.valid) {
+      return;
+    }
+
+    const dStart = parseDDMMYYYY(formStartDate)!;
+    const dMat = parseDDMMYYYY(formMaturityDate)!;
+
+    if (dMat <= dStart) {
+      setMaturityDateError('Maturity date must be after start date');
+      return;
+    }
+
     const amountNum = parseFloat(formAmount) || 100000;
     const rateNum = parseFloat(formInterestRate) || 7.5;
 
@@ -88,10 +233,11 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       type: formType,
       nickname: formNickname || (formType === 'FD' ? 'Fixed Deposit' : 'Recurring Deposit'),
       bankName: formBankName || 'HDFC Bank',
-      accountNumber: formAccountNumber || '**** 8829',
+      accountNumber: formAccountNumber || '50100482918829',
       amount: amountNum,
       interestRate: rateNum,
-      maturityDate: formMaturityDate || (editingDeposit ? '24 Oct, 2025' : '24 Oct, 2026'),
+      startDate: formStartDate,
+      maturityDate: formMaturityDate,
       nominee: formHasNominee ? formNomineeName : undefined,
     });
   };
@@ -101,7 +247,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop overlay click to close */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/40 transition-opacity animate-in fade-in duration-200" onClick={onClose} />
 
       {/* Modal card */}
       <div className="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-[#C3C6CE]/30 max-h-[90vh] flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
@@ -113,44 +259,46 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full text-[#74777F] hover:bg-[#F2F4F5] hover:text-[#00162A] active:scale-95 transition-all flex items-center justify-center cursor-pointer"
-            aria-label="Close modal"
+            className="w-8 h-8 rounded-full text-[#74777F] hover:bg-[#F2F4F5] hover:text-[#00162A] flex items-center justify-center transition-colors cursor-pointer"
           >
-            <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>
-              close
-            </span>
+            <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
           </button>
         </div>
 
-        {/* Form Container */}
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           {/* Scrollable Form Content */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 min-h-0 no-scrollbar">
-            {/* Deposit Type Switcher */}
-            <div className="bg-[#F2F4F5] p-1.5 rounded-2xl grid grid-cols-2 gap-1 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setFormType('FD')}
-                className={`py-3 rounded-xl transition-all ${formType === 'FD'
-                  ? 'bg-white text-[#00162A] shadow-sm'
-                  : 'text-[#74777F] hover:text-[#00162A]'
-                  }`}
-              >
-                Fixed Deposit
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormType('RD')}
-                className={`py-3 rounded-xl transition-all ${formType === 'RD'
-                  ? 'bg-white text-[#00162A] shadow-sm'
-                  : 'text-[#74777F] hover:text-[#00162A]'
-                  }`}
-              >
-                Recurring Deposit
-              </button>
+          <div className="p-6 md:p-8 overflow-y-auto space-y-5 flex-1 max-h-[calc(90vh-140px)]">
+
+            {/* Deposit Type Switcher (FD / RD) */}
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
+                DEPOSIT TYPE
+              </label>
+              <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[#F2F4F5]">
+                <button
+                  type="button"
+                  onClick={() => setFormType('FD')}
+                  className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${formType === 'FD'
+                      ? 'bg-white text-[#006A65] shadow-xs'
+                      : 'text-[#74777F] hover:text-[#00162A]'
+                    }`}
+                >
+                  Fixed Deposit (FD)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormType('RD')}
+                  className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${formType === 'RD'
+                      ? 'bg-white text-[#006A65] shadow-xs'
+                      : 'text-[#74777F] hover:text-[#00162A]'
+                    }`}
+                >
+                  Recurring Deposit (RD)
+                </button>
+              </div>
             </div>
 
-            {/* Deposit Nickname */}
+            {/* Nickname Input */}
             <div className="space-y-1.5">
               <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
                 DEPOSIT NICKNAME <span className="text-red-500 ml-0.5">*</span>
@@ -158,50 +306,40 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
               <input
                 type="text"
                 required
-                placeholder="e.g. Retirement Alpha Fund, Goldman Sachs"
+                placeholder="e.g. Retirement Alpha Fund"
                 value={formNickname}
                 onChange={(e) => setFormNickname(e.target.value)}
                 className="w-full px-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
               />
             </div>
 
-            {/* Institution Name & Account Number */}
+            {/* Bank Name & Account Number */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                  INSTITUTION / BANK NAME
+                  BANK NAME <span className="text-red-500 ml-0.5">*</span>
                 </label>
-                <div className="relative">
-                  <span
-                    className="material-symbols-outlined absolute left-3.5 top-3.5 text-[#74777F] select-none"
-                    style={{ fontSize: '18px' }}
-                  >
-                    account_balance
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="e.g. HDFC Bank"
-                    value={formBankName}
-                    onChange={(e) => setFormBankName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                  />
-                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. HDFC Bank"
+                  value={formBankName}
+                  onChange={(e) => setFormBankName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                  DEPOSIT NUMBER
+                  ACCOUNT NUMBER
                 </label>
                 <div className="relative">
-                  <span
-                    className="material-symbols-outlined absolute left-3.5 top-3.5 text-[#74777F] select-none"
-                    style={{ fontSize: '18px' }}
-                  >
+                  <span className="material-symbols-outlined absolute left-3 top-3.5 text-[#74777F] select-none" style={{ fontSize: '18px' }}>
                     tag
                   </span>
                   <input
                     type="text"
-                    placeholder="#### #### ####"
+                    placeholder="e.g. 50100482918829"
                     value={formAccountNumber}
                     onChange={(e) => setFormAccountNumber(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
@@ -248,44 +386,135 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
               </div>
             </div>
 
-            {/* Maturity Date & Tenure */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                  MATURITY DATE <span className="text-red-500 ml-0.5">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="dd/mm/yyyy"
-                  maxLength={10}
-                  value={formMaturityDate}
-                  onChange={(e) => setFormMaturityDate(formatMaturityDateInput(e.target.value))}
-                  className="w-full px-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                />
+            {/* Start Date & Maturity Date */}
+            <div className="space-y-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                {/* START DATE */}
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
+                    START DATE <span className="text-red-500 ml-0.5">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="dd/mm/yyyy"
+                      maxLength={10}
+                      value={formStartDate}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
+                      className={`w-full pl-4 pr-10 py-3 rounded-2xl border bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:ring-1 ${startDateError
+                          ? 'border-[#BA1A1A] focus:border-[#BA1A1A] focus:ring-[#BA1A1A]'
+                          : 'border-[#C3C6CE]/50 focus:border-[#006A65] focus:ring-[#006A65]'
+                        }`}
+                    />
+                    {/* Hidden Native Date Picker */}
+                    <input
+                      ref={startDatePickerRef}
+                      type="date"
+                      value={ddmmYYYYToISO(formStartDate)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleStartDateChange(isoToDDMMYYYY(e.target.value));
+                        }
+                      }}
+                      className="absolute inset-0 opacity-0 w-0 h-0 pointer-events-none"
+                    />
+                    {/* Calendar Icon Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (startDatePickerRef.current) {
+                          try {
+                            startDatePickerRef.current.showPicker();
+                          } catch (err) {
+                            startDatePickerRef.current.focus();
+                            startDatePickerRef.current.click();
+                          }
+                        }
+                      }}
+                      className="absolute right-3 top-3 text-[#74777F] hover:text-[#006A65] transition-colors cursor-pointer"
+                      aria-label="Pick start date"
+                      title="Open calendar date picker"
+                    >
+                      <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>
+                        calendar_today
+                      </span>
+                    </button>
+                  </div>
+                  {startDateError && (
+                    <p className="text-xs font-semibold text-[#BA1A1A] pt-0.5 pl-1">
+                      {startDateError}
+                    </p>
+                  )}
+                </div>
+
+                {/* MATURITY DATE */}
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
+                    MATURITY DATE <span className="text-red-500 ml-0.5">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="dd/mm/yyyy"
+                      maxLength={10}
+                      value={formMaturityDate}
+                      onChange={(e) => handleMaturityDateChange(e.target.value)}
+                      className={`w-full pl-4 pr-10 py-3 rounded-2xl border bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:ring-1 ${maturityDateError
+                          ? 'border-[#BA1A1A] focus:border-[#BA1A1A] focus:ring-[#BA1A1A]'
+                          : 'border-[#C3C6CE]/50 focus:border-[#006A65] focus:ring-[#006A65]'
+                        }`}
+                    />
+                    {/* Hidden Native Date Picker */}
+                    <input
+                      ref={maturityDatePickerRef}
+                      type="date"
+                      value={ddmmYYYYToISO(formMaturityDate)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleMaturityDateChange(isoToDDMMYYYY(e.target.value));
+                        }
+                      }}
+                      className="absolute inset-0 opacity-0 w-0 h-0 pointer-events-none"
+                    />
+                    {/* Calendar Icon Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (maturityDatePickerRef.current) {
+                          try {
+                            maturityDatePickerRef.current.showPicker();
+                          } catch (err) {
+                            maturityDatePickerRef.current.focus();
+                            maturityDatePickerRef.current.click();
+                          }
+                        }
+                      }}
+                      className="absolute right-3 top-3 text-[#74777F] hover:text-[#006A65] transition-colors cursor-pointer"
+                      aria-label="Pick maturity date"
+                      title="Open calendar date picker"
+                    >
+                      <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>
+                        calendar_today
+                      </span>
+                    </button>
+                  </div>
+                  {maturityDateError && (
+                    <p className="text-xs font-semibold text-[#BA1A1A] pt-0.5 pl-1">
+                      {maturityDateError}
+                    </p>
+                  )}
+                </div>
+
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                  TENURE <span className="text-red-500 ml-0.5">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    placeholder="Years"
-                    value={formTenureYears}
-                    onChange={(e) => setFormTenureYears(e.target.value)}
-                    className="w-full px-3 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-2 focus:border-[#006A65] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Months"
-                    value={formTenureMonths}
-                    onChange={(e) => setFormTenureMonths(e.target.value)}
-                    className="w-full px-3 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-2 focus:border-[#006A65] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
-              </div>
+              {calculatedTenure && !startDateError && !maturityDateError && (
+                <p className="text-xs font-semibold text-[#006A65] pt-0.5 pl-1">
+                  Auto-calculated Tenure: <span className="font-extrabold text-[#00162A]">{calculatedTenure}</span>
+                </p>
+              )}
             </div>
 
             {/* Nominee Option */}
@@ -298,24 +527,25 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                 <span className="material-symbols-outlined select-none" style={{ fontSize: '16px' }}>
                   {formHasNominee ? 'remove' : 'add'}
                 </span>
-                <span>{formHasNominee ? 'REMOVE NOMINEE' : 'ADD NOMINEE'}</span>
+                {formHasNominee ? 'Remove Nominee Details' : 'Add Nominee Details'}
               </button>
 
               {formHasNominee && (
-                <div className="mt-3">
+                <div className="mt-3 animate-in fade-in duration-200">
                   <input
                     type="text"
                     placeholder="Nominee Full Name"
                     value={formNomineeName}
                     onChange={(e) => setFormNomineeName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-2 focus:border-[#006A65]"
+                    className="w-full px-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
                   />
                 </div>
               )}
             </div>
+
           </div>
 
-          {/* Fixed Footer Buttons */}
+          {/* Modal Footer with Actions */}
           <div className="flex items-center justify-end gap-3 p-4 md:px-8 md:py-4 border-t border-[#C3C6CE]/20 flex-shrink-0 bg-white">
             <CancelButton onClick={onClose} />
             <SaveButton type="submit">
@@ -328,3 +558,5 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
     document.body
   );
 };
+
+export default AddEditDepositModal;

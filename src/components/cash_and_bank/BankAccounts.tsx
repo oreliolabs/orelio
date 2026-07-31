@@ -315,15 +315,23 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
                         <span className="text-lg font-extrabold text-orelio-navy group-hover:scale-105 transition-transform duration-300">
                           {f(formatCurrency(account.balance))}
                         </span>
-                        <div className="w-7 h-7 rounded-full bg-gray-50 group-hover:bg-[#006A65]/10 flex items-center justify-center transition-colors duration-300">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isEditing) toggleExpand(account.id);
+                          }}
+                          className="flex items-center justify-center text-[#73777E] group-hover:text-[#006A65] transition-colors cursor-pointer"
+                          aria-label={isExpanded ? 'Collapse account' : 'Expand account'}
+                        >
                           <span
-                            className={`material-symbols-outlined text-[#73777E] group-hover:text-[#006A65] transition-transform duration-300 select-none ${isExpanded ? 'rotate-180' : 'group-hover:translate-y-0.5'
+                            className={`material-symbols-outlined transition-transform duration-300 select-none ${isExpanded ? 'rotate-180' : 'group-hover:translate-y-0.5'
                               }`}
-                            style={{ fontSize: '18px' }}
+                            style={{ fontSize: '22px' }}
                           >
                             expand_more
                           </span>
-                        </div>
+                        </button>
                       </div>
                     )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AddEditDepositModal } from './AddEditDepositModal';
 import type { DepositFormData } from './AddEditDepositModal';
 import { DeleteDepositModal } from './DeleteDepositModal';
@@ -13,13 +13,115 @@ export interface Deposit {
   interestRate: number;
   currentValue: number;
   principalOrMonthly: number;
+  startDate?: string;
   maturityDate: string;
+  tenureYears?: number;
+  tenureMonths?: number;
   daysRemaining: number;
   progressPercent: number;
   status: 'active' | 'matured';
   maturedDate?: string;
   nominee?: string;
 }
+
+export const formatDisplayDate = (str?: string): string => {
+  if (!str) return '';
+  const trimmed = str.trim();
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Handle dd/mm/yyyy format
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+    const [dStr, mStr, yStr] = trimmed.split('/');
+    const day = parseInt(dStr, 10);
+    const month = parseInt(mStr, 10) - 1;
+    const year = parseInt(yStr, 10);
+    if (month >= 0 && month < 12) {
+      return `${day} ${monthNames[month]}, ${year}`;
+    }
+  }
+
+  // Handle yyyy-mm-dd format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [yStr, mStr, dStr] = trimmed.split('-');
+    const day = parseInt(dStr, 10);
+    const month = parseInt(mStr, 10) - 1;
+    const year = parseInt(yStr, 10);
+    if (month >= 0 && month < 12) {
+      return `${day} ${monthNames[month]}, ${year}`;
+    }
+  }
+
+  const ts = Date.parse(trimmed.replace(',', ''));
+  if (!isNaN(ts)) {
+    const dt = new Date(ts);
+    const day = dt.getDate();
+    const month = monthNames[dt.getMonth()];
+    const year = dt.getFullYear();
+    return `${day} ${month}, ${year}`;
+  }
+
+  return trimmed;
+};
+
+export const calculateDepositMetrics = (
+  maturityDateStr: string,
+  startDateStr?: string,
+  tenureYears: number = 1,
+  tenureMonths: number = 0
+): { progressPercent: number; daysRemaining: number } => {
+  const parseDateStr = (str: string): Date | null => {
+    if (!str) return null;
+    const trimmed = str.trim();
+    // Format: dd/mm/yyyy
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+      const parts = trimmed.split('/');
+      return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+    }
+    // Format: yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const parts = trimmed.split('-');
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+    }
+    // Format: 24 Oct, 2025 or 24 Oct 2025
+    const timestamp = Date.parse(trimmed.replace(',', ''));
+    if (!isNaN(timestamp)) {
+      return new Date(timestamp);
+    }
+    return null;
+  };
+
+  const matDate = parseDateStr(maturityDateStr);
+  const now = new Date();
+
+  if (!matDate || isNaN(matDate.getTime())) {
+    return { progressPercent: 50, daysRemaining: 180 };
+  }
+
+  // Determine start date
+  let stDate = startDateStr ? parseDateStr(startDateStr) : null;
+  if (!stDate || isNaN(stDate.getTime())) {
+    // Subtract tenure (or 1 year default) from maturity date to get start date
+    const totalTenureDays = (tenureYears || 1) * 365 + (tenureMonths || 0) * 30;
+    stDate = new Date(matDate.getTime() - totalTenureDays * 24 * 60 * 60 * 1000);
+  }
+
+  const totalDurationMs = matDate.getTime() - stDate.getTime();
+  const elapsedMs = now.getTime() - stDate.getTime();
+  const remainingMs = matDate.getTime() - now.getTime();
+
+  const daysRemaining = Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+
+  let progressPercent = 0;
+  if (totalDurationMs > 0) {
+    progressPercent = Math.min(100, Math.max(0, Math.round((elapsedMs / totalDurationMs) * 100)));
+  }
+
+  return {
+    progressPercent,
+    daysRemaining
+  };
+};
 
 interface DepositsProps {
   isPrivate: boolean;
@@ -31,11 +133,12 @@ const INITIAL_DEPOSITS: Deposit[] = [
     type: 'FD',
     nickname: 'Retirement Alpha Fund',
     bankName: 'HDFC Bank',
-    accountNumber: '**** 8829',
+    accountNumber: '50100482918829',
     interestRate: 7.85,
     currentValue: 245000,
     principalOrMonthly: 200000,
-    maturityDate: '24 Oct, 2025',
+    startDate: '24/10/2023',
+    maturityDate: '24/10/2025',
     daysRemaining: 245,
     progressPercent: 65,
     status: 'active',
@@ -46,11 +149,12 @@ const INITIAL_DEPOSITS: Deposit[] = [
     type: 'RD',
     nickname: 'Retirement Alpha Fund',
     bankName: 'ICICI Bank',
-    accountNumber: '**** 8829',
+    accountNumber: '50100239108829',
     interestRate: 6.85,
     currentValue: 245000,
     principalOrMonthly: 2000,
-    maturityDate: '12 Oct, 2025',
+    startDate: '12/10/2023',
+    maturityDate: '12/10/2025',
     daysRemaining: 245,
     progressPercent: 75,
     status: 'active',
@@ -61,11 +165,12 @@ const INITIAL_DEPOSITS: Deposit[] = [
     type: 'FD',
     nickname: 'Retirement Alpha Fund',
     bankName: 'Kotak Bank',
-    accountNumber: '**** 8829',
+    accountNumber: '50100774928829',
     interestRate: 7.85,
     currentValue: 245000,
     principalOrMonthly: 200000,
-    maturityDate: '24 Oct, 2025',
+    startDate: '24/10/2023',
+    maturityDate: '24/10/2025',
     daysRemaining: 245,
     progressPercent: 65,
     status: 'active'
@@ -75,11 +180,12 @@ const INITIAL_DEPOSITS: Deposit[] = [
     type: 'FD',
     nickname: 'Children Higher Education',
     bankName: 'Axis Bank',
-    accountNumber: '**** 3411',
+    accountNumber: '91823019383411',
     interestRate: 7.50,
     currentValue: 310500,
     principalOrMonthly: 250000,
-    maturityDate: '18 Dec, 2026',
+    startDate: '18/12/2024',
+    maturityDate: '18/12/2026',
     daysRemaining: 510,
     progressPercent: 40,
     status: 'active',
@@ -90,11 +196,12 @@ const INITIAL_DEPOSITS: Deposit[] = [
     type: 'RD',
     nickname: 'Emergency Rainy Day RD',
     bankName: 'SBI Bank',
-    accountNumber: '**** 9012',
+    accountNumber: '10293847569012',
     interestRate: 7.10,
     currentValue: 103000,
     principalOrMonthly: 5000,
-    maturityDate: '05 Mar, 2026',
+    startDate: '05/03/2024',
+    maturityDate: '05/03/2026',
     daysRemaining: 220,
     progressPercent: 55,
     status: 'active'
@@ -104,15 +211,16 @@ const INITIAL_DEPOSITS: Deposit[] = [
     type: 'FD',
     nickname: '2023 Tax Saver',
     bankName: 'HDFC Bank',
-    accountNumber: '**** 5562',
+    accountNumber: '50100984715562',
     interestRate: 6.75,
     currentValue: 55420,
     principalOrMonthly: 50000,
-    maturityDate: '15 Jan, 2025',
+    startDate: '15/01/2023',
+    maturityDate: '15/01/2025',
     daysRemaining: 0,
     progressPercent: 100,
     status: 'matured',
-    maturedDate: '15 Jan, 2025',
+    maturedDate: '15/01/2025',
     nominee: 'Priya Sharma'
   },
   {
@@ -120,15 +228,16 @@ const INITIAL_DEPOSITS: Deposit[] = [
     type: 'FD',
     nickname: '2023 Tax Saver',
     bankName: 'ICICI Bank',
-    accountNumber: '**** 5562',
+    accountNumber: '50100348105562',
     interestRate: 6.75,
     currentValue: 55420,
     principalOrMonthly: 50000,
-    maturityDate: '15 Jan, 2025',
+    startDate: '15/01/2023',
+    maturityDate: '15/01/2025',
     daysRemaining: 0,
     progressPercent: 100,
     status: 'matured',
-    maturedDate: '15 Jan, 2025'
+    maturedDate: '15/01/2025'
   }
 ];
 
@@ -182,17 +291,32 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
     };
   }, [isAddEditOpen, isDeleteOpen]);
 
-  // Calculations for summary cards & filtering
-  const rawActiveDeposits = deposits.filter(d => d.status === 'active');
-  const rawMaturedDeposits = deposits.filter(d => d.status === 'matured');
+  // Process deposits to dynamically compute maturity & days remaining
+  const processedDeposits = useMemo(() => {
+    return deposits.map((d: Deposit) => {
+      const metrics = calculateDepositMetrics(d.maturityDate, d.startDate, d.tenureYears, d.tenureMonths);
+      const isMatured = d.status === 'matured' || metrics.daysRemaining <= 0;
+      return {
+        ...d,
+        daysRemaining: isMatured ? 0 : metrics.daysRemaining,
+        progressPercent: isMatured ? 100 : metrics.progressPercent,
+        status: isMatured ? ('matured' as const) : ('active' as const),
+        maturedDate: d.maturedDate || (isMatured ? d.maturityDate : undefined)
+      };
+    });
+  }, [deposits]);
 
-  const activeDepositsList = rawActiveDeposits.filter(d => {
+  // Calculations for summary cards & filtering
+  const rawActiveDeposits = processedDeposits.filter((d: Deposit) => d.status === 'active');
+  const rawMaturedDeposits = processedDeposits.filter((d: Deposit) => d.status === 'matured');
+
+  const activeDepositsList = rawActiveDeposits.filter((d: Deposit) => {
     if (filterType === 'FD') return d.type === 'FD';
     if (filterType === 'RD') return d.type === 'RD';
     return true;
   });
 
-  const maturedDepositsList = rawMaturedDeposits.filter(d => {
+  const maturedDepositsList = rawMaturedDeposits.filter((d: Deposit) => {
     if (filterType === 'FD') return d.type === 'FD';
     if (filterType === 'RD') return d.type === 'RD';
     return true;
@@ -213,9 +337,9 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
     maturedPage * ITEMS_PER_PAGE
   );
 
-  const totalCurrentValue = rawActiveDeposits.reduce((acc, curr) => acc + curr.currentValue, 0);
-  const fixedDeposits = rawActiveDeposits.filter(d => d.type === 'FD');
-  const recurringDeposits = rawActiveDeposits.filter(d => d.type === 'RD');
+  const totalCurrentValue = rawActiveDeposits.reduce((acc: number, curr: Deposit) => acc + curr.currentValue, 0);
+  const fixedDeposits = rawActiveDeposits.filter((d: Deposit) => d.type === 'FD');
+  const recurringDeposits = rawActiveDeposits.filter((d: Deposit) => d.type === 'RD');
 
   // Form Handlers
   const handleOpenAdd = () => {
@@ -229,9 +353,14 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
   };
 
   const handleSaveDeposit = (formData: DepositFormData) => {
+    const metrics = calculateDepositMetrics(
+      formData.maturityDate,
+      formData.startDate
+    );
+
     if (editingDeposit) {
       // Edit existing
-      setDeposits(deposits.map(d => d.id === editingDeposit.id ? {
+      setDeposits((prev: Deposit[]) => prev.map((d: Deposit) => d.id === editingDeposit.id ? {
         ...d,
         type: formData.type,
         nickname: formData.nickname,
@@ -240,7 +369,10 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         principalOrMonthly: formData.amount,
         interestRate: formData.interestRate,
         currentValue: formData.amount * 1.08,
+        startDate: formData.startDate,
         maturityDate: formData.maturityDate,
+        daysRemaining: metrics.daysRemaining,
+        progressPercent: metrics.progressPercent,
         nominee: formData.nominee
       } : d));
     } else {
@@ -250,17 +382,18 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         type: formData.type,
         nickname: formData.nickname,
         bankName: formData.bankName,
-        accountNumber: formData.accountNumber.startsWith('****') ? formData.accountNumber : `**** ${formData.accountNumber.slice(-4)}`,
+        accountNumber: formData.accountNumber || '50100482918829',
         interestRate: formData.interestRate,
         currentValue: formData.amount,
         principalOrMonthly: formData.amount,
+        startDate: formData.startDate,
         maturityDate: formData.maturityDate,
-        daysRemaining: 365,
-        progressPercent: 10,
-        status: 'active',
+        daysRemaining: metrics.daysRemaining,
+        progressPercent: metrics.progressPercent,
+        status: metrics.daysRemaining <= 0 ? 'matured' : 'active',
         nominee: formData.nominee
       };
-      setDeposits([newDep, ...deposits]);
+      setDeposits((prev: Deposit[]) => [newDep, ...prev]);
     }
     setIsAddEditOpen(false);
   };
@@ -274,13 +407,49 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
   };
 
   const handleReinvest = (deposit: Deposit) => {
-    // Convert matured back to active deposit
-    setDeposits(deposits.map(d => d.id === deposit.id ? {
+    const years = deposit.tenureYears || 1;
+    const months = deposit.tenureMonths || 0;
+    const oldMatStr = deposit.maturityDate || deposit.maturedDate || '01 Jan, 2025';
+
+    // Parse old maturity date
+    let oldDate: Date;
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(oldMatStr.trim())) {
+      const parts = oldMatStr.trim().split('/');
+      oldDate = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+    } else {
+      const ts = Date.parse(oldMatStr.replace(',', ''));
+      oldDate = !isNaN(ts) ? new Date(ts) : new Date();
+    }
+
+    // Add tenure to old maturity date
+    const newDate = new Date(oldDate.getFullYear() + (years || 1), oldDate.getMonth() + (months || 0), oldDate.getDate());
+
+    // Format new maturity date string matching original style
+    let newMaturityStr = '';
+    if (oldMatStr.includes('/')) {
+      const d = String(newDate.getDate()).padStart(2, '0');
+      const m = String(newDate.getMonth() + 1).padStart(2, '0');
+      const y = newDate.getFullYear();
+      newMaturityStr = `${d}/${m}/${y}`;
+    } else {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const d = newDate.getDate();
+      const m = monthNames[newDate.getMonth()];
+      const y = newDate.getFullYear();
+      newMaturityStr = `${d} ${m}, ${y}`;
+    }
+
+    const metrics = calculateDepositMetrics(newMaturityStr, oldMatStr, years, months);
+
+    // Convert matured back to active deposit with new maturity date
+    setDeposits((prevDeposits: Deposit[]) => prevDeposits.map((d: Deposit) => d.id === deposit.id ? {
       ...d,
       status: 'active',
-      maturityDate: '26 Jul, 2026',
-      daysRemaining: 365,
-      progressPercent: 5
+      startDate: oldMatStr,
+      maturityDate: newMaturityStr,
+      daysRemaining: metrics.daysRemaining,
+      progressPercent: metrics.progressPercent,
+      maturedDate: undefined
     } : d));
   };
 
@@ -348,7 +517,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
               ACTIVE DEPOSITS
             </span>
             <div className="text-4xl md:text-5xl font-extrabold text-white mt-1">
-              {activeDepositsList.length > 0 ? activeDepositsList.length : 12}
+              {rawActiveDeposits.length > 0 ? rawActiveDeposits.length : 12}
             </div>
           </div>
 
@@ -418,9 +587,17 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
 
           {/* Active Deposits List Cards */}
           <div className="space-y-5">
-            {paginatedActiveDeposits.map((deposit) => {
+            {paginatedActiveDeposits.map((deposit: Deposit) => {
               const isMenuOpen = activeMenuId === deposit.id;
               const isExpanded = expandedDepositId === deposit.id;
+              const metrics = calculateDepositMetrics(
+                deposit.maturityDate,
+                deposit.startDate,
+                deposit.tenureYears,
+                deposit.tenureMonths
+              );
+              const progressPercent = metrics.progressPercent;
+              const daysRemaining = metrics.daysRemaining;
 
               return (
                 <div
@@ -429,20 +606,21 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                   className={`group bg-white rounded-3xl p-5 md:p-6 border border-[#C3C6CE]/30 shadow-xs hover:border-2 hover:border-[#006A65] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-2px_rgba(0,106,101,0.05)] transition-all duration-300 ease-out relative flex flex-col cursor-pointer ${isMenuOpen ? 'z-50' : 'z-0'
                     } ${isExpanded ? 'border-[#006A65]/60 shadow-[0_4px_20px_0_rgba(0,106,101,0.08)]' : ''}`}
                 >
-                  {/* Main Row */}
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 w-full">
-                    {/* Left Side: Icon & Deposit Info */}
-                    <div className="flex items-start gap-4 min-w-[240px]">
+                  {/* Main Card Grid Row */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    {/* Column 1: Icon & Title & Deposit No */}
+                    <div className="flex items-center gap-4 min-w-[240px]">
                       <div className="w-12 h-12 rounded-2xl bg-[#F0F4F8] text-[#00162A] group-hover:bg-[#006A65] group-hover:text-white group-hover:scale-105 flex items-center justify-center flex-shrink-0 transition-all duration-300 ease-out">
-                        {deposit.type === 'FD' ? (
-                          <span className="material-symbols-outlined select-none transition-transform duration-300 group-hover:scale-100 group-hover:-rotate-12" style={{ fontSize: '24px' }}>savings</span>
-                        ) : (
-                          <span className="material-symbols-outlined select-none transition-transform duration-500 group-hover:rotate-180" style={{ fontSize: '24px' }}>refresh</span>
-                        )}
+                        <span
+                          className={`material-symbols-outlined select-none transition-transform duration-300 ${deposit.type === 'FD' ? 'group-hover:scale-100 group-hover:-rotate-12' : 'group-hover:rotate-180'
+                            }`}
+                          style={{ fontSize: '24px' }}
+                        >
+                          {deposit.type === 'FD' ? 'savings' : 'refresh'}
+                        </span>
                       </div>
-
                       <div>
-                        <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-2 transition-colors duration-300">
+                        <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] group-hover:text-[#006A65] uppercase mb-1.5 transition-colors duration-300">
                           {deposit.type === 'FD' ? 'FD NICKNAME' : 'RD NICKNAME'}
                         </span>
                         <h3 className="text-base font-bold text-[#00162A]">
@@ -485,12 +663,12 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                       <div className="w-full bg-[#E5E8EB] h-2 rounded-full overflow-hidden">
                         <div
                           className="bg-[#006A65] h-full rounded-full transition-all duration-500"
-                          style={{ width: `${deposit.progressPercent}%` }}
+                          style={{ width: `${progressPercent}%` }}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-xs font-medium text-[#74777F] mt-1.5">
-                        <span>Matures {deposit.maturityDate}</span>
-                        <span>{deposit.daysRemaining} days remaining</span>
+                      <div className="flex flex-col text-xs font-medium text-[#74777F] mt-2 space-y-0.5">
+                        <span>Matures {formatDisplayDate(deposit.maturityDate)}</span>
+                        <span>{daysRemaining} days remaining</span>
                       </div>
                     </div>
 
@@ -642,7 +820,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
 
           {/* Matured Deposits Cards */}
           <div className="space-y-5">
-            {paginatedMaturedDeposits.map((deposit) => {
+            {paginatedMaturedDeposits.map((deposit: Deposit) => {
               const isExpanded = expandedDepositId === deposit.id;
 
               return (
@@ -698,7 +876,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                         MATURED ON
                       </span>
                       <span className="block text-sm font-bold text-[#74777F]">
-                        {deposit.maturedDate || '15 Jan, 2025'}
+                        {formatDisplayDate(deposit.maturedDate || deposit.maturityDate)}
                       </span>
                     </div>
 
