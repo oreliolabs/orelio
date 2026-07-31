@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { PrimaryButton } from '../common/PrimaryButton';
 
 interface BankAccount {
   id: string;
@@ -233,13 +234,13 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
             Combined cash balance across <span className="text-[#00162A] font-semibold">{accounts.length} accounts</span>
           </p>
         </div>
-        <button
+        <PrimaryButton
           onClick={handleAddClick}
-          className="flex items-center gap-1 px-4 py-2.5 text-sm font-bold text-white bg-[#006A65] rounded-2xl hover:bg-[#006A65] active:scale-98 transition-all shadow-sm self-start sm:self-center"
+          icon="add"
+          className="self-start sm:self-center"
         >
-          <span className="material-symbols-outlined text-sm font-bold" style={{ fontSize: '20px' }}>add</span>
           New Bank Account
-        </button>
+        </PrimaryButton>
       </div>
 
 

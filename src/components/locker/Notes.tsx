@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { PrimaryButton } from '../common/PrimaryButton';
 
 export interface Note {
   id: string;
@@ -214,13 +215,12 @@ export const Notes: React.FC = () => {
           </p>
         </div>
         <div>
-          <button
+          <PrimaryButton
             onClick={handleAddClick}
-            className="flex items-center gap-1 px-4 py-2.5 text-sm font-bold text-white bg-[#006A65] rounded-2xl hover:bg-[#006A65] active:scale-98 transition-all shadow-sm"
+            icon="add"
           >
-            <span className="material-symbols-outlined text-sm font-bold" style={{ fontSize: '20px' }}>add</span>
             Add New Note
-          </button>
+          </PrimaryButton>
         </div>
       </div>
 

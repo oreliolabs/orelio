@@ -4,6 +4,7 @@ import {
   ShieldCheck,
   Check
 } from 'lucide-react';
+import { PrimaryButton } from '../common/PrimaryButton';
 export { EditMemberModal } from './EditMemberModal';
 export { RemoveMemberModal } from './RemoveMemberModal';
 
@@ -59,13 +60,12 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
           <h2 className="text-2xl font-extrabold text-orelio-navy mt-1">Manage Family</h2>
           <p className="text-sm text-orelio-gray font-medium mt-1">Manage your inner circle to optimise your joint financial goals.</p>
         </div>
-        <button
+        <PrimaryButton
           onClick={onAddClick}
-          className="flex items-center justify-center gap-1 px-6 py-3 rounded-[15px] bg-orelio-darkgreen text-white text-sm font-bold shadow-md hover:bg-orelio-darkgreen hover:scale-103 active:scale-97 transition-all duration-200"
+          icon="person_add"
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>person_add</span>
-          <span>Add Members</span>
-        </button>
+          Add Members
+        </PrimaryButton>
       </div>
 
       {/* Divider */}

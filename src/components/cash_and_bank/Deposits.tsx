@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AddEditDepositModal } from './AddEditDepositModal';
 import type { DepositFormData } from './AddEditDepositModal';
 import { DeleteDepositModal } from './DeleteDepositModal';
+import { PrimaryButton } from '../common/PrimaryButton';
 
 export interface Deposit {
   id: string;
@@ -296,13 +297,12 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
             Manage and track your fixed and recurring investments.
           </p>
         </div>
-        <button
+        <PrimaryButton
           onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#006A65] text-white font-bold text-sm shadow-sm hover:bg-[#006A65] active:scale-98 transition-all"
+          icon="add"
         >
-          <span className="material-symbols-outlined select-none font-bold" style={{ fontSize: '18px' }}>add</span>
-          <span>New Deposit</span>
-        </button>
+          New Deposit
+        </PrimaryButton>
       </div>
 
       {/* Subtitle Divider */}

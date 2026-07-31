@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Policy, PolicyFormData, PolicyType } from './InsuranceTypes';
 import { AddEditPolicyModal } from './AddEditPolicyModal';
 import { DeletePolicyModal } from './DeletePolicyModal';
+import { PrimaryButton } from '../common/PrimaryButton';
 
 interface InsuranceProps {
   isPrivate: boolean;
@@ -161,16 +162,15 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
           </p>
         </div>
 
-        <button
+        <PrimaryButton
           onClick={() => {
             setEditingPolicy(null);
             setIsAddModalOpen(true);
           }}
-          className="px-5 py-2.5 rounded-full bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-95 flex-shrink-0"
+          icon="add"
         >
-          <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>add</span>
-          <span>Add New Policy</span>
-        </button>
+          Add New Policy
+        </PrimaryButton>
       </div>
 
       {/* Horizontal Divider */}
