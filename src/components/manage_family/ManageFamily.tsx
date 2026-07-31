@@ -46,8 +46,11 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
       return { bg: 'bg-[#FFF1F2]', text: 'text-[#E11D48]' };
     } else if (role === 'Child') {
       return { bg: 'bg-[#F0FDFA]', text: 'text-[#0D9488]' };
-    } else {
-      return { bg: 'bg-[#E6FFFA]', text: 'text-[#047481]' };
+    } else if (role === 'Mother' || role === 'Father') {
+      return { bg: 'bg-[#F5F3FF]', text: 'text-[#7C3AED]' };
+    }
+    else {
+      return { bg: 'bg-[#FEF9C3]', text: 'text-[#CA8A04]' };
     }
   };
 
