@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Policy, PolicyFormData, PolicyType, PremiumFrequency } from './InsuranceTypes';
+import { SaveButton } from '../common/SaveButton';
 
 interface AddEditPolicyModalProps {
   isOpen: boolean;
@@ -280,12 +281,9 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm transition-all shadow-md active:scale-95"
-            >
+            <SaveButton type="submit">
               Save Policy
-            </button>
+            </SaveButton>
           </div>
         </form>
       </div>

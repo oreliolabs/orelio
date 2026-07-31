@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { PrimaryButton } from '../common/PrimaryButton';
+import { SaveButton } from '../common/SaveButton';
 
 interface BankAccount {
   id: string;
@@ -544,12 +545,9 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-5 py-2 text-sm font-bold text-white bg-[#006A65] rounded-xl hover:bg-[#006A65]/90 transition-colors shadow-sm"
-              >
+              <SaveButton type="submit">
                 Save
-              </button>
+              </SaveButton>
             </div>
           </form>
         </div>,

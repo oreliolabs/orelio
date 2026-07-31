@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Deposit } from './Deposits';
+import { SaveButton } from '../common/SaveButton';
 
 export interface DepositFormData {
   type: 'FD' | 'RD';
@@ -322,12 +323,9 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              className="px-6 py-3 rounded-2xl bg-[#006A65] text-white font-bold text-sm shadow-sm hover:bg-[#006A65]/90 active:scale-98 transition-all"
-            >
+            <SaveButton type="submit">
               Save Deposit
-            </button>
+            </SaveButton>
           </div>
         </form>
       </div>

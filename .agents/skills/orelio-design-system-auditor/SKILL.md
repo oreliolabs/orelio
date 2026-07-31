@@ -1,21 +1,50 @@
 ---
 name: orelio-design-system-auditor
-description: Enforce Orelio Wealth Ledger design tokens, Material Symbols, typography hierarchy, popover z-index layering, and card hover animations when building or updating financial UI components.
+description: Enforce Orelio Wealth Ledger design tokens, Material Symbols, typography hierarchy, popover z-index layering, common components (PrimaryButton, SaveButton), and card hover animations when building or updating financial UI components.
 ---
 
 # Orelio Design System Auditor & UI Component Builder
 
-This skill provides mandatory guidelines, design token mappings, component architecture rules, and verification workflows for creating or updating UI components in the **Orelio Wealth Ledger** codebase.
+This skill provides mandatory guidelines, design token mappings, common component standards, and verification workflows for creating or updating UI components in the **Orelio Wealth Ledger** codebase.
 
 ## 1. When to Apply This Skill
 Trigger or read this skill whenever you are asked to:
 - Build a new financial view, list card, modal, or popover menu in Orelio.
+- Add primary header action buttons or modal save buttons.
 - Refactor layout, hover interactions, or color palettes across components.
 - Audit UI consistency against the master `DESIGN.md` specification.
 
 ---
 
-## 2. Mandatory Design Rules
+## 2. Common Reusable Components (Mandatory)
+
+Always import and use common UI components from `src/components/common/` rather than creating custom button markup:
+
+### A. Primary Action Button (`PrimaryButton`)
+- **Import**: `import { PrimaryButton } from '../common/PrimaryButton';`
+- **Usage**: Main page header action buttons (e.g. "New Bank Account", "Add New Policy", "New Deposit", "Add Members", "Add New Note").
+- **Example**:
+  ```tsx
+  <PrimaryButton icon="add" onClick={handleOpenAdd}>
+    New Deposit
+  </PrimaryButton>
+  ```
+- **Features**: Pre-styled `#006A65` brand teal, hover scale elevation (`hover:scale-103`), optically balanced left/right padding (`pl-3.5 pr-5`), and Material Symbol icon support.
+
+### B. Modal Save Button (`SaveButton`)
+- **Import**: `import { SaveButton } from '../common/SaveButton';`
+- **Usage**: Modal submit and save action buttons (e.g. "Save", "Save Policy", "Save Deposit", "Save Profile").
+- **Example**:
+  ```tsx
+  <SaveButton type="submit" isSaving={isSaving}>
+    Save Policy
+  </SaveButton>
+  ```
+- **Features**: Standalone modal submit button with `rounded-xl` corners, clean hover background (`hover:bg-[#00524E]`), no hover scale enlargement, and optional built-in `isSaving` state.
+
+---
+
+## 3. Mandatory Design Rules
 
 ### A. Color Palette Enforcement
 Always use Orelio design tokens rather than default Tailwind colors:
@@ -46,7 +75,7 @@ When implementing a dropdown/popover menu inside list cards:
 Inline horizontal stretching divider layout:
 ```tsx
 <div className="flex items-center gap-4 w-full">
-  <h2 className="text-xl font-semibold text-[#43474D] tracking-tight whitespace-nowrap">
+  <h2 className="text-xl font-bold text-[#00162A] tracking-tight whitespace-nowrap">
     Section Title
   </h2>
   <div className="flex-1 h-[1px] bg-[#C3C6CE]/30" />
@@ -59,8 +88,9 @@ Inline horizontal stretching divider layout:
 
 ---
 
-## 3. Verification & Quality Assurance Workflow
+## 4. Verification & Quality Assurance Workflow
 Before declaring any UI task complete:
 1. Run `npm run build` to confirm zero TypeScript compilation or bundle errors.
-2. Launch a browser agent to visually verify hover states, popover layering, contrast, and layout alignment.
-3. Cross-reference `DESIGN.md` to ensure design tokens match.
+2. Verify that header action buttons use `PrimaryButton` and modal submit buttons use `SaveButton`.
+3. Launch a browser agent to visually verify hover states, popover layering, contrast, and layout alignment.
+4. Cross-reference `DESIGN.md` to ensure design tokens match.

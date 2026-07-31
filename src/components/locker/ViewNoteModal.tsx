@@ -1,0 +1,58 @@
+import React from 'react';
+import { createPortal } from 'react-dom';
+import type { Note } from './Notes';
+
+export interface ViewNoteModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  note: Note | null;
+}
+
+export const ViewNoteModal: React.FC<ViewNoteModalProps> = ({
+  isOpen,
+  onClose,
+  note,
+}) => {
+  if (!isOpen || !note) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/40" onClick={onClose} />
+      <div
+        className="relative flex flex-col bg-white rounded-3xl shadow-2xl p-6 z-10 animate-in fade-in zoom-in-95 duration-200"
+        style={{ width: '40vw', height: '40vw', minWidth: '350px', minHeight: '350px' }}
+      >
+        {/* Topbar inside View Modal */}
+        <div className="flex items-center justify-between border-b border-[#C3C6CE]/15 pb-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-[#73777E] uppercase tracking-wider">
+            <span className="material-symbols-outlined select-none" style={{ fontSize: '14px' }}>
+              schedule
+            </span>
+            Last updated {note.lastUpdated.toLowerCase()}
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] hover:text-black transition-colors"
+          >
+            <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>
+              close
+            </span>
+          </button>
+        </div>
+
+        {/* Note Details */}
+        <div className="flex-1 flex flex-col min-h-0 pt-3 space-y-3">
+          <h3 className="text-xl font-bold text-[#006A65] leading-snug flex-shrink-0">
+            {note.title}
+          </h3>
+          <div className="text-sm text-orelio-navy font-medium leading-relaxed flex-1 overflow-y-auto pr-1 whitespace-pre-line min-h-0">
+            {note.content}
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+export default ViewNoteModal;

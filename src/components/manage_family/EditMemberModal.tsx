@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Info, X } from 'lucide-react';
 import type { FamilyMember } from './ManageFamily';
+import { SaveButton } from '../common/SaveButton';
 
 interface EditMemberModalProps {
   isOpen: boolean;
@@ -245,35 +246,13 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
             >
               Cancel
             </button>
-            <button
+            <SaveButton
               type="submit"
               onClick={handleSaveClick}
-              className={`
-                relative overflow-hidden px-4 py-2 text-sm font-bold text-white bg-orelio-darkgreen rounded-xl
-                transition-all duration-150 ease-out select-none
-                hover:bg-orelio-darkgreen/90
-                ${isSaving ? 'scale-95 bg-orelio-darkgreen/80' : 'scale-100 active:scale-95'}
-              `}
+              isSaving={isSaving}
             >
-              <span className={`flex items-center gap-1.5 transition-all duration-200 ${isSaving ? 'opacity-80' : 'opacity-100'}`}>
-                <span
-                  className="material-symbols-outlined"
-                  style={{
-                    fontSize: '15px',
-                    opacity: isSaving ? 1 : 0,
-                    transform: isSaving ? 'scale(1)' : 'scale(0.5)',
-                    transition: 'opacity 0.2s ease, transform 0.2s ease',
-                    display: 'inline-block',
-                    width: isSaving ? '15px' : '0px',
-                    overflow: 'hidden',
-                    marginRight: isSaving ? '0' : '-4px',
-                  }}
-                >
-                  check
-                </span>
-                {isSaving ? 'Saving...' : 'Save Profile'}
-              </span>
-            </button>
+              Save Profile
+            </SaveButton>
           </div>
 
         </form>

@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { PrimaryButton } from '../common/PrimaryButton';
+import { AddEditNoteModal } from './AddEditNoteModal';
+import { ViewNoteModal } from './ViewNoteModal';
+import { DeleteNoteModal } from './DeleteNoteModal';
 
 export interface Note {
   id: string;
@@ -64,10 +66,6 @@ export const Notes: React.FC = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
-  // Add/Edit Form State
-  const [formTitle, setFormTitle] = useState('');
-  const [formContent, setFormContent] = useState('');
-
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
@@ -81,8 +79,6 @@ export const Notes: React.FC = () => {
 
   const handleEdit = (note: Note) => {
     setSelectedNote(note);
-    setFormTitle(note.title);
-    setFormContent(note.content);
     setIsAddEditOpen(true);
     setActiveMenuId(null);
   };
@@ -95,24 +91,19 @@ export const Notes: React.FC = () => {
 
   const handleAddClick = () => {
     setSelectedNote(null);
-    setFormTitle('');
-    setFormContent('');
     setIsAddEditOpen(true);
   };
 
   // Form Save
-  const handleSaveNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formTitle.trim() || !formContent.trim()) return;
-
+  const handleSaveNote = (title: string, content: string) => {
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     if (selectedNote) {
       // Edit mode
       setNotes(notes.map(n => n.id === selectedNote.id ? {
         ...n,
-        title: formTitle,
-        content: formContent,
+        title,
+        content,
         lastUpdated: currentTime
       } : n));
     } else {
@@ -120,8 +111,8 @@ export const Notes: React.FC = () => {
       const newColor = '#00162A';
       const newNote: Note = {
         id: Date.now().toString(),
-        title: formTitle,
-        content: formContent,
+        title,
+        content,
         lastUpdated: currentTime,
         accentColor: newColor
       };
@@ -391,152 +382,26 @@ export const Notes: React.FC = () => {
       )}
 
       {/* VIEW NOTE MODAL */}
-      {isViewOpen && selectedNote && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setIsViewOpen(false)} />
-          <div
-            className="relative flex flex-col bg-white rounded-3xl shadow-2xl p-6 z-10 animate-in fade-in zoom-in-95 duration-200"
-            style={{ width: '40vw', height: '40vw', minWidth: '350px', minHeight: '350px' }}
-          >
-            {/* Topbar inside View Modal */}
-            <div className="flex items-center justify-between border-b border-[#C3C6CE]/15 pb-3 flex-shrink-0">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#73777E] uppercase tracking-wider">
-                <span className="material-symbols-outlined select-none" style={{ fontSize: '14px' }}>schedule</span>
-                Last updated {selectedNote.lastUpdated.toLowerCase()}
-              </div>
-              <button
-                onClick={() => setIsViewOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] hover:text-black transition-colors"
-              >
-                <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
-              </button>
-            </div>
-
-            {/* Note Details */}
-            <div className="flex-1 flex flex-col min-h-0 pt-3 space-y-3">
-              <h3 className="text-xl font-bold text-[#006A65] leading-snug flex-shrink-0">
-                {selectedNote.title}
-              </h3>
-              <div className="text-sm text-orelio-navy font-medium leading-relaxed flex-1 overflow-y-auto pr-1 whitespace-pre-line min-h-0">
-                {selectedNote.content}
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      <ViewNoteModal
+        isOpen={isViewOpen}
+        onClose={() => setIsViewOpen(false)}
+        note={selectedNote}
+      />
 
       {/* ADD/EDIT NOTE MODAL */}
-      {isAddEditOpen && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setIsAddEditOpen(false)} />
-          <form
-            onSubmit={handleSaveNote}
-            className="relative flex flex-col bg-white rounded-3xl shadow-2xl p-6 z-10 animate-in fade-in zoom-in-95 duration-200"
-            style={{ width: '40vw', height: '40vw', minWidth: '350px', minHeight: '350px' }}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-[#C3C6CE]/15 pb-3 flex-shrink-0">
-              <h3 className="text-lg font-bold text-orelio-navy">
-                {selectedNote ? 'Edit Note' : 'Add Note'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsAddEditOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] hover:text-black transition-colors"
-              >
-                <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
-              </button>
-            </div>
-
-            {/* Inputs */}
-            <div className="flex-1 flex flex-col space-y-4 py-4 min-h-0">
-              <div className="space-y-1.5 flex-shrink-0">
-                <label className="block text-[11px] font-bold text-[#3F4945] tracking-wider uppercase">Title</label>
-                <input
-                  type="text"
-                  required
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Enter note title..."
-                  className="w-full px-[11px] py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm text-orelio-navy font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all"
-                />
-              </div>
-
-              <div className="space-y-1.5 flex-1 flex flex-col min-h-0">
-                <label className="block text-[11px] font-bold text-[#3F4945] tracking-wider uppercase">Description</label>
-                <textarea
-                  required
-                  value={formContent}
-                  onChange={(e) => setFormContent(e.target.value)}
-                  placeholder="Write something here...."
-                  className="w-full px-[11px] py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm text-orelio-navy font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all resize-none leading-relaxed flex-1 min-h-0"
-                />
-              </div>
-            </div>
-
-            {/* Footer Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C3C6CE]/15 flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsAddEditOpen(false)}
-                className="px-4 py-2 text-sm font-bold text-[#3F4945] bg-transparent rounded-xl hover:bg-orelio-light-gray transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!formTitle.trim() || !formContent.trim()}
-                className="px-5 py-2 text-sm font-bold text-white bg-[#006A65] rounded-xl hover:bg-[#006A65]/90 disabled:opacity-50 disabled:pointer-events-none transition-colors shadow-sm"
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        </div>,
-        document.body
-      )}
+      <AddEditNoteModal
+        isOpen={isAddEditOpen}
+        onClose={() => setIsAddEditOpen(false)}
+        selectedNote={selectedNote}
+        onSave={handleSaveNote}
+      />
 
       {/* DELETE NOTE MODAL */}
-      {isDeleteOpen && selectedNote && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setIsDeleteOpen(false)} />
-          <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 space-y-3 text-center z-10 animate-in fade-in zoom-in-95 duration-200">
-            {/* Warning Graphic */}
-            <div className="mx-auto flex justify-center">
-              <svg className="transition-all duration-300 hover:scale-110 hover:rotate-3 cursor-pointer origin-center" width="82" height="104" viewBox="0 0 82 104" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" clipRule="evenodd" d="M35.0547 18.8154C46.2332 18.8035 58.1784 16.5893 66.9926 23.1441C76.6139 30.299 83.1824 42.0331 81.8217 53.594C80.5386 64.4953 68.7147 70.1723 60.548 77.8995C52.4369 85.5743 46.4194 96.7031 35.0547 97.8446C23.0447 99.0509 10.3675 93.1323 3.55753 83.6237C-2.59729 75.0299 3.42655 64 3.36292 53.594C3.29854 43.066 -4.05418 31.1597 3.1881 23.212C10.5057 15.1817 23.8972 18.8273 35.0547 18.8154Z" fill="#FFF0EF" />
-                <path d="M33.5333 61L36.9999 57.5333L40.4666 61L42.3333 59.1333L38.8666 55.6667L42.3333 52.2L40.4666 50.3333L36.9999 53.8L33.5333 50.3333L31.6666 52.2L35.1333 55.6667L31.6666 59.1333L33.5333 61ZM30.3333 67C29.5999 67 28.9721 66.7389 28.4499 66.2167C27.9277 65.6944 27.6666 65.0667 27.6666 64.3333V47H26.3333V44.3333H32.9999V43H40.9999V44.3333H47.6666V47H46.3333V64.3333C46.3333 65.0667 46.0721 65.6944 45.5499 66.2167C45.0277 66.7389 44.3999 67 43.6666 67H30.3333Z" fill="#BA1A1A" />
-              </svg>
-            </div>
-
-            {/* Content text */}
-            <div className="space-y-2 mt-1">
-              <h3 className="text-lg font-bold text-orelio-navy">Delete Note?</h3>
-              <p className="text-sm text-[#43474D] leading-relaxed font-medium">
-                Once deleted, this note cannot be recovered.
-              </p>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-6">
-              <button
-                onClick={() => setIsDeleteOpen(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-bold text-[#3F4945] bg-[#E6E8E9] rounded-xl hover:bg-[#D5D7D8] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-[#BA1A1A] rounded-xl hover:bg-[#9E1414] transition-colors shadow-sm"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      <DeleteNoteModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };
