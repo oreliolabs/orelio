@@ -7,6 +7,7 @@ import { Notes } from './components/locker/Notes';
 import { BankAccounts } from './components/cash_and_bank/BankAccounts';
 import Deposits from './components/cash_and_bank/Deposits';
 import { Insurance } from './components/insurance/Insurance';
+import { LoansAndCredit } from './components/loans_and_credit/LoansAndCredit';
 import { Briefcase, ArrowUpRight } from 'lucide-react';
 
 interface FamilyMember {
@@ -182,6 +183,9 @@ function App() {
 
       case 'insurance':
         return <Insurance isPrivate={isPrivate} />;
+
+      case 'loans-credit':
+        return <LoansAndCredit isPrivate={isPrivate} />;
 
       case 'manage-family':
         return (
