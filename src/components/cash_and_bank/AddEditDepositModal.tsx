@@ -279,8 +279,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                   type="button"
                   onClick={() => setFormType('FD')}
                   className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${formType === 'FD'
-                      ? 'bg-white text-[#006A65] shadow-xs'
-                      : 'text-[#74777F] hover:text-[#00162A]'
+                    ? 'bg-white text-[#006A65] shadow-xs'
+                    : 'text-[#74777F] hover:text-[#00162A]'
                     }`}
                 >
                   Fixed Deposit (FD)
@@ -289,8 +289,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                   type="button"
                   onClick={() => setFormType('RD')}
                   className={`py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${formType === 'RD'
-                      ? 'bg-white text-[#006A65] shadow-xs'
-                      : 'text-[#74777F] hover:text-[#00162A]'
+                    ? 'bg-white text-[#006A65] shadow-xs'
+                    : 'text-[#74777F] hover:text-[#00162A]'
                     }`}
                 >
                   Recurring Deposit (RD)
@@ -358,6 +358,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                   <span className="absolute left-3.5 top-3 text-sm font-bold text-[#74777F]">₹</span>
                   <input
                     type="number"
+                    min="0"
                     required
                     placeholder="0.00"
                     value={formAmount}
@@ -374,6 +375,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                 <div className="relative">
                   <input
                     type="number"
+                    min="0"
                     required
                     step="0.01"
                     placeholder="7.85"
@@ -404,8 +406,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                       value={formStartDate}
                       onChange={(e) => handleStartDateChange(e.target.value)}
                       className={`w-full pl-4 pr-10 py-3 rounded-2xl border bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:ring-1 ${startDateError
-                          ? 'border-[#BA1A1A] focus:border-[#BA1A1A] focus:ring-[#BA1A1A]'
-                          : 'border-[#C3C6CE]/50 focus:border-[#006A65] focus:ring-[#006A65]'
+                        ? 'border-[#BA1A1A] focus:border-[#BA1A1A] focus:ring-[#BA1A1A]'
+                        : 'border-[#C3C6CE]/50 focus:border-[#006A65] focus:ring-[#006A65]'
                         }`}
                     />
                     {/* Hidden Native Date Picker */}
@@ -463,8 +465,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                       value={formMaturityDate}
                       onChange={(e) => handleMaturityDateChange(e.target.value)}
                       className={`w-full pl-4 pr-10 py-3 rounded-2xl border bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:ring-1 ${maturityDateError
-                          ? 'border-[#BA1A1A] focus:border-[#BA1A1A] focus:ring-[#BA1A1A]'
-                          : 'border-[#C3C6CE]/50 focus:border-[#006A65] focus:ring-[#006A65]'
+                        ? 'border-[#BA1A1A] focus:border-[#BA1A1A] focus:ring-[#BA1A1A]'
+                        : 'border-[#C3C6CE]/50 focus:border-[#006A65] focus:ring-[#006A65]'
                         }`}
                     />
                     {/* Hidden Native Date Picker */}

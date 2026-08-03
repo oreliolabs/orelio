@@ -55,6 +55,18 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingPolicy, setDeletingPolicy] = useState<Policy | null>(null);
 
+  // Close More menu on click outside
+  React.useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.policy-menu-container')) {
+        setActiveMenuPolicyId(null);
+      }
+    };
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
+  }, []);
+
   // Formatting helpers
   const formatCurrency = (val: number) => {
     return '₹ ' + val.toLocaleString('en-IN');
@@ -252,7 +264,7 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
                   </div>
 
                   {/* Context Menu Trigger & Popover */}
-                  <div className="relative">
+                  <div className="relative policy-menu-container">
                     <button
                       type="button"
                       onClick={() => setActiveMenuPolicyId(isMenuOpen ? null : policy.id)}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PrimaryButton } from '../common/PrimaryButton';
 import { DeleteConfirmationModal } from '../common/DeleteConfirmationModal';
 import { AddEditLoanModal } from './AddEditLoanModal';
@@ -87,6 +87,18 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<LoanItem | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  // Close More menu when clicking anywhere outside
+  useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.loan-card-menu-container')) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
+  }, []);
 
   // Success alert state for "Mark Installment as Paid"
   const [notification, setNotification] = useState<string | null>(null);
@@ -405,7 +417,7 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
                 </div>
 
                 {/* Column 5: More Menu Button & Popover */}
-                <div className="relative flex justify-end self-start">
+                <div className="relative flex justify-end self-start loan-card-menu-container">
                   <button
                     onClick={() => setActiveMenuId(isMenuOpen ? null : loan.id)}
                     className="w-9 h-9 rounded-full flex items-center justify-center text-[#74777F] hover:bg-[#F2F4F5] hover:text-[#00162A] transition-colors -mt-1 -mr-1"

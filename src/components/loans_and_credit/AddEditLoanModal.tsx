@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { SaveButton } from '../common/SaveButton';
 import { CancelButton } from '../common/CancelButton';
@@ -44,6 +44,18 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -124,27 +136,53 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
           <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 no-scrollbar">
             {/* Row 1: Loan Type & Loan Provider */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="relative" ref={dropdownRef}>
                 <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
                   LOAN TYPE
                 </label>
-                <div className="relative">
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] appearance-none"
-                  >
-                    <option value="Mortgage">Mortgage</option>
-                    <option value="Auto Loan">Auto Loan</option>
-                    <option value="Personal Loan">Personal Loan</option>
-                    <option value="Education Loan">Education Loan</option>
-                    <option value="Credit Card">Credit Card</option>
-                    <option value="Other">Other Loan</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#74777F] pointer-events-none select-none">
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full px-4 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] flex items-center justify-between focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
+                >
+                  <span>{formData.type || 'Select Loan Type'}</span>
+                  <span className={`material-symbols-outlined text-[#74777F] transition-transform duration-200 select-none ${isDropdownOpen ? 'rotate-180' : ''}`}>
                     expand_more
                   </span>
-                </div>
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-2xl border border-[#C3C6CE]/30 shadow-xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-150">
+                    <div className="max-h-48 overflow-y-auto py-1 no-scrollbar">
+                      {['Mortgage', 'Auto Loan', 'Personal Loan', 'Education Loan', 'Credit Card', 'Other'].map((option) => {
+                        const isSelected = formData.type === option;
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, type: option });
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full h-10 px-4 text-xs font-semibold transition-colors flex items-center justify-between border-b border-[#C3C6CE]/10 last:border-0 ${isSelected
+                                ? 'bg-[#F2F4F5] text-[#00162A]'
+                                : 'text-[#43474D] hover:bg-[#F8F9FA]'
+                              }`}
+                          >
+                            <span className="leading-none">{option}</span>
+                            {isSelected ? (
+                              <span className="material-symbols-outlined text-[#006A65] text-base leading-none select-none">
+                                check
+                              </span>
+                            ) : (
+                              <span className="w-4 h-4" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -177,22 +215,38 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
               />
             </div>
 
-            {/* Row 3: Total Loan Amount */}
-            <div>
-              <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                TOTAL LOAN AMOUNT
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[#00162A]">
-                  ₹
-                </span>
+            {/* Row 3: Total Loan Amount & Start Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
+                  TOTAL LOAN AMOUNT
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[#00162A]">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    placeholder="0.00"
+                    value={formData.totalAmount || ''}
+                    onChange={(e) => setFormData({ ...formData, totalAmount: Math.max(0, parseFloat(e.target.value) || 0) })}
+                    className="w-full pl-8 pr-4 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
+                  START DATE
+                </label>
                 <input
-                  type="number"
-                  step="any"
-                  placeholder="0.00"
-                  value={formData.totalAmount || ''}
-                  onChange={(e) => setFormData({ ...formData, totalAmount: parseFloat(e.target.value) || 0 })}
-                  className="w-full pl-8 pr-4 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className="w-full px-4 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
                   required
                 />
               </div>
@@ -208,10 +262,11 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="5.25"
                     value={formData.interestRate || ''}
-                    onChange={(e) => setFormData({ ...formData, interestRate: parseFloat(e.target.value) || 0 })}
-                    className="w-full pl-4 pr-8 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
+                    onChange={(e) => setFormData({ ...formData, interestRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                    className="w-full pl-4 pr-8 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#74777F]">
@@ -228,10 +283,11 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
                   <div className="relative">
                     <input
                       type="number"
+                      min="0"
                       placeholder="30"
                       value={formData.tenureYears ?? ''}
-                      onChange={(e) => setFormData({ ...formData, tenureYears: parseInt(e.target.value, 10) || 0 })}
-                      className="w-full pl-4 pr-12 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
+                      onChange={(e) => setFormData({ ...formData, tenureYears: Math.max(0, parseInt(e.target.value, 10) || 0) })}
+                      className="w-full pl-4 pr-12 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#74777F] uppercase">
                       YRS
@@ -240,10 +296,11 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
                   <div className="relative">
                     <input
                       type="number"
+                      min="0"
                       placeholder="0"
                       value={formData.tenureMonths ?? ''}
-                      onChange={(e) => setFormData({ ...formData, tenureMonths: parseInt(e.target.value, 10) || 0 })}
-                      className="w-full pl-4 pr-12 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
+                      onChange={(e) => setFormData({ ...formData, tenureMonths: Math.max(0, parseInt(e.target.value, 10) || 0) })}
+                      className="w-full pl-4 pr-12 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#74777F] uppercase">
                       MOS
@@ -251,20 +308,6 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Row 5: Start Date */}
-            <div>
-              <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                START DATE
-              </label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full px-4 py-3 bg-[#FBFCFD] border border-[#C3C6CE]/50 rounded-xl text-sm font-medium text-[#00162A] focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
-                required
-              />
             </div>
           </div>
 
