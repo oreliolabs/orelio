@@ -8,8 +8,6 @@ import { BankAccounts } from './components/cash_and_bank/BankAccounts';
 import Deposits from './components/cash_and_bank/Deposits';
 import { Insurance } from './components/insurance/Insurance';
 import { LoansAndCredit } from './components/loans_and_credit/LoansAndCredit';
-import { MutualFunds } from './components/mutual_funds/MutualFunds';
-import { OtherAssets } from './components/other_assets/OtherAssets';
 import { Stocks } from './components/stocks/Stocks';
 import { Briefcase } from 'lucide-react';
 
@@ -92,12 +90,6 @@ function App() {
       // Asset categories
       case 'stocks':
         return <Stocks isPrivate={isPrivate} />;
-
-      case 'mutual-funds':
-        return <MutualFunds isPrivate={isPrivate} />;
-
-      case 'other-assets':
-        return <OtherAssets isPrivate={isPrivate} />;
 
       case 'notes':
         return <Notes />;

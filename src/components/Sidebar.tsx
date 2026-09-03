@@ -40,9 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       isOpen: assetsOpen,
       setIsOpen: setAssetsOpen,
       submenu: [
-        { name: 'Stocks', id: 'stocks' },
-        { name: 'Mutual Funds', id: 'mutual-funds' },
-        { name: 'Other Assets', id: 'other-assets' }
+        { name: 'Stocks & Mutual Funds', id: 'stocks' }
       ]
     },
     // This one is a P2

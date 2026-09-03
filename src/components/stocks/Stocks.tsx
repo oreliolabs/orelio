@@ -82,13 +82,13 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-extrabold text-[#00162A]">Stocks</h2>
+            <h2 className="text-2xl font-extrabold text-[#00162A]">Stocks & Mutual Funds</h2>
             <span className="text-xs font-medium text-[#74777F] flex items-center gap-1.5 mt-1">
               Last Updated: 2 secs ago
             </span>
           </div>
           <p className="text-sm font-medium text-[#707975] mt-1">
-            Manage and track your equity holdings and portfolio performance.
+            Manage and track your equity holdings, mutual funds, and portfolio performance.
           </p>
         </div>
         <div>
@@ -150,13 +150,13 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
 
             {/* Gradient Area under curve - flush to right (400) and bottom (100) */}
             <path
-              d="M 0 100 C 80 96, 150 72, 220 56 C 290 42, 340 20, 400 6 L 400 100 L 0 100 Z"
+              d="M 0 100 C 60 98, 110 66, 170 70 C 230 74, 275 42, 330 38 C 365 35, 385 15, 400 8 L 400 100 L 0 100 Z"
               fill="url(#stockCurveGrad)"
             />
 
             {/* Smooth upward trend line touching the bottom at (0,100) and running to the right border */}
             <path
-              d="M 0 100 C 80 96, 150 72, 220 56 C 290 42, 340 20, 400 6"
+              d="M 0 100 C 60 98, 110 66, 170 70 C 230 74, 275 42, 330 38 C 365 35, 385 15, 400 8"
               stroke="#006A65"
               strokeWidth="3"
               strokeLinecap="round"

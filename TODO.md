@@ -16,8 +16,6 @@ Issues like -
 
 
 	TODAY:
-	1. Mutual funds screen - [DONE: Created mutual funds screen with CAS statement upload (PDF/JSON/CSV), password decryption, portfolio KPI cards, category filtering, search, and holdings ledger]
-	2. Stocks screen - [DONE: Created Stocks screen with Net Current Value card, bottom-aligned flush sparkline, left-aligned holdings table, and Upload CAS Statement modal with CDSL/NSDL password decryptor and demo loader]
-	3. Other Assets screen - [DONE: Created other assets screen supporting Real Estate (rental yields), Crypto, Bonds/SGB, Gold & Metals, Alternative equity, KPI cards, dynamic Add/Edit modal, and details ledger]
+	1. Stocks and Mutual Funds screen - [DONE: Combined screen with Net Current Value card, bottom-aligned flush sparkline, left-aligned holdings table, and Upload CAS Statement modal with CDSL/NSDL password decryptor]
 
 	
