@@ -9,19 +9,21 @@ interface AddEditPolicyModalProps {
   onClose: () => void;
   editingPolicy: Policy | null;
   onSave: (formData: PolicyFormData) => void;
+  isFirstPolicy?: boolean;
 }
 
 export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
   isOpen,
   onClose,
   editingPolicy,
-  onSave
+  onSave,
+  isFirstPolicy = false
 }) => {
   const [policyType, setPolicyType] = useState<PolicyType>('Life Insurance');
   const [provider, setProvider] = useState('');
   const [policyName, setPolicyName] = useState('');
   const [policyNumber, setPolicyNumber] = useState('');
-  const [annualPremium, setAnnualPremium] = useState('');
+  const [premiumAmount, setPremiumAmount] = useState('');
   const [premiumFrequency, setPremiumFrequency] = useState<PremiumFrequency>('Annual');
   const [sumInsured, setSumInsured] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -33,7 +35,7 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
       setProvider(editingPolicy.provider || '');
       setPolicyName(editingPolicy.policyName);
       setPolicyNumber(editingPolicy.policyNumber || '');
-      setAnnualPremium(editingPolicy.annualPremium.toString());
+      setPremiumAmount(((editingPolicy.premiumAmount ?? (editingPolicy as any).annualPremium) ?? '').toString());
       setPremiumFrequency(editingPolicy.premiumFrequency);
       setSumInsured(editingPolicy.sumInsured.toString());
       setStartDate(editingPolicy.startDate);
@@ -43,7 +45,7 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
       setProvider('');
       setPolicyName('');
       setPolicyNumber('');
-      setAnnualPremium('');
+      setPremiumAmount('');
       setPremiumFrequency('Annual');
       setSumInsured('');
       setStartDate('');
@@ -60,7 +62,7 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
       provider,
       policyName,
       policyNumber,
-      annualPremium,
+      premiumAmount,
       premiumFrequency,
       sumInsured,
       startDate,
@@ -79,7 +81,7 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
         <div className="p-6 sm:px-8 sm:pt-6 sm:pb-4 border-b border-[#C3C6CE]/20 flex-shrink-0 flex items-center justify-between">
           <div>
             <h3 className="text-2xl font-extrabold text-[#00162A] tracking-tight">
-              {editingPolicy ? 'Edit Policy' : 'Add New Policy'}
+              {editingPolicy ? 'Edit Policy' : (isFirstPolicy ? 'Add Your First Policy' : 'Add New Policy')}
             </h3>
             <p className="text-xs font-medium text-[#707975] mt-0.5">
               Enter your policy coverage details below.
@@ -181,11 +183,11 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
                     step="any"
                     required
                     placeholder="0.00"
-                    value={annualPremium}
+                    value={premiumAmount}
                     onChange={(e) => {
                       const val = e.target.value;
                       if (val === '' || parseFloat(val) >= 0) {
-                        setAnnualPremium(val);
+                        setPremiumAmount(val);
                       }
                     }}
                     className="w-full h-12 pl-8 pr-4 rounded-xl bg-[#F2F4F5] border border-[#C3C6CE]/30 font-semibold text-sm text-[#00162A] placeholder-[#707975]/60 focus:outline-none focus:border-2 focus:border-[#006A65] focus:bg-white transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

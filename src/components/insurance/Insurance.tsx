@@ -36,8 +36,8 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
   }, []);
 
   // Formatting helpers
-  const formatCurrency = (val: number) => {
-    return '₹ ' + val.toLocaleString('en-IN');
+  const formatCurrency = (val: number | undefined | null) => {
+    return '₹ ' + (val || 0).toLocaleString('en-IN');
   };
 
   const formatDate = (dateStr: string) => {
@@ -73,21 +73,23 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
   const activeCount = policies.length;
   // Calculate monthly premium estimate ($3,045 when 3 annual policies of 15200 => (15200*3)/12 = 3800, or exact sum / 12)
   const monthlyPremiumEstimate = policies.reduce((acc, pol) => {
+    const prem = pol.premiumAmount ?? (pol as any).annualPremium ?? 0;
     switch (pol.premiumFrequency) {
       case 'Monthly':
-        return acc + pol.annualPremium;
+        return acc + prem;
       case 'Quarterly':
-        return acc + pol.annualPremium / 3;
+        return acc + prem / 3;
       case 'Half-Yearly':
-        return acc + pol.annualPremium / 6;
+        return acc + prem / 6;
       case 'Annual':
       default:
-        return acc + pol.annualPremium / 12;
+        return acc + prem / 12;
     }
   }, 0);
 
   // Save policy handler (Create or Edit)
   const handleSavePolicy = (formData: PolicyFormData) => {
+    const premAmount = parseFloat(formData.premiumAmount || '0') || 0;
     if (editingPolicy) {
       setPolicies(prev =>
         prev.map(p =>
@@ -98,7 +100,7 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
               provider: formData.provider,
               policyName: formData.policyName,
               policyNumber: formData.policyNumber,
-              annualPremium: parseFloat(formData.annualPremium) || 0,
+              premiumAmount: premAmount,
               premiumFrequency: formData.premiumFrequency,
               sumInsured: parseFloat(formData.sumInsured) || 0,
               startDate: formData.startDate,
@@ -114,7 +116,7 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
         provider: formData.provider,
         policyName: formData.policyName,
         policyNumber: formData.policyNumber,
-        annualPremium: parseFloat(formData.annualPremium) || 0,
+        premiumAmount: premAmount,
         premiumFrequency: formData.premiumFrequency,
         sumInsured: parseFloat(formData.sumInsured) || 0,
         startDate: formData.startDate,
@@ -149,7 +151,7 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
           }}
           icon="add"
         >
-          Add New Policy
+          {policies.length === 0 ? 'Add Your First Policy' : 'Add New Policy'}
         </PrimaryButton>
       </div>
 
@@ -192,10 +194,11 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
           </span>
         </div>
 
-        {/* Policy Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {policies.map((policy) => {
-            const isMenuOpen = activeMenuPolicyId === policy.id;
+        {/* Policy Cards Grid / Empty State */}
+        {policies.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {policies.map((policy) => {
+              const isMenuOpen = activeMenuPolicyId === policy.id;
 
             return (
               <div
@@ -284,10 +287,10 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
                 <div className="grid grid-cols-2 gap-y-4 gap-x-6 pt-1">
                   <div>
                     <span className="block text-xs font-bold tracking-widest text-[#73777E] uppercase">
-                      ANNUAL PREMIUM
+                      PREMIUM AMOUNT
                     </span>
                     <span className="block text-sm font-medium text-[#00162A] mt-0.5">
-                      {isPrivate ? '••••' : formatCurrency(policy.annualPremium)}
+                      {isPrivate ? '••••' : formatCurrency(policy.premiumAmount ?? (policy as any).annualPremium ?? 0)}
                     </span>
                   </div>
 
@@ -328,7 +331,31 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
             );
           })}
         </div>
-      </div>
+      ) : (
+        <div className="text-center py-16 px-6 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#006A65]/10 text-[#006A65] flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined select-none text-[36px]">
+              shield
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-[#00162A] tracking-tight">No Insurance Policies Yet</h3>
+          <p className="text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
+            Track your life, health, vehicle, and property insurance coverage all in one secure place.
+          </p>
+          <div className="mt-6">
+            <PrimaryButton
+              onClick={() => {
+                setEditingPolicy(null);
+                setIsAddModalOpen(true);
+              }}
+              icon="add"
+            >
+              Add Your First Policy
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
+    </div>
 
       {/* Modals */}
       <AddEditPolicyModal
@@ -336,6 +363,7 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
         onClose={() => setIsAddModalOpen(false)}
         editingPolicy={editingPolicy}
         onSave={handleSavePolicy}
+        isFirstPolicy={policies.length === 0}
       />
 
       <DeletePolicyModal

@@ -326,76 +326,8 @@
       "status": "active"
     }
   ],
-  "policies": [
-    {
-      "id": "pol-1",
-      "policyType": "Property Insurance",
-      "policyName": "Estate Protection Plan",
-      "policyNumber": "POL-2231-LL",
-      "provider": "AXA Private",
-      "sumInsured": 2500000,
-      "annualPremium": 15200,
-      "premiumFrequency": "Annual",
-      "startDate": "2024-01-22",
-      "expiryDate": "2027-01-22"
-    },
-    {
-      "id": "pol-2",
-      "policyType": "Health Insurance",
-      "policyName": "Executive Health Shield",
-      "policyNumber": "STAR-8812-HC",
-      "provider": "Star Health",
-      "sumInsured": 1500000,
-      "annualPremium": 24500,
-      "premiumFrequency": "Annual",
-      "startDate": "2024-03-10",
-      "expiryDate": "2027-03-10"
-    },
-    {
-      "id": "pol-3",
-      "policyType": "Term Insurance",
-      "policyName": "Family Term Protection",
-      "policyNumber": "HDFC-LIFE-901",
-      "provider": "HDFC Life",
-      "sumInsured": 10000000,
-      "annualPremium": 38000,
-      "premiumFrequency": "Annual",
-      "startDate": "2023-08-15",
-      "expiryDate": "2038-08-15"
-    }
-  ],
-  "notes": [
-    {
-      "id": "1788453012833",
-      "title": "new norte",
-      "content": "fdasjfkasjfkasf",
-      "lastUpdated": "2026-09-03T16:30:12.833Z"
-    },
-    {
-      "id": "2",
-      "title": "CConversations in Silence",
-      "content": "Some of the best conversations happen in silence. When we quiet the noise around us, we can finally hear the underlying currents of our thoughts, goals, and strategies. Writing down these quiet insights helps transform brief ideas into permanent systems, ensuring we stay focused on long-term values rather than short-term market noises.",
-      "lastUpdated": "2026-09-03T16:31:12.865Z"
-    },
-    {
-      "id": "3",
-      "title": "Quarterly Asset Allocation Checklist",
-      "content": "Review cash reserves, equity weightings across portfolios, and ensure Locker records (wills, digital passwords) are updated. Balance target ratios when stocks rise past their threshold. Maintain safety margins for loans.",
-      "lastUpdated": "YESTERDAY"
-    },
-    {
-      "id": "4",
-      "title": "Retirement Vision Board",
-      "content": "Mapping out passive income milestones for age 60. Core streams include dividend stocks, EPF accumulations, and rental yielding real estate. Focus on stability over raw growth in later stages. Regularly audit health cover limits.",
-      "lastUpdated": "3 DAYS AGO"
-    },
-    {
-      "id": "5",
-      "title": "Emergency Fund Rules",
-      "content": "Emergency reserves must cover 6 months of fixed family expenses. Keep cash strictly in savings accounts or short-term liquid FDs. Never deploy emergency funds into volatile equity assets.",
-      "lastUpdated": "1 WEEK AGO"
-    }
-  ],
+  "policies": [],
+  "notes": [],
   "assetAllocation": [
     {
       "name": "Stocks",

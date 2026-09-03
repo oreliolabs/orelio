@@ -221,7 +221,11 @@ export function saveLoans(loans: LoanItem[]): void {
 }
 
 export function getPolicies(): Policy[] {
-  return getOrelioDatabase().policies;
+  const policies = getOrelioDatabase().policies || [];
+  return policies.map((p: any) => ({
+    ...p,
+    premiumAmount: typeof p.premiumAmount === 'number' ? p.premiumAmount : (typeof p.annualPremium === 'number' ? p.annualPremium : 0)
+  }));
 }
 
 export function savePolicies(policies: Policy[]): void {

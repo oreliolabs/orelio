@@ -15,7 +15,7 @@ export interface Policy {
   policyNumber?: string;
   provider?: string;
   sumInsured: number;
-  annualPremium: number;
+  premiumAmount: number;
   premiumFrequency: PremiumFrequency;
   startDate: string; // YYYY-MM-DD or formatted string
   expiryDate: string; // YYYY-MM-DD or formatted string
@@ -27,7 +27,7 @@ export interface PolicyFormData {
   policyNumber?: string;
   provider?: string;
   sumInsured: string;
-  annualPremium: string;
+  premiumAmount: string;
   premiumFrequency: PremiumFrequency;
   startDate: string;
   expiryDate: string;

@@ -16,6 +16,5 @@ Issues like -
 
 
 	TODAY:
-	1. Stocks and Mutual Funds screen - [DONE: Combined screen with Net Current Value card, bottom-aligned flush sparkline, left-aligned holdings table, and Upload CAS Statement modal with CDSL/NSDL password decryptor]
-
-	
+	1. User accounts - Rajesh ka data rajesh mein, spouse ka data spouse mein and all members ka data is aggregated
+	2. empty state notes
