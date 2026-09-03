@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Eye, EyeOff, ChevronDown, Menu, Users, Bell } from 'lucide-react';
+import { Search, Eye, EyeOff, ChevronDown, Menu, Users } from 'lucide-react';
 
 interface FamilyMember {
   id: string;
@@ -91,11 +91,14 @@ export const Topbar: React.FC<TopbarProps> = ({
           {isPrivate ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
 
-        {/* Notifications badge */}
-        <button className="hidden sm:block p-2.5 rounded-xl border border-[#C3C6CE]/20 bg-white text-orelio-navy hover:bg-orelio-light-gray relative transition-all">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-        </button>
+        {/* Dark/Light mode toggle
+        <button 
+          className="hidden sm:block p-2.5 rounded-xl border border-[#C3C6CE]/20 bg-white text-orelio-navy hover:bg-orelio-light-gray transition-all cursor-pointer"
+          title="Toggle Dark/Light Mode"
+          aria-label="Toggle Dark/Light Mode"
+        >
+          <Moon size={18} />
+        </button> */}
 
         {/* Divider */}
         <div className="hidden sm:block h-6 w-px bg-[#C3C6CE]/35" />

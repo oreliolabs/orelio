@@ -173,7 +173,7 @@ export const UploadCASModal: React.FC<UploadCASModalProps> = ({
       {/* Modal Dialog Box */}
       <div className="relative bg-white rounded-3xl max-w-xl w-full flex flex-col max-h-[90vh] shadow-2xl border border-[#C3C6CE]/30 overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 md:px-8 pt-5 pb-4 border-b border-[#C3C6CE]/20 flex-shrink-0 bg-white">
+        <div className="flex items-center justify-between px-6 md:px-8 pt-5 pb-4 flex-shrink-0 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center flex-shrink-0">
               <span className="material-symbols-outlined select-none" style={{ fontSize: '22px' }}>
