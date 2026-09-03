@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Policy, PolicyFormData, PolicyType } from './InsuranceTypes';
+import { getPolicies, savePolicies } from '../../data/orelioStore';
 import { AddEditPolicyModal } from './AddEditPolicyModal';
 import { DeletePolicyModal } from './DeletePolicyModal';
 import { PrimaryButton } from '../common/PrimaryButton';
@@ -9,44 +10,11 @@ interface InsuranceProps {
 }
 
 export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
-  const [policies, setPolicies] = useState<Policy[]>([
-    {
-      id: 'pol-1',
-      policyType: 'Property Insurance',
-      policyName: 'Estate Protection Plan',
-      policyNumber: 'POL-2231-LL',
-      provider: 'AXA Private',
-      sumInsured: 2500000,
-      annualPremium: 15200,
-      premiumFrequency: 'Annual',
-      startDate: '2024-01-22',
-      expiryDate: '2025-01-22'
-    },
-    {
-      id: 'pol-2',
-      policyType: 'Property Insurance',
-      policyName: 'Estate Protection Plan',
-      policyNumber: 'POL-2231-LL',
-      provider: 'AXA Private',
-      sumInsured: 2500000,
-      annualPremium: 15200,
-      premiumFrequency: 'Annual',
-      startDate: '2024-01-22',
-      expiryDate: '2025-01-22'
-    },
-    {
-      id: 'pol-3',
-      policyType: 'Property Insurance',
-      policyName: 'Estate Protection Plan',
-      policyNumber: 'POL-2231-LL',
-      provider: 'AXA Private',
-      sumInsured: 2500000,
-      annualPremium: 15200,
-      premiumFrequency: 'Annual',
-      startDate: '2024-01-22',
-      expiryDate: '2025-01-22'
-    }
-  ]);
+  const [policies, setPolicies] = useState<Policy[]>(() => getPolicies());
+
+  useEffect(() => {
+    savePolicies(policies);
+  }, [policies]);
 
   // Modal & Menu states
   const [activeMenuPolicyId, setActiveMenuPolicyId] = useState<string | null>(null);

@@ -4,52 +4,19 @@ import { PrimaryButton } from '../common/PrimaryButton';
 import { SaveButton } from '../common/SaveButton';
 import { CancelButton } from '../common/CancelButton';
 
-interface BankAccount {
-  id: string;
-  bankName: string;
-  accountType: string;
-  balance: number;
-  lastUpdated: string;
-  accountNumber: string;
-  ifscCode: string;
-}
+import { getBankAccounts, saveBankAccounts } from '../../data/orelioStore';
+import type { BankAccount } from '../../data/types';
 
 interface BankAccountsProps {
   isPrivate: boolean;
 }
 
-const INITIAL_ACCOUNTS: BankAccount[] = [
-  {
-    id: '1',
-    bankName: 'Kotak Bank Account',
-    accountType: 'Savings Account',
-    balance: 84094.23,
-    lastUpdated: '12:00 pm',
-    accountNumber: '1234 1234 1234',
-    ifscCode: 'KKBK0000234'
-  },
-  {
-    id: '2',
-    bankName: 'ICICI Bank Account',
-    accountType: 'Savings Account',
-    balance: 894.74,
-    lastUpdated: '12:00 pm',
-    accountNumber: '1234 1234 1234',
-    ifscCode: 'SBIN0001234'
-  },
-  {
-    id: '3',
-    bankName: 'HDFC Bank Account',
-    accountType: 'Savings Account',
-    balance: 16905.77,
-    lastUpdated: '12:00 pm',
-    accountNumber: '1234 1234 5678',
-    ifscCode: 'HDFC0000012'
-  }
-];
-
 export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
-  const [accounts, setAccounts] = useState<BankAccount[]>(INITIAL_ACCOUNTS);
+  const [accounts, setAccounts] = useState<BankAccount[]>(() => getBankAccounts());
+
+  useEffect(() => {
+    saveBankAccounts(accounts);
+  }, [accounts]);
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set(['2'])); // Seeding ICICI as expanded by default like in SVG
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 

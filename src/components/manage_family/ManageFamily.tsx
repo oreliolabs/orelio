@@ -17,7 +17,6 @@ export interface FamilyMember {
   age: number;
   isDependent: boolean;
   gender: 'Male' | 'Female' | 'Other';
-  avatarColor: string;
 }
 
 interface ManageFamilyProps {

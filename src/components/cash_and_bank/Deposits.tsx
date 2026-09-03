@@ -3,26 +3,9 @@ import { AddEditDepositModal } from './AddEditDepositModal';
 import type { DepositFormData } from './AddEditDepositModal';
 import { DeleteDepositModal } from './DeleteDepositModal';
 import { PrimaryButton } from '../common/PrimaryButton';
-
-export interface Deposit {
-  id: string;
-  type: 'FD' | 'RD';
-  nickname: string;
-  bankName: string;
-  accountNumber: string;
-  interestRate: number;
-  currentValue: number;
-  principalOrMonthly: number;
-  startDate?: string;
-  maturityDate: string;
-  tenureYears?: number;
-  tenureMonths?: number;
-  daysRemaining: number;
-  progressPercent: number;
-  status: 'active' | 'matured';
-  maturedDate?: string;
-  nominee?: string;
-}
+import { getDeposits, saveDeposits } from '../../data/orelioStore';
+import type { Deposit } from '../../data/types';
+export type { Deposit } from '../../data/types';
 
 export const formatDisplayDate = (str?: string): string => {
   if (!str) return '';
@@ -159,122 +142,12 @@ interface DepositsProps {
   isPrivate: boolean;
 }
 
-const INITIAL_DEPOSITS: Deposit[] = [
-  {
-    id: 'dep-1',
-    type: 'FD',
-    nickname: 'Retirement Alpha Fund',
-    bankName: 'HDFC Bank',
-    accountNumber: '50100482918829',
-    interestRate: 7.85,
-    currentValue: 245000,
-    principalOrMonthly: 200000,
-    startDate: '24/10/2023',
-    maturityDate: '24/10/2025',
-    daysRemaining: 245,
-    progressPercent: 65,
-    status: 'active',
-    nominee: 'Priya Sharma'
-  },
-  {
-    id: 'dep-2',
-    type: 'RD',
-    nickname: 'Retirement Alpha Fund',
-    bankName: 'ICICI Bank',
-    accountNumber: '50100239108829',
-    interestRate: 6.85,
-    currentValue: 245000,
-    principalOrMonthly: 2000,
-    startDate: '12/10/2023',
-    maturityDate: '12/10/2025',
-    daysRemaining: 245,
-    progressPercent: 75,
-    status: 'active',
-    nominee: 'Rohan Sharma'
-  },
-  {
-    id: 'dep-3',
-    type: 'FD',
-    nickname: 'Retirement Alpha Fund',
-    bankName: 'Kotak Bank',
-    accountNumber: '50100774928829',
-    interestRate: 7.85,
-    currentValue: 245000,
-    principalOrMonthly: 200000,
-    startDate: '24/10/2023',
-    maturityDate: '24/10/2025',
-    daysRemaining: 245,
-    progressPercent: 65,
-    status: 'active'
-  },
-  {
-    id: 'dep-4',
-    type: 'FD',
-    nickname: 'Children Higher Education',
-    bankName: 'Axis Bank',
-    accountNumber: '91823019383411',
-    interestRate: 7.50,
-    currentValue: 310500,
-    principalOrMonthly: 250000,
-    startDate: '18/12/2024',
-    maturityDate: '18/12/2026',
-    daysRemaining: 510,
-    progressPercent: 40,
-    status: 'active',
-    nominee: 'Aarav Sharma'
-  },
-  {
-    id: 'dep-5',
-    type: 'RD',
-    nickname: 'Emergency Rainy Day RD',
-    bankName: 'SBI Bank',
-    accountNumber: '10293847569012',
-    interestRate: 7.10,
-    currentValue: 103000,
-    principalOrMonthly: 5000,
-    startDate: '05/03/2024',
-    maturityDate: '05/03/2026',
-    daysRemaining: 220,
-    progressPercent: 55,
-    status: 'active'
-  },
-  {
-    id: 'dep-m1',
-    type: 'FD',
-    nickname: '2023 Tax Saver',
-    bankName: 'HDFC Bank',
-    accountNumber: '50100984715562',
-    interestRate: 6.75,
-    currentValue: 55420,
-    principalOrMonthly: 50000,
-    startDate: '15/01/2023',
-    maturityDate: '15/01/2025',
-    daysRemaining: 0,
-    progressPercent: 100,
-    status: 'matured',
-    maturedDate: '15/01/2025',
-    nominee: 'Priya Sharma'
-  },
-  {
-    id: 'dep-m2',
-    type: 'FD',
-    nickname: '2023 Tax Saver',
-    bankName: 'ICICI Bank',
-    accountNumber: '50100348105562',
-    interestRate: 6.75,
-    currentValue: 55420,
-    principalOrMonthly: 50000,
-    startDate: '15/01/2023',
-    maturityDate: '15/01/2025',
-    daysRemaining: 0,
-    progressPercent: 100,
-    status: 'matured',
-    maturedDate: '15/01/2025'
-  }
-];
-
 export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
-  const [deposits, setDeposits] = useState<Deposit[]>(INITIAL_DEPOSITS);
+  const [deposits, setDeposits] = useState<Deposit[]>(() => getDeposits());
+
+  useEffect(() => {
+    saveDeposits(deposits);
+  }, [deposits]);
 
   // Context Menu & Expansion State
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);

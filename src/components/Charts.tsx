@@ -1,30 +1,10 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
-interface ChartDataItem {
-  name: string;
-  value: number;
-  color: string;
-}
-
-// Asset Allocation Data (Semi-Donut)
-const assetData: ChartDataItem[] = [
-  { name: 'Stocks', value: 10, color: '#0284C7' },      // Sky blue
-  { name: 'Bonds', value: 26, color: '#0F766E' },       // Teal
-  { name: 'Fixed Deposits', value: 34, color: '#0D9488' }, // Mint Teal
-  { name: 'Mutual Funds', value: 24, color: '#4F46E5' },  // Indigo
-  { name: 'Cash', value: 10, color: '#F59E0B' },        // Amber
-  { name: 'Gold', value: 12, color: '#EAB308' }         // Yellow
-];
-
-// Loans & Credit Liability Data (Full Donut)
-const liabilityData: ChartDataItem[] = [
-  { name: 'Home Loan', value: 85, color: '#DC2626' },    // Red
-  { name: 'Car Loan', value: 12, color: '#F59E0B' },     // Amber
-  { name: 'Others', value: 3, color: '#9CA3AF' }        // Gray
-];
+import { getAssetAllocation, getLiabilityAllocation } from '../data/orelioStore';
 
 export const AssetAllocationChart: React.FC = () => {
+  const assetData = getAssetAllocation();
   return (
     <div className="w-full h-full flex flex-col md:flex-row items-center justify-between gap-6">
       
@@ -82,6 +62,7 @@ export const AssetAllocationChart: React.FC = () => {
 };
 
 export const LiabilityChart: React.FC = () => {
+  const liabilityData = getLiabilityAllocation();
   return (
     <div className="w-full h-full flex flex-col md:flex-row items-center justify-between gap-6">
       

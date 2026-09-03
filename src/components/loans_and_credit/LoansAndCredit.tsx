@@ -3,83 +3,20 @@ import { PrimaryButton } from '../common/PrimaryButton';
 import { DeleteConfirmationModal } from '../common/DeleteConfirmationModal';
 import { AddEditLoanModal } from './AddEditLoanModal';
 import type { LoanFormData } from './AddEditLoanModal';
-
-export interface LoanItem {
-  id: string;
-  type: string;
-  nickname: string;
-  provider: string;
-  accountNumber: string;
-  totalAmount: number;
-  outstandingBalance: number;
-  interestRate: number;
-  tenureYears: number;
-  tenureMonths: number;
-  startDate: string;
-  nextEmiDate: string;
-  monthlyEmi: number;
-  repaymentProgressPercent: number;
-  status: 'active' | 'closed';
-}
+import { getLoans, saveLoans } from '../../data/orelioStore';
+import type { LoanItem } from '../../data/types';
+export type { LoanItem } from '../../data/types';
 
 interface LoansAndCreditProps {
   isPrivate?: boolean;
 }
 
 export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = false }) => {
-  const [loans, setLoans] = useState<LoanItem[]>([
-    {
-      id: '1',
-      type: 'Mortgage',
-      nickname: 'Home Loan',
-      provider: 'HSBC',
-      accountNumber: '**** 9210',
-      totalAmount: 1450000.00,
-      outstandingBalance: 842000.00,
-      interestRate: 4.82,
-      tenureYears: 30,
-      tenureMonths: 0,
-      startDate: '2018-10-12',
-      nextEmiDate: 'Oct 12, 2023',
-      monthlyEmi: 12450.00,
-      repaymentProgressPercent: 42,
-      status: 'active'
-    },
-    {
-      id: '2',
-      type: 'Auto Loan',
-      nickname: 'Car Loan - SUV',
-      provider: 'HDFC Bank',
-      accountNumber: '**** 4431',
-      totalAmount: 1800000.00,
-      outstandingBalance: 520000.00,
-      interestRate: 7.50,
-      tenureYears: 5,
-      tenureMonths: 0,
-      startDate: '2021-03-15',
-      nextEmiDate: 'Nov 05, 2023',
-      monthlyEmi: 32100.00,
-      repaymentProgressPercent: 71,
-      status: 'active'
-    },
-    {
-      id: '3',
-      type: 'Personal Loan',
-      nickname: 'Renovation Credit',
-      provider: 'ICICI Bank',
-      accountNumber: '**** 1109',
-      totalAmount: 500000.00,
-      outstandingBalance: 121390.42,
-      interestRate: 10.25,
-      tenureYears: 3,
-      tenureMonths: 0,
-      startDate: '2022-06-01',
-      nextEmiDate: 'Oct 28, 2023',
-      monthlyEmi: 16100.00,
-      repaymentProgressPercent: 76,
-      status: 'active'
-    }
-  ]);
+  const [loans, setLoans] = useState<LoanItem[]>(() => getLoans());
+
+  useEffect(() => {
+    saveLoans(loans);
+  }, [loans]);
 
   // Modal and menu state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -175,7 +112,7 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
         type: formData.type,
         nickname: formData.nickname,
         provider: formData.provider,
-        accountNumber: `**** ${Math.floor(1000 + Math.random() * 9000)}`,
+        accountNumber: formData.accountNumber || `${Math.floor(100000000000 + Math.random() * 900000000000)}`,
         totalAmount: formData.totalAmount,
         outstandingBalance: formData.totalAmount,
         interestRate: formData.interestRate,
@@ -399,22 +336,31 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
                 </div>
 
                 {/* Column 4: Repayment Progress */}
-                <div className="flex-1 max-w-xs">
-                  <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase group-hover:text-[#006A65] transition-colors mb-1.5">
-                    REPAYMENT PROGRESS
-                  </span>
-                  <div className="w-full h-2 rounded-full bg-[#F2F4F5] overflow-hidden">
-                    <div
-                      className="h-full bg-[#006A65] rounded-full transition-all duration-500"
-                      style={{ width: `${loan.repaymentProgressPercent}%` }}
-                    />
-                  </div>
-                  <div className="mt-1">
-                    <span className="text-xs font-medium text-[#74777F]">
-                      {loan.repaymentProgressPercent}% Paid
-                    </span>
-                  </div>
-                </div>
+                {(() => {
+                  const progressPercent = loan.repaymentProgressPercent ?? (
+                    loan.totalAmount > 0
+                      ? Math.min(100, Math.max(0, Math.round(((loan.totalAmount - loan.outstandingBalance) / loan.totalAmount) * 100)))
+                      : 0
+                  );
+                  return (
+                    <div className="flex-1 max-w-xs">
+                      <span className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase group-hover:text-[#006A65] transition-colors mb-1.5">
+                        REPAYMENT PROGRESS
+                      </span>
+                      <div className="w-full h-2 rounded-full bg-[#F2F4F5] overflow-hidden">
+                        <div
+                          className="h-full bg-[#006A65] rounded-full transition-all duration-500"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                      <div className="mt-1">
+                        <span className="text-xs font-medium text-[#74777F]">
+                          {progressPercent}% Paid
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Column 5: More Menu Button & Popover */}
                 <div className="relative flex justify-end self-start loan-card-menu-container">
@@ -439,7 +385,7 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
                         <span>Edit Loan Details</span>
                       </button>
 
-                      {loan.repaymentProgressPercent < 100 && loan.outstandingBalance > 0 && (
+                      {loan.outstandingBalance > 0 && (
                         <button
                           onClick={() => handleMarkInstallmentPaid(loan)}
                           className="w-full text-left px-3.5 py-2 text-[14px] font-semibold text-[#3F4945] hover:bg-[#F2F4F5] transition-colors flex items-center gap-2 whitespace-nowrap"

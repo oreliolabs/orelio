@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getUserProfile } from '../../data/orelioStore';
 
 interface WelcomePageProps {
   onSignIn: () => void;
@@ -65,24 +66,29 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
         {/* Sign In Card */}
         <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left">
           {/* Active User Persona Banner */}
-          <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/25">
-            <img
-              src="/alexander_bloom_avatar.png"
-              alt="Alexander Bloom"
-              className="w-12 h-12 rounded-full object-cover flex-shrink-0 shadow-xs ring-2 ring-white"
-            />
-            <div className="flex-1 min-w-0">
-              <span className="block text-sm font-bold text-[#00162A] truncate">
-                Alexander Bloom
-              </span>
-              <span className="block text-xs text-[#74777F] truncate">
-                alexander.bloom@orelio.private
-              </span>
-            </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold text-[#006A65] bg-[#E6F4F1] uppercase">
-              Ready
-            </span>
-          </div>
+          {(() => {
+            const userProfile = getUserProfile();
+            return (
+              <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/25">
+                <img
+                  src="/alexander_bloom_avatar.png"
+                  alt={userProfile.name}
+                  className="w-12 h-12 rounded-full object-cover flex-shrink-0 shadow-xs ring-2 ring-white"
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="block text-sm font-bold text-[#00162A] truncate">
+                    {userProfile.name}
+                  </span>
+                  <span className="block text-xs text-[#74777F] truncate">
+                    {userProfile.email}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold text-[#006A65] bg-[#E6F4F1] uppercase">
+                  Ready
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Primary Action Button */}
           <button

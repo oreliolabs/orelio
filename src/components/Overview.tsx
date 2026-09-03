@@ -10,12 +10,15 @@ import {
   Activity, 
   PiggyBank 
 } from 'lucide-react';
+import { getOverviewMetrics } from '../data/orelioStore';
 
 interface OverviewProps {
   isPrivate: boolean;
 }
 
 export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
+  const metrics = getOverviewMetrics();
+
   // Helper to mask values in private mode
   const f = (val: string) => (isPrivate ? '••••' : val);
 
@@ -31,14 +34,14 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
             <div>
               <span className="block text-xs font-bold tracking-widest text-orelio-darkgreen uppercase">Current Net Worth</span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-orelio-navy mt-1 tracking-tight">
-                {f('₹ 2.30 Cr')}
+                {f(metrics.netWorthDisplay)}
               </h2>
             </div>
             
             {/* Trend Badge */}
             <div className="flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
               <ArrowUpRight size={14} className="stroke-[2.5]" />
-              <span>{f('+₹ 28.4L')} (+12.3%) this year</span>
+              <span>{f(metrics.yearGrowthAmount)} (+{metrics.yearGrowthPercent}%) this year</span>
             </div>
           </div>
 

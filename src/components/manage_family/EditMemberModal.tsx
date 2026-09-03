@@ -108,13 +108,6 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
     setIsSaving(true);
 
     const calculatedAge = calculateAge(formDob);
-    let avatarGrad = 'from-teal-500 to-cyan-600';
-    if (formGender === 'Female') {
-      avatarGrad = 'from-pink-500 to-purple-600';
-    } else if (formRole === 'Child') {
-      avatarGrad = 'from-amber-400 to-orange-500';
-    }
-
     const displayDob = toDisplayDmy(formDob);
 
     const memberData: FamilyMember = {
@@ -125,8 +118,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       dob: displayDob,
       age: calculatedAge,
       isDependent: formIsDependent,
-      gender: formGender,
-      avatarColor: selectedMember?.avatarColor || avatarGrad
+      gender: formGender
     };
 
     // Brief save animation then call onSave

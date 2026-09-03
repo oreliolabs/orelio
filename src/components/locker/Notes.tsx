@@ -3,54 +3,16 @@ import { PrimaryButton } from '../common/PrimaryButton';
 import { AddEditNoteModal } from './AddEditNoteModal';
 import { ViewNoteModal } from './ViewNoteModal';
 import { DeleteNoteModal } from './DeleteNoteModal';
-
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  lastUpdated: string; // e.g., "12:00 PM"
-  accentColor: string; // "#006A65" or "#00162A"
-}
+import { getNotes, saveNotes } from '../../data/orelioStore';
+import type { Note } from '../../data/types';
+export type { Note } from '../../data/types';
 
 export const Notes: React.FC = () => {
-  // Mock default notes based on reference design
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: '1',
-      title: 'The Art of Small Beginnings',
-      content: 'Not every meaningful change arrives with a grand announcement. Sometimes, the most enduring habits, the most solid financial portfolios, and the deepest personal reflections start in the quietest way imaginable. A single rupee set aside, a single sentence written, or a single moment of quiet alignment can lay the foundation for a lifetime of growth.',
-      lastUpdated: '12:00 PM',
-      accentColor: '#00162A'
-    },
-    {
-      id: '2',
-      title: 'Conversations in Silence',
-      content: 'Some of the best conversations happen in silence. When we quiet the noise around us, we can finally hear the underlying currents of our thoughts, goals, and strategies. Writing down these quiet insights helps transform brief ideas into permanent systems, ensuring we stay focused on long-term values rather than short-term market noises.',
-      lastUpdated: '11:30 AM',
-      accentColor: '#00162A'
-    },
-    {
-      id: '3',
-      title: 'Quarterly Asset Allocation Checklist',
-      content: 'Review cash reserves, equity weightings across portfolios, and ensure Locker records (wills, digital passwords) are updated. Balance target ratios when stocks rise past their threshold. Maintain safety margins for loans.',
-      lastUpdated: 'YESTERDAY',
-      accentColor: '#00162A'
-    },
-    {
-      id: '4',
-      title: 'Retirement Vision Board',
-      content: 'Mapping out passive income milestones for age 60. Core streams include dividend stocks, EPF accumulations, and rental yielding real estate. Focus on stability over raw growth in later stages. Regularly audit health cover limits.',
-      lastUpdated: '3 DAYS AGO',
-      accentColor: '#00162A'
-    },
-    {
-      id: '5',
-      title: 'Emergency Fund Rules',
-      content: 'Emergency reserves must cover 6 months of fixed family expenses. Keep cash strictly in savings accounts or short-term liquid FDs. Never deploy emergency funds into volatile equity assets.',
-      lastUpdated: '1 WEEK AGO',
-      accentColor: '#00162A'
-    }
-  ]);
+  const [notes, setNotes] = useState<Note[]>(() => getNotes());
+
+  useEffect(() => {
+    saveNotes(notes);
+  }, [notes]);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');

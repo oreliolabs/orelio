@@ -16,7 +16,7 @@ export interface StockCASMetadata {
   depository: 'CDSL' | 'NSDL' | 'CAMS' | 'KFintech';
   dematAccountId?: string;
   statementPeriod: string;
-  totalMarketValue: number;
+  totalMarketValue?: number;
   totalInvestedValue: number;
   uploadedAt: string;
 }

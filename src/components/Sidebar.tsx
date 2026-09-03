@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LogoutConfirmationModal } from './common/LogoutConfirmationModal';
+import { getUserProfile } from '../data/orelioStore';
 
 interface SidebarProps {
   activeTab: string;
@@ -219,11 +220,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center gap-3">
             <img
               src="/alexander_bloom_avatar.png"
-              alt="Alexander Bloom"
+              alt={getUserProfile().name}
               className="w-10 h-10 rounded-full object-cover flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <span className="block text-sm font-bold text-black truncate leading-tight">Alexander Bloom</span>
+              <span className="block text-sm font-bold text-black truncate leading-tight">{getUserProfile().name}</span>
               <button
                 type="button"
                 onClick={() => setIsLogoutModalOpen(true)}

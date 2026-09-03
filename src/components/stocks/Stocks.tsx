@@ -1,51 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PrimaryButton } from '../common/PrimaryButton';
 import { UploadStockCASModal } from './UploadStockCASModal';
-import { INITIAL_STOCKS } from './sampleStocksData';
-import type { StockHolding, StockCASMetadata } from './StocksTypes';
+import { getStocks, saveStocks, getStockMetadata, saveStockMetadata } from '../../data/orelioStore';
+import type { StockHolding, StockCASMetadata } from '../../data/types';
 
 interface StocksProps {
   isPrivate: boolean;
 }
 
-const STORAGE_STOCKS_KEY = 'orelio_stocks_holdings';
-const STORAGE_STOCKS_META_KEY = 'orelio_stocks_metadata';
-
 export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
-  const [holdings, setHoldings] = useState<StockHolding[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_STOCKS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.warn('Failed to load saved stocks:', e);
-    }
-    return INITIAL_STOCKS;
-  });
-
-  const [metadata, setMetadata] = useState<StockCASMetadata | null>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_STOCKS_META_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.warn('Failed to load stocks metadata:', e);
-    }
-    return null;
-  });
-
+  const [holdings, setHoldings] = useState<StockHolding[]>(() => getStocks());
+  const [metadata, setMetadata] = useState<StockCASMetadata | null>(() => getStockMetadata());
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  // Persist to localStorage
+  // Persist to central orelioStore
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_STOCKS_KEY, JSON.stringify(holdings));
-      if (metadata) {
-        localStorage.setItem(STORAGE_STOCKS_META_KEY, JSON.stringify(metadata));
-      }
-    } catch (e) {
-      console.warn('Failed to persist stocks:', e);
+    saveStocks(holdings);
+    if (metadata) {
+      saveStockMetadata(metadata);
     }
   }, [holdings, metadata]);
 

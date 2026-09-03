@@ -12,17 +12,8 @@ import { Stocks } from './components/stocks/Stocks';
 import { WelcomePage } from './components/welcome/WelcomePage';
 import { Briefcase } from 'lucide-react';
 
-interface FamilyMember {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  dob: string;
-  age: number;
-  isDependent: boolean;
-  gender: 'Male' | 'Female' | 'Other';
-  avatarColor: string;
-}
+import { getFamilyMembers, saveFamilyMembers } from './data/orelioStore';
+import type { FamilyMember } from './data/types';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -42,52 +33,7 @@ function App() {
     localStorage.setItem('orelio_authenticated', 'true');
   };
   
-  const [members, setMembers] = useState<FamilyMember[]>([
-    {
-      id: '1',
-      firstName: 'Rajesh',
-      lastName: 'Dubey',
-      role: 'Self',
-      dob: '15/02/1973',
-      age: 52,
-      isDependent: false,
-      gender: 'Male',
-      avatarColor: 'from-teal-600 to-emerald-500'
-    },
-    {
-      id: '2',
-      firstName: 'Priya',
-      lastName: 'Dubey',
-      role: 'Spouse',
-      dob: '22/07/1977',
-      age: 48,
-      isDependent: false,
-      gender: 'Female',
-      avatarColor: 'from-pink-500 to-purple-600'
-    },
-    {
-      id: '3',
-      firstName: 'Kavya',
-      lastName: 'Dubey',
-      role: 'Child',
-      dob: '05/06/2014',
-      age: 12,
-      isDependent: true,
-      gender: 'Female',
-      avatarColor: 'from-amber-400 to-orange-500'
-    },
-    {
-      id: '4',
-      firstName: 'Marjari',
-      lastName: 'Rampure',
-      role: 'Mother',
-      dob: '11/11/1948',
-      age: 77,
-      isDependent: true,
-      gender: 'Female',
-      avatarColor: 'from-teal-500 to-cyan-600'
-    }
-  ]);
+  const [members, setMembers] = useState<FamilyMember[]>(() => getFamilyMembers());
 
   // Modal states lifted to App.tsx
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -243,11 +189,14 @@ function App() {
         isEditing={isEditing}
         selectedMember={selectedMember}
         onSave={(updatedOrNewMember) => {
+          let nextMembers: FamilyMember[];
           if (isEditing && selectedMember) {
-            setMembers(members.map(m => m.id === selectedMember.id ? updatedOrNewMember : m));
+            nextMembers = members.map(m => m.id === selectedMember.id ? updatedOrNewMember : m);
           } else {
-            setMembers([...members, updatedOrNewMember]);
+            nextMembers = [...members, updatedOrNewMember];
           }
+          setMembers(nextMembers);
+          saveFamilyMembers(nextMembers);
           setIsEditModalOpen(false);
         }}
       />
@@ -258,7 +207,9 @@ function App() {
           onClose={() => setIsRemoveModalOpen(false)}
           selectedMember={selectedMember}
           onConfirm={() => {
-            setMembers(members.filter(m => m.id !== selectedMember.id));
+            const nextMembers = members.filter(m => m.id !== selectedMember.id);
+            setMembers(nextMembers);
+            saveFamilyMembers(nextMembers);
             setIsRemoveModalOpen(false);
           }}
         />
