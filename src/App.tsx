@@ -9,6 +9,7 @@ import Deposits from './components/cash_and_bank/Deposits';
 import { Insurance } from './components/insurance/Insurance';
 import { LoansAndCredit } from './components/loans_and_credit/LoansAndCredit';
 import { Stocks } from './components/stocks/Stocks';
+import { WelcomePage } from './components/welcome/WelcomePage';
 import { Briefcase } from 'lucide-react';
 
 interface FamilyMember {
@@ -24,9 +25,22 @@ interface FamilyMember {
 }
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('orelio_authenticated') !== 'false';
+  });
   const [activeTab, setActiveTab] = useState('overview');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.setItem('orelio_authenticated', 'false');
+  };
+
+  const handleSignIn = () => {
+    setIsAuthenticated(true);
+    localStorage.setItem('orelio_authenticated', 'true');
+  };
   
   const [members, setMembers] = useState<FamilyMember[]>([
     {
@@ -198,6 +212,10 @@ function App() {
     }
   };
 
+  if (!isAuthenticated) {
+    return <WelcomePage onSignIn={handleSignIn} />;
+  }
+
   return (
     <div className="min-h-screen flex bg-orelio-bg font-sans antialiased">
       
@@ -207,6 +225,7 @@ function App() {
         setActiveTab={setActiveTab} 
         isOpen={mobileSidebarOpen}
         setIsOpen={setMobileSidebarOpen}
+        onLogout={handleLogout}
       />
 
       {/* Main Layout Area */}

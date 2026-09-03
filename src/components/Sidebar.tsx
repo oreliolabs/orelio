@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
+import { LogoutConfirmationModal } from './common/LogoutConfirmationModal';
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   isOpen,
-  setIsOpen
+  setIsOpen,
+  onLogout
 }) => {
   // Submenu states
   const [assetsOpen, setAssetsOpen] = useState(true);
   const [cashBankOpen, setCashBankOpen] = useState(false);
   const [lockerOpen, setLockerOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleTabClick = (tabName: string) => {
     setActiveTab(tabName);
@@ -220,10 +224,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
             />
             <div className="flex-1 min-w-0">
               <span className="block text-sm font-bold text-black truncate leading-tight">Alexander Bloom</span>
-              <span className="block text-[9px] font-bold tracking-widest text-[#707975] uppercase mt-1">PREMIUM TIER</span>
+              <button
+                type="button"
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="flex items-center gap-1 text-xs font-semibold text-[#707975] hover:text-[#BA1A1A] transition-colors mt-0.5 cursor-pointer group"
+                title="Log out of account"
+              >
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '13px' }}>
+                  logout
+                </span>
+                <span>Log out</span>
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Logout Confirmation Modal */}
+        <LogoutConfirmationModal
+          isOpen={isLogoutModalOpen}
+          onClose={() => setIsLogoutModalOpen(false)}
+          onConfirm={() => {
+            setIsLogoutModalOpen(false);
+            onLogout?.();
+          }}
+        />
       </aside>
     </>
   );
