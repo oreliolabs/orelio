@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Eye, EyeOff, ChevronDown, Menu, Users } from 'lucide-react';
+import { /* Search, */ Eye, EyeOff, ChevronDown, Menu, Users } from 'lucide-react';
 
 interface FamilyMember {
   id: string;
@@ -61,6 +61,7 @@ export const Topbar: React.FC<TopbarProps> = ({
           <Menu size={20} />
         </button>
 
+        {/* Search Bar (Commented out)
         <div className="relative w-full">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-orelio-gray">
             <Search size={16} />
@@ -71,6 +72,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             className="w-full h-11 pl-11 pr-4 rounded-xl bg-orelio-light-gray/60 border border-[#C3C6CE]/15 font-medium text-sm text-orelio-navy placeholder-orelio-gray focus:outline-none focus:bg-white focus:border-orelio-darkgreen/40 transition-all"
           />
         </div>
+        */}
       </div>
 
       {/* Right: Quick Action Controls */}
