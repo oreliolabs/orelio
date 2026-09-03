@@ -79,13 +79,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         {/* Privacy eye toggle with tooltip */}
         <button 
           onClick={() => setIsPrivate(!isPrivate)}
-          className={`
-            p-2.5 rounded-xl border border-[#C3C6CE]/20 transition-all duration-200
-            ${isPrivate 
-              ? 'bg-orelio-darkgreen text-white border-orelio-darkgreen hover:bg-orelio-darkgreen/90' 
-              : 'bg-white text-orelio-navy hover:bg-orelio-light-gray'
-            }
-          `}
+          className="p-2.5 rounded-xl border border-[#C3C6CE]/20 bg-white text-orelio-navy hover:bg-orelio-light-gray transition-all duration-200 cursor-pointer"
           title={isPrivate ? "Show financial figures" : "Hide financial figures (Privacy Mode)"}
         >
           {isPrivate ? <EyeOff size={18} /> : <Eye size={18} />}

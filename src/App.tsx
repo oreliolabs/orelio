@@ -144,10 +144,9 @@ function App() {
 
       case 'settings':
         return (
-          <div className="space-y-6 fade-in p-2 max-w-3xl">
+          <div className="space-y-6 fade-in p-2 w-full">
             <div>
-              <span className="text-xs font-bold tracking-widest text-orelio-gray uppercase">Preferences & System</span>
-              <h2 className="text-2xl font-extrabold text-orelio-navy mt-1">Settings</h2>
+              <h2 className="text-2xl font-extrabold text-orelio-navy">Settings</h2>
             </div>
             
             <div className="glass-card divide-y divide-[#C3C6CE]/15">
@@ -166,18 +165,10 @@ function App() {
 
               <div className="p-6 flex items-center justify-between">
                 <div className="space-y-1">
-                  <span className="block font-bold text-orelio-navy text-sm">Currency Symbols</span>
-                  <span className="block text-xs text-orelio-gray font-medium">Configure primary denomination. Currently Indian Rupees (INR).</span>
+                  <span className="block font-bold text-orelio-navy text-sm">Currency Symbols (Coming soon)</span>
+                  <span className="block text-xs text-orelio-gray font-medium">Configure primary denomination. Currently fixed to Indian Rupees (INR) only.</span>
                 </div>
                 <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg">INR (₹)</span>
-              </div>
-
-              <div className="p-6 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="block font-bold text-orelio-navy text-sm">Integrate External Brokers</span>
-                  <span className="block text-xs text-orelio-gray font-medium">Sync mutual fund and stock assets automatically via CAS.</span>
-                </div>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-orelio-navy rounded-lg hover:bg-orelio-navy/90 transition-all">Link CAS</button>
               </div>
             </div>
           </div>

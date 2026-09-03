@@ -28,13 +28,37 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   const [showTooltip, setShowTooltip] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Helper to convert DD/MM/YYYY to YYYY-MM-DD for date input
+  const toDateInputValue = (dmy: string): string => {
+    if (!dmy) return '';
+    if (dmy.includes('-')) return dmy;
+    const parts = dmy.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return dmy;
+  };
+
+  // Helper to convert YYYY-MM-DD back to DD/MM/YYYY
+  const toDisplayDmy = (ymd: string): string => {
+    if (!ymd) return '';
+    if (ymd.includes('/')) return ymd;
+    const parts = ymd.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+    }
+    return ymd;
+  };
+
   // Sync state with selectedMember when it changes or modal opens
   React.useEffect(() => {
     if (isOpen) {
       setFormFirstName(selectedMember?.firstName || '');
       setFormLastName(selectedMember?.lastName || '');
       setFormRole(selectedMember?.role || 'Child');
-      setFormDob(selectedMember?.dob || '');
+      setFormDob(toDateInputValue(selectedMember?.dob || ''));
       setFormGender(selectedMember?.gender || 'Female');
       setFormIsDependent(selectedMember?.isDependent ?? false);
     }
@@ -54,11 +78,21 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
 
   const calculateAge = (dobString: string): number => {
     try {
-      const parts = dobString.split('/');
-      if (parts.length !== 3) return 30;
-      const birthYear = parseInt(parts[2], 10);
-      const currentYear = new Date().getFullYear();
-      return Math.max(0, currentYear - birthYear);
+      if (dobString.includes('-')) {
+        const parts = dobString.split('-');
+        if (parts.length === 3) {
+          const birthYear = parseInt(parts[0], 10);
+          return Math.max(0, new Date().getFullYear() - birthYear);
+        }
+      }
+      if (dobString.includes('/')) {
+        const parts = dobString.split('/');
+        if (parts.length === 3) {
+          const birthYear = parseInt(parts[2], 10);
+          return Math.max(0, new Date().getFullYear() - birthYear);
+        }
+      }
+      return 30;
     } catch {
       return 30;
     }
@@ -66,8 +100,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formFirstName.trim() || !formLastName.trim() || !formDob.trim()) {
-      alert('Please fill out all fields.');
+    if (!formFirstName.trim() || !formDob.trim()) {
+      alert('Please fill out all required fields.');
       return;
     }
 
@@ -81,12 +115,14 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       avatarGrad = 'from-amber-400 to-orange-500';
     }
 
+    const displayDob = toDisplayDmy(formDob);
+
     const memberData: FamilyMember = {
       id: selectedMember?.id || Date.now().toString(),
       firstName: formFirstName,
       lastName: formLastName,
       role: formRole,
-      dob: formDob,
+      dob: displayDob,
       age: calculatedAge,
       isDependent: formIsDependent,
       gender: formGender,
@@ -131,7 +167,9 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
           {/* Name fields */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">First Name</label>
+              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+                First Name <span className="text-[#BA1A1A] ml-0.5">*</span>
+              </label>
               <input
                 type="text"
                 required
@@ -143,10 +181,11 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">Last Name</label>
+              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+                Last Name
+              </label>
               <input
                 type="text"
-                required
                 value={formLastName}
                 onChange={(e) => setFormLastName(e.target.value)}
                 placeholder="Enter last name"
@@ -158,37 +197,57 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
           {/* Role selection & DOB */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">Relation</label>
-              <select
-                value={formRole}
-                onChange={(e) => setFormRole(e.target.value)}
-                className="w-full px-[11px] py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm text-orelio-navy font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all"
-              >
-                <option value="Spouse">Spouse</option>
-                <option value="Child">Child</option>
-                <option value="Mother">Mother</option>
-                <option value="Father">Father</option>
-                <option value="Sibling">Sibling</option>
-                <option value="Other">Other</option>
-              </select>
+              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+                Relation <span className="text-[#BA1A1A] ml-0.5">*</span>
+              </label>
+              <div className="relative flex items-center">
+                <select
+                  value={formRole}
+                  onChange={(e) => setFormRole(e.target.value)}
+                  className="w-full pl-3 pr-9 py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm text-orelio-navy font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all appearance-none cursor-pointer"
+                >
+                  <option value="Spouse">Spouse</option>
+                  <option value="Child">Child</option>
+                  <option value="Mother">Mother</option>
+                  <option value="Father">Father</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Other">Other</option>
+                </select>
+                <span className="material-symbols-outlined pointer-events-none absolute right-3 text-orelio-navy/70 select-none" style={{ fontSize: '18px' }}>
+                  expand_more
+                </span>
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">Date of Birth</label>
+              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+                Date of Birth <span className="text-[#BA1A1A] ml-0.5">*</span>
+              </label>
               <input
-                type="text"
+                type="date"
                 required
                 value={formDob}
                 onChange={(e) => setFormDob(e.target.value)}
-                placeholder="DD/MM/YYYY"
-                className="w-full px-[11px] py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm text-orelio-navy font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all"
+                onClick={(e) => {
+                  try {
+                    (e.currentTarget as HTMLInputElement).showPicker?.();
+                  } catch {}
+                }}
+                max={new Date().toISOString().split('T')[0]}
+                className={`w-full px-[11px] py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-50 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 ${
+                  !formDob
+                    ? 'text-orelio-navy/50 [&::-webkit-datetime-edit]:text-orelio-navy/50'
+                    : 'text-orelio-navy [&::-webkit-datetime-edit]:text-orelio-navy'
+                }`}
               />
             </div>
           </div>
 
           {/* Gender radio selectors */}
           <div className="space-y-1.5">
-            <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">Gender</label>
+            <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+              Gender <span className="text-[#BA1A1A] ml-0.5">*</span>
+            </label>
             <div className="flex gap-4">
               {['Male', 'Female', 'Other'].map((g) => (
                 <label key={g} className="flex items-center gap-2 text-sm font-semibold text-orelio-navy cursor-pointer">

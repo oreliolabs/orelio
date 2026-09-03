@@ -1,9 +1,9 @@
 import React from 'react';
-import {
-  PiggyBank,
-  ShieldCheck,
-  Check
-} from 'lucide-react';
+// import {
+//   PiggyBank,
+//   ShieldCheck,
+//   Check
+// } from 'lucide-react';
 import { PrimaryButton } from '../common/PrimaryButton';
 export { EditMemberModal } from './EditMemberModal';
 export { RemoveMemberModal } from './RemoveMemberModal';
@@ -29,15 +29,12 @@ interface ManageFamilyProps {
 }
 
 export const ManageFamily: React.FC<ManageFamilyProps> = ({
-  isPrivate,
+  isPrivate: _isPrivate,
   members,
   onEditClick,
   onRemoveClick,
   onAddClick
 }) => {
-  // Helper to mask sensitive values in private mode
-  const f = (val: string) => (isPrivate ? '••••' : val);
-
   // Dynamic style calculation for avatars matching the reference SVG colors
   const getAvatarStyle = (role: string) => {
     if (role === 'Self') {
@@ -92,7 +89,7 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-orelio-navy text-base truncate">
-                      {member.firstName} {member.lastName}
+                      {[member.firstName, member.lastName].filter(Boolean).join(' ')}
                     </span>
 
                     {member.isDependent && (
@@ -104,9 +101,9 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
                   </div>
 
                   <div className="text-sm text-orelio-gray font-medium mt-1">
-                    DOB: {f(member.dob)}
+                    DOB: {member.dob}
                     <span className="mx-1.5">•</span>
-                    Age: {f(member.age.toString())} yrs
+                    Age: {member.age} yrs
                     <span className="mx-1.5">•</span>
                     Role: {member.role}
                   </div>
@@ -143,10 +140,10 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
         })}
       </div>
 
-      {/* Bottom Grid: Family Tax Optimization & Privacy Info */}
+      {/* Bottom Grid: Family Tax Optimization & Privacy Info (Commented out)
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Tax Optimization card */}
+        Tax Optimization card
         <div className="lg:col-span-2 glass-card-dark p-6 md:p-8 flex flex-col justify-between text-white relative overflow-hidden group">
           <div className="absolute -right-6 -bottom-6 text-emerald-800/10 opacity-30 transform -rotate-12 group-hover:scale-105 transition-transform duration-300">
             <PiggyBank size={180} />
@@ -173,7 +170,7 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
           </button>
         </div>
 
-        {/* Privacy Info Card */}
+        Privacy Info Card
         <div className="bg-white rounded-3xl p-6 md:p-8 flex flex-col items-center text-center justify-between border border-[#C3C6CE]/35 relative overflow-hidden group shadow-sm">
           <div className="space-y-4 flex flex-col items-center">
             <div className="w-12 h-12 rounded-full bg-teal-50 text-orelio-darkgreen flex items-center justify-center border border-teal-100 mb-2">
@@ -195,6 +192,7 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
         </div>
 
       </div>
+      */}
 
     </div>
   );
