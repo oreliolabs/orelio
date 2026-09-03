@@ -2,6 +2,7 @@ import orelioDatabaseSeed from './orelio_database.json';
 import type {
   OrelioDatabase,
   UserProfile,
+  UserSettings,
   FamilyMember,
   BankAccount,
   Deposit,
@@ -55,15 +56,34 @@ export function getOrelioDatabase(): OrelioDatabase {
   return seed;
 }
 
+function sanitizeDatabase(db: OrelioDatabase): OrelioDatabase {
+  return {
+    ...db,
+    familyMembers: db.familyMembers
+      ? db.familyMembers.map((m) => {
+          const { age, ...rest } = m;
+          return rest;
+        })
+      : [],
+    notes: db.notes
+      ? db.notes.map((n) => {
+          const { accentColor, ...rest } = n;
+          return rest;
+        })
+      : []
+  };
+}
+
 /**
  * Persists the entire database to memory and localStorage.
  */
 export function saveOrelioDatabase(db: OrelioDatabase): void {
-  memoryDatabase = db;
+  const sanitized = sanitizeDatabase(db);
+  memoryDatabase = sanitized;
 
   if (typeof localStorage !== 'undefined') {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
     } catch (err) {
       console.error('[OrelioStore] Failed to save to localStorage:', err);
     }
@@ -71,8 +91,19 @@ export function saveOrelioDatabase(db: OrelioDatabase): void {
 
   if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     try {
-      window.dispatchEvent(new CustomEvent('orelio_db_updated', { detail: db }));
+      window.dispatchEvent(new CustomEvent('orelio_db_updated', { detail: sanitized }));
     } catch {}
+  }
+
+  // Persist directly to orelio_database.json via Vite dev server middleware
+  if (typeof fetch !== 'undefined') {
+    fetch('/api/save-database', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(sanitized, null, 2)
+    }).catch(() => {});
   }
 }
 
@@ -95,6 +126,16 @@ export function resetToDatabaseDefaults(): OrelioDatabase {
     } catch {}
   }
 
+  if (typeof fetch !== 'undefined') {
+    fetch('/api/save-database', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(seed, null, 2)
+    }).catch(() => {});
+  }
+
   return seed;
 }
 
@@ -108,6 +149,20 @@ export function getUserProfile(): UserProfile {
 
 export function saveUserProfile(profile: UserProfile): void {
   const db = { ...getOrelioDatabase(), userProfile: profile };
+  saveOrelioDatabase(db);
+}
+
+export function getUserSettings(): UserSettings {
+  return getOrelioDatabase().settings || {
+    privacyModeDefault: false,
+    currency: 'INR',
+    currencySymbol: '₹',
+    theme: 'light'
+  };
+}
+
+export function saveUserSettings(settings: UserSettings): void {
+  const db = { ...getOrelioDatabase(), settings };
   saveOrelioDatabase(db);
 }
 

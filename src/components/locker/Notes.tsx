@@ -7,6 +7,53 @@ import { getNotes, saveNotes } from '../../data/orelioStore';
 import type { Note } from '../../data/types';
 export type { Note } from '../../data/types';
 
+export function formatNoteTime(dateStr: string): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) {
+    return dateStr;
+  }
+
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  const isToday =
+    now.getDate() === date.getDate() &&
+    now.getMonth() === date.getMonth() &&
+    now.getFullYear() === date.getFullYear();
+
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    yesterday.getDate() === date.getDate() &&
+    yesterday.getMonth() === date.getMonth() &&
+    yesterday.getFullYear() === date.getFullYear();
+
+  if (isYesterday) {
+    return 'YESTERDAY';
+  }
+
+  if (diffDays >= 2 && diffDays < 7) {
+    return `${diffDays} DAYS AGO`;
+  }
+
+  if (diffDays >= 7 && diffDays < 14) {
+    return '1 WEEK AGO';
+  }
+
+  if (diffDays >= 14 && diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return `${weeks} WEEKS AGO`;
+  }
+
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+}
+
 export const Notes: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>(() => getNotes());
 
@@ -58,7 +105,7 @@ export const Notes: React.FC = () => {
 
   // Form Save
   const handleSaveNote = (title: string, content: string) => {
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const currentTime = new Date().toISOString();
 
     if (selectedNote) {
       // Edit mode
@@ -69,14 +116,12 @@ export const Notes: React.FC = () => {
         lastUpdated: currentTime
       } : n));
     } else {
-      // Add mode - alternate colors
-      const newColor = '#00162A';
+      // Add mode
       const newNote: Note = {
         id: Date.now().toString(),
         title,
         content,
-        lastUpdated: currentTime,
-        accentColor: newColor
+        lastUpdated: currentTime
       };
       setNotes([newNote, ...notes]);
       setCurrentPage(1); // Go back to first page to see the new note
@@ -130,9 +175,11 @@ export const Notes: React.FC = () => {
     if (sortBy === 'alphabetical') {
       result.sort((a, b) => a.title.localeCompare(b.title));
     } else if (sortBy === 'oldest') {
-      // To simulate sorting mock timestamps: we'll reverse them
-      result.reverse();
-    } // 'latest' is the default order (newest first/current state order)
+      result.sort((a, b) => new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime());
+    } else {
+      // 'latest' newest first
+      result.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
+    }
 
     return result;
   }, [notes, searchQuery, sortBy]);
@@ -219,7 +266,7 @@ export const Notes: React.FC = () => {
           paginatedNotes.map((note) => {
             const isHovered = hoveredNoteId === note.id;
             const isMenuOpen = activeMenuId === note.id;
-            const currentAccentColor = note.accentColor === '#00162A' && isHovered ? '#006A65' : note.accentColor;
+            const currentAccentColor = isHovered ? '#006A65' : (note.accentColor || '#00162A');
 
             return (
               <div
@@ -253,7 +300,7 @@ export const Notes: React.FC = () => {
                     </p>
                     <div className="flex items-center gap-1 text-[11px] text-[#73777E] font-bold uppercase tracking-wider pt-0.5">
                       <span className="material-symbols-outlined select-none" style={{ fontSize: '13px' }}>schedule</span>
-                      LAST UPDATED {note.lastUpdated}
+                      LAST UPDATED {formatNoteTime(note.lastUpdated)}
                     </div>
                   </div>
                 </div>

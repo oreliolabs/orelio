@@ -12,15 +12,23 @@ export interface UserProfile {
   currencySymbol: string;
 }
 
+export interface UserSettings {
+  privacyModeDefault: boolean;
+  currency: string;
+  currencySymbol: string;
+  theme?: 'light' | 'dark' | 'system';
+}
+
 export interface FamilyMember {
   id: string;
   firstName: string;
   lastName: string;
   role: string;
   dob: string;
-  age: number;
+  age?: number;
   isDependent: boolean;
   gender: 'Male' | 'Female' | 'Other';
+  avatarColor?: string;
 }
 
 export interface BankAccount {
@@ -76,7 +84,7 @@ export interface Note {
   title: string;
   content: string;
   lastUpdated: string;
-  accentColor: string;
+  accentColor?: string;
 }
 
 export interface ChartDataItem {
@@ -94,6 +102,7 @@ export interface OverviewMetrics {
 
 export interface OrelioDatabase {
   userProfile: UserProfile;
+  settings: UserSettings;
   familyMembers: FamilyMember[];
   bankAccounts: BankAccount[];
   deposits: Deposit[];

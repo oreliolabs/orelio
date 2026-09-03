@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import type { Note } from './Notes';
+import { formatNoteTime, type Note } from './Notes';
 
 export interface ViewNoteModalProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ export const ViewNoteModal: React.FC<ViewNoteModalProps> = ({
             <span className="material-symbols-outlined select-none" style={{ fontSize: '14px' }}>
               schedule
             </span>
-            Last updated {note.lastUpdated.toLowerCase()}
+            Last updated {formatNoteTime(note.lastUpdated).toLowerCase()}
           </div>
           <button
             onClick={onClose}

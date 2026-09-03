@@ -12,8 +12,8 @@ import { Stocks } from './components/stocks/Stocks';
 import { WelcomePage } from './components/welcome/WelcomePage';
 import { Briefcase } from 'lucide-react';
 
-import { getFamilyMembers, saveFamilyMembers } from './data/orelioStore';
-import type { FamilyMember } from './data/types';
+import { getFamilyMembers, saveFamilyMembers, getUserSettings, saveUserSettings } from './data/orelioStore';
+import type { FamilyMember, UserSettings } from './data/types';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -21,7 +21,8 @@ function App() {
   });
   const [activeTab, setActiveTab] = useState('overview');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [settings, setSettings] = useState<UserSettings>(() => getUserSettings());
+  const [isPrivate, setIsPrivate] = useState<boolean>(() => getUserSettings().privacyModeDefault);
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -102,10 +103,16 @@ function App() {
                   <span className="block text-xs text-orelio-gray font-medium">Hide financial numbers upon application startup.</span>
                 </div>
                 <button 
-                  onClick={() => setIsPrivate(!isPrivate)}
-                  className={`w-12 h-6 rounded-full transition-all duration-300 relative ${isPrivate ? 'bg-orelio-darkgreen' : 'bg-orelio-light-gray'}`}
+                  onClick={() => {
+                    const nextVal = !settings.privacyModeDefault;
+                    const updated = { ...settings, privacyModeDefault: nextVal };
+                    setSettings(updated);
+                    saveUserSettings(updated);
+                    setIsPrivate(nextVal);
+                  }}
+                  className={`w-12 h-6 rounded-full transition-all duration-300 relative ${settings.privacyModeDefault ? 'bg-orelio-darkgreen' : 'bg-orelio-light-gray'}`}
                 >
-                  <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${isPrivate ? 'translate-x-6' : ''}`} />
+                  <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${settings.privacyModeDefault ? 'translate-x-6' : ''}`} />
                 </button>
               </div>
 
@@ -114,7 +121,9 @@ function App() {
                   <span className="block font-bold text-orelio-navy text-sm">Currency Symbols (Coming soon)</span>
                   <span className="block text-xs text-orelio-gray font-medium">Configure primary denomination. Currently fixed to Indian Rupees (INR) only.</span>
                 </div>
-                <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg">INR (₹)</span>
+                <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg">
+                  {settings.currency} ({settings.currencySymbol})
+                </span>
               </div>
             </div>
           </div>

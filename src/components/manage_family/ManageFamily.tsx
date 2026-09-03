@@ -14,10 +14,44 @@ export interface FamilyMember {
   lastName: string;
   role: string;
   dob: string;
-  age: number;
+  age?: number;
   isDependent: boolean;
   gender: 'Male' | 'Female' | 'Other';
+  avatarColor?: string;
 }
+
+export const calculateAge = (dobString?: string): number => {
+  if (!dobString) return 0;
+  try {
+    let day = 0, month = 0, year = 0;
+    if (dobString.includes('-')) {
+      const parts = dobString.split('-');
+      if (parts.length === 3) {
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        day = parseInt(parts[2], 10);
+      }
+    } else if (dobString.includes('/')) {
+      const parts = dobString.split('/');
+      if (parts.length === 3) {
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        year = parseInt(parts[2], 10);
+      }
+    }
+    if (!year) return 0;
+
+    const today = new Date();
+    let age = today.getFullYear() - year;
+    const m = today.getMonth() - month;
+    if (m < 0 || (m === 0 && today.getDate() < day)) {
+      age--;
+    }
+    return Math.max(0, age);
+  } catch {
+    return 0;
+  }
+};
 
 interface ManageFamilyProps {
   isPrivate: boolean;
@@ -102,7 +136,7 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
                   <div className="text-sm text-orelio-gray font-medium mt-1">
                     DOB: {member.dob}
                     <span className="mx-1.5">•</span>
-                    Age: {member.age} yrs
+                    Age: {calculateAge(member.dob)} yrs
                     <span className="mx-1.5">•</span>
                     Role: {member.role}
                   </div>

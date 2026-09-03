@@ -3,8 +3,16 @@
     "id": "usr-alexander-bloom",
     "name": "Alexander Bloom",
     "email": "alexander.bloom@orelio.private",
+    "avatar": "/alexander_bloom_avatar.png",
+    "tier": "PREMIUM",
     "currency": "INR",
     "currencySymbol": "₹"
+  },
+  "settings": {
+    "privacyModeDefault": false,
+    "currency": "INR",
+    "currencySymbol": "₹",
+    "theme": "light"
   },
   "familyMembers": [
     {
@@ -13,38 +21,16 @@
       "lastName": "Dubey",
       "role": "Self",
       "dob": "15/02/1973",
-      "age": 52,
       "isDependent": false,
       "gender": "Male"
     },
     {
-      "id": "2",
-      "firstName": "Priya",
-      "lastName": "Dubey",
-      "role": "Spouse",
-      "dob": "22/07/1977",
-      "age": 48,
-      "isDependent": false,
-      "gender": "Female"
-    },
-    {
-      "id": "3",
-      "firstName": "Kavya",
-      "lastName": "Dubey",
+      "id": "1788452518369",
+      "firstName": "mmmm",
+      "lastName": "mm",
       "role": "Child",
-      "dob": "05/06/2014",
-      "age": 12,
-      "isDependent": true,
-      "gender": "Female"
-    },
-    {
-      "id": "4",
-      "firstName": "Manjari",
-      "lastName": "Rampure",
-      "role": "Dependent",
-      "dob": "08/04/1951",
-      "age": 75,
-      "isDependent": true,
+      "dob": "30/08/2026",
+      "isDependent": false,
       "gender": "Female"
     }
   ],
@@ -89,6 +75,8 @@
       "principalOrMonthly": 200000,
       "startDate": "24/10/2023",
       "maturityDate": "24/10/2025",
+      "daysRemaining": 245,
+      "progressPercent": 65,
       "status": "active",
       "nominee": "Priya Sharma"
     },
@@ -103,6 +91,8 @@
       "principalOrMonthly": 10000,
       "startDate": "01/01/2024",
       "maturityDate": "01/01/2025",
+      "daysRemaining": 90,
+      "progressPercent": 75,
       "status": "active",
       "nominee": "Alexander Bloom"
     },
@@ -117,6 +107,8 @@
       "principalOrMonthly": 400000,
       "startDate": "15/05/2022",
       "maturityDate": "15/05/2027",
+      "daysRemaining": 780,
+      "progressPercent": 40,
       "status": "active",
       "nominee": "Kavya Sharma"
     },
@@ -131,6 +123,8 @@
       "principalOrMonthly": 150000,
       "startDate": "10/03/2021",
       "maturityDate": "10/03/2026",
+      "daysRemaining": 340,
+      "progressPercent": 80,
       "status": "active",
       "nominee": "Alexander Bloom"
     },
@@ -145,6 +139,8 @@
       "principalOrMonthly": 300000,
       "startDate": "12/08/2023",
       "maturityDate": "12/08/2026",
+      "daysRemaining": 520,
+      "progressPercent": 50,
       "status": "active",
       "nominee": "Priya Sharma"
     },
@@ -159,6 +155,8 @@
       "principalOrMonthly": 400000,
       "startDate": "01/06/2023",
       "maturityDate": "01/06/2024",
+      "daysRemaining": 0,
+      "progressPercent": 100,
       "status": "matured",
       "maturedDate": "01/06/2024",
       "nominee": "Alexander Bloom"
@@ -174,6 +172,8 @@
       "principalOrMonthly": 75000,
       "startDate": "14/02/2023",
       "maturityDate": "14/02/2024",
+      "daysRemaining": 0,
+      "progressPercent": 100,
       "status": "matured",
       "maturedDate": "14/02/2024",
       "nominee": "Alexander Bloom"
@@ -189,6 +189,8 @@
       "principalOrMonthly": 200000,
       "startDate": "18/11/2020",
       "maturityDate": "18/11/2028",
+      "daysRemaining": 1400,
+      "progressPercent": 45,
       "status": "active",
       "nominee": "Kavya Sharma"
     },
@@ -203,6 +205,8 @@
       "principalOrMonthly": 300000,
       "startDate": "05/09/2023",
       "maturityDate": "05/09/2024",
+      "daysRemaining": 0,
+      "progressPercent": 100,
       "status": "matured",
       "maturedDate": "05/09/2024",
       "nominee": "Priya Sharma"
@@ -218,6 +222,8 @@
       "principalOrMonthly": 500000,
       "startDate": "20/07/2022",
       "maturityDate": "20/07/2027",
+      "daysRemaining": 680,
+      "progressPercent": 42,
       "status": "active",
       "nominee": "Manjari Rampure"
     }
@@ -263,6 +269,7 @@
     "depository": "CDSL",
     "dematAccountId": "1208160098765432",
     "statementPeriod": "April 2025 - March 2026",
+    "totalMarketValue": 600800,
     "totalInvestedValue": 529200,
     "uploadedAt": "2026-09-03T10:00:00.000Z"
   },
@@ -272,7 +279,7 @@
       "type": "Mortgage",
       "nickname": "Home Loan",
       "provider": "HSBC",
-      "accountNumber": "04829108499210",
+      "accountNumber": "**** 9210",
       "totalAmount": 1450000,
       "outstandingBalance": 842000,
       "interestRate": 4.82,
@@ -281,6 +288,7 @@
       "startDate": "2018-10-12",
       "nextEmiDate": "Oct 12, 2026",
       "monthlyEmi": 12450,
+      "repaymentProgressPercent": 42,
       "status": "active"
     },
     {
@@ -288,7 +296,7 @@
       "type": "Auto Loan",
       "nickname": "BMW Vehicle Loan",
       "provider": "HDFC Bank",
-      "accountNumber": "50100482914091",
+      "accountNumber": "**** 4091",
       "totalAmount": 1850000,
       "outstandingBalance": 1210000,
       "interestRate": 8.45,
@@ -297,6 +305,7 @@
       "startDate": "2022-03-15",
       "nextEmiDate": "Oct 15, 2026",
       "monthlyEmi": 37890,
+      "repaymentProgressPercent": 35,
       "status": "active"
     },
     {
@@ -304,7 +313,7 @@
       "type": "Credit Line",
       "nickname": "Private Credit Line",
       "provider": "Standard Chartered",
-      "accountNumber": "42918374918122",
+      "accountNumber": "**** 8122",
       "totalAmount": 500000,
       "outstandingBalance": 125000,
       "interestRate": 10.25,
@@ -313,6 +322,7 @@
       "startDate": "2023-06-01",
       "nextEmiDate": "Oct 01, 2026",
       "monthlyEmi": 9400,
+      "repaymentProgressPercent": 75,
       "status": "active"
     }
   ],
@@ -356,53 +366,84 @@
   ],
   "notes": [
     {
-      "id": "1",
-      "title": "The Art of Small Beginnings",
-      "content": "Not every meaningful change arrives with a grand announcement. Sometimes, the most enduring habits, the most solid financial portfolios, and the deepest personal reflections start in the quietest way imaginable. A single rupee set aside, a single sentence written, or a single moment of quiet alignment can lay the foundation for a lifetime of growth.",
-      "lastUpdated": "12:00 PM",
-      "accentColor": "#00162A"
+      "id": "1788453012833",
+      "title": "new norte",
+      "content": "fdasjfkasjfkasf",
+      "lastUpdated": "2026-09-03T16:30:12.833Z"
     },
     {
       "id": "2",
-      "title": "Conversations in Silence",
+      "title": "CConversations in Silence",
       "content": "Some of the best conversations happen in silence. When we quiet the noise around us, we can finally hear the underlying currents of our thoughts, goals, and strategies. Writing down these quiet insights helps transform brief ideas into permanent systems, ensuring we stay focused on long-term values rather than short-term market noises.",
-      "lastUpdated": "11:30 AM",
-      "accentColor": "#00162A"
+      "lastUpdated": "2026-09-03T16:31:12.865Z"
     },
     {
       "id": "3",
       "title": "Quarterly Asset Allocation Checklist",
       "content": "Review cash reserves, equity weightings across portfolios, and ensure Locker records (wills, digital passwords) are updated. Balance target ratios when stocks rise past their threshold. Maintain safety margins for loans.",
-      "lastUpdated": "YESTERDAY",
-      "accentColor": "#00162A"
+      "lastUpdated": "YESTERDAY"
     },
     {
       "id": "4",
       "title": "Retirement Vision Board",
       "content": "Mapping out passive income milestones for age 60. Core streams include dividend stocks, EPF accumulations, and rental yielding real estate. Focus on stability over raw growth in later stages. Regularly audit health cover limits.",
-      "lastUpdated": "3 DAYS AGO",
-      "accentColor": "#00162A"
+      "lastUpdated": "3 DAYS AGO"
     },
     {
       "id": "5",
       "title": "Emergency Fund Rules",
       "content": "Emergency reserves must cover 6 months of fixed family expenses. Keep cash strictly in savings accounts or short-term liquid FDs. Never deploy emergency funds into volatile equity assets.",
-      "lastUpdated": "1 WEEK AGO",
-      "accentColor": "#00162A"
+      "lastUpdated": "1 WEEK AGO"
     }
   ],
   "assetAllocation": [
-    { "name": "Stocks", "value": 10, "color": "#0284C7" },
-    { "name": "Bonds", "value": 26, "color": "#0F766E" },
-    { "name": "Fixed Deposits", "value": 34, "color": "#0D9488" },
-    { "name": "Mutual Funds", "value": 24, "color": "#4F46E5" },
-    { "name": "Cash", "value": 10, "color": "#F59E0B" },
-    { "name": "Gold", "value": 12, "color": "#EAB308" }
+    {
+      "name": "Stocks",
+      "value": 10,
+      "color": "#0284C7"
+    },
+    {
+      "name": "Bonds",
+      "value": 26,
+      "color": "#0F766E"
+    },
+    {
+      "name": "Fixed Deposits",
+      "value": 34,
+      "color": "#0D9488"
+    },
+    {
+      "name": "Mutual Funds",
+      "value": 24,
+      "color": "#4F46E5"
+    },
+    {
+      "name": "Cash",
+      "value": 10,
+      "color": "#F59E0B"
+    },
+    {
+      "name": "Gold",
+      "value": 12,
+      "color": "#EAB308"
+    }
   ],
   "liabilityAllocation": [
-    { "name": "Home Loan", "value": 85, "color": "#DC2626" },
-    { "name": "Car Loan", "value": 12, "color": "#F59E0B" },
-    { "name": "Others", "value": 3, "color": "#9CA3AF" }
+    {
+      "name": "Home Loan",
+      "value": 85,
+      "color": "#DC2626"
+    },
+    {
+      "name": "Car Loan",
+      "value": 12,
+      "color": "#F59E0B"
+    },
+    {
+      "name": "Others",
+      "value": 3,
+      "color": "#9CA3AF"
+    }
   ],
   "overviewMetrics": {
     "netWorth": 23000000,

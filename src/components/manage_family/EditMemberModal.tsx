@@ -76,28 +76,6 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
     };
   }, [isOpen]);
 
-  const calculateAge = (dobString: string): number => {
-    try {
-      if (dobString.includes('-')) {
-        const parts = dobString.split('-');
-        if (parts.length === 3) {
-          const birthYear = parseInt(parts[0], 10);
-          return Math.max(0, new Date().getFullYear() - birthYear);
-        }
-      }
-      if (dobString.includes('/')) {
-        const parts = dobString.split('/');
-        if (parts.length === 3) {
-          const birthYear = parseInt(parts[2], 10);
-          return Math.max(0, new Date().getFullYear() - birthYear);
-        }
-      }
-      return 30;
-    } catch {
-      return 30;
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formFirstName.trim() || !formDob.trim()) {
@@ -107,7 +85,6 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
 
     setIsSaving(true);
 
-    const calculatedAge = calculateAge(formDob);
     const displayDob = toDisplayDmy(formDob);
 
     const memberData: FamilyMember = {
@@ -116,7 +93,6 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       lastName: formLastName,
       role: formRole,
       dob: displayDob,
-      age: calculatedAge,
       isDependent: formIsDependent,
       gender: formGender
     };
