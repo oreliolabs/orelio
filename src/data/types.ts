@@ -50,14 +50,14 @@ export interface Deposit {
   interestRate: number;
   currentValue: number;
   principalOrMonthly: number;
-  startDate?: string;
-  maturityDate: string;
+  startDate?: number;
+  maturityDate: number;
   tenureYears?: number;
   tenureMonths?: number;
   daysRemaining?: number;
   progressPercent?: number;
   status: 'active' | 'matured';
-  maturedDate?: string;
+  maturedDate?: number;
   nominee?: string;
 }
 

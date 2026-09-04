@@ -11,8 +11,8 @@ export interface DepositFormData {
   depositNumber: string;
   amount: number;
   interestRate: number;
-  startDate: string;
-  maturityDate: string;
+  startDate: number;
+  maturityDate: number;
   nominee?: string;
 }
 
@@ -24,9 +24,19 @@ interface AddEditDepositModalProps {
   onSave: (formData: DepositFormData) => void;
 }
 
-export const normalizeToDDMMYYYY = (str?: string): string => {
-  if (!str) return '';
-  const trimmed = str.trim();
+export const normalizeToDDMMYYYY = (val?: string | number): string => {
+  if (val === undefined || val === null || val === '') return '';
+  if (typeof val === 'number') {
+    const dt = new Date(val);
+    if (!isNaN(dt.getTime())) {
+      const d = String(dt.getUTCDate()).padStart(2, '0');
+      const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const y = dt.getUTCFullYear();
+      return `${d}/${m}/${y}`;
+    }
+    return '';
+  }
+  const trimmed = val.trim();
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) return trimmed;
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
     const parts = trimmed.split('/');
@@ -37,12 +47,22 @@ export const normalizeToDDMMYYYY = (str?: string): string => {
   const ts = Date.parse(trimmed.replace(',', ''));
   if (!isNaN(ts)) {
     const dt = new Date(ts);
-    const d = String(dt.getDate()).padStart(2, '0');
-    const m = String(dt.getMonth() + 1).padStart(2, '0');
-    const y = dt.getFullYear();
+    const d = String(dt.getUTCDate()).padStart(2, '0');
+    const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+    const y = dt.getUTCFullYear();
     return `${d}/${m}/${y}`;
   }
   return trimmed;
+};
+
+export const ddmmYYYYToEpoch = (str: string): number => {
+  if (!str) return 0;
+  const trimmed = str.trim();
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+    const [d, m, y] = trimmed.split('/').map(Number);
+    return Date.UTC(y, m - 1, d);
+  }
+  return new Date(str).getTime() || 0;
 };
 
 export const isValidDDMMYYYY = (str: string): { valid: boolean; error?: string } => {
@@ -233,8 +253,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       depositNumber: formDepositNumber || '50100482918829',
       amount: amountNum,
       interestRate: rateNum,
-      startDate: formStartDate,
-      maturityDate: formMaturityDate,
+      startDate: ddmmYYYYToEpoch(formStartDate),
+      maturityDate: ddmmYYYYToEpoch(formMaturityDate),
       nominee: formHasNominee ? formNomineeName : undefined,
     });
   };

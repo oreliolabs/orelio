@@ -195,23 +195,78 @@ export function saveBankAccounts(accounts: BankAccount[]): void {
   saveOrelioDatabase(db);
 }
 
+function parseDepositDateToEpoch(val: unknown): number | undefined {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string' && val.trim()) {
+    const s = val.trim();
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+      const [d, m, y] = s.split('/').map(Number);
+      return Date.UTC(y, m - 1, d);
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+      return new Date(s + 'T00:00:00Z').getTime();
+    }
+    const parsed = Date.parse(s);
+    if (!isNaN(parsed)) return parsed;
+  }
+  return undefined;
+}
+
 export function getDeposits(): Deposit[] {
   const deps = getOrelioDatabase().deposits || [];
-  return deps.map((d: any) => {
+  const now = Date.now();
+  let hasAutoMatured = false;
+
+  const resolved: Deposit[] = deps.map((d: any) => {
     const { daysRemaining, progressPercent, accountNumber, ...rest } = d;
+    const startEpoch = parseDepositDateToEpoch(d.startDate);
+    const maturityEpoch = parseDepositDateToEpoch(d.maturityDate) ?? now;
+    const isPastMaturity = maturityEpoch <= now;
+    const status: 'active' | 'matured' = (isPastMaturity || d.status === 'matured') ? 'matured' : 'active';
+    const maturedDate = status === 'matured'
+      ? (parseDepositDateToEpoch(d.maturedDate) ?? maturityEpoch)
+      : undefined;
+
+    if (isPastMaturity && d.status !== 'matured') {
+      hasAutoMatured = true;
+    }
+
     return {
       ...rest,
       depositNumber: d.depositNumber || d.accountNumber || '',
+      startDate: startEpoch,
+      maturityDate: maturityEpoch,
+      status,
+      ...(maturedDate !== undefined ? { maturedDate } : {})
     };
   });
+
+  if (hasAutoMatured) {
+    saveDeposits(resolved);
+  }
+
+  return resolved;
 }
 
 export function saveDeposits(deposits: Deposit[]): void {
+  const now = Date.now();
   const cleanDeposits = deposits.map((d: any) => {
     const { daysRemaining, progressPercent, accountNumber, ...rest } = d;
+    const startEpoch = parseDepositDateToEpoch(d.startDate);
+    const maturityEpoch = parseDepositDateToEpoch(d.maturityDate) ?? now;
+    const isPastMaturity = maturityEpoch <= now;
+    const status: 'active' | 'matured' = (isPastMaturity || d.status === 'matured') ? 'matured' : 'active';
+    const maturedDate = status === 'matured'
+      ? (parseDepositDateToEpoch(d.maturedDate) ?? maturityEpoch)
+      : undefined;
+
     return {
       ...rest,
       depositNumber: d.depositNumber || d.accountNumber || '',
+      startDate: startEpoch,
+      maturityDate: maturityEpoch,
+      status,
+      ...(maturedDate !== undefined ? { maturedDate } : {})
     };
   });
   const db = { ...getOrelioDatabase(), deposits: cleanDeposits };

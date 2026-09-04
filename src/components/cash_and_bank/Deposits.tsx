@@ -7,11 +7,22 @@ import { getDeposits, saveDeposits } from '../../data/orelioStore';
 import type { Deposit } from '../../data/types';
 export type { Deposit } from '../../data/types';
 
-export const formatDisplayDate = (str?: string): string => {
-  if (!str) return '';
-  const trimmed = str.trim();
-
+export const formatDisplayDate = (val?: string | number): string => {
+  if (val === undefined || val === null || val === '') return '';
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  if (typeof val === 'number') {
+    const dt = new Date(val);
+    if (!isNaN(dt.getTime())) {
+      const day = dt.getUTCDate();
+      const month = monthNames[dt.getUTCMonth()];
+      const year = dt.getUTCFullYear();
+      return `${day} ${month}, ${year}`;
+    }
+    return '';
+  }
+
+  const trimmed = val.trim();
 
   // Handle dd/mm/yyyy format
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
@@ -38,39 +49,43 @@ export const formatDisplayDate = (str?: string): string => {
   const ts = Date.parse(trimmed.replace(',', ''));
   if (!isNaN(ts)) {
     const dt = new Date(ts);
-    const day = dt.getDate();
-    const month = monthNames[dt.getMonth()];
-    const year = dt.getFullYear();
+    const day = dt.getUTCDate();
+    const month = monthNames[dt.getUTCMonth()];
+    const year = dt.getUTCFullYear();
     return `${day} ${month}, ${year}`;
   }
 
   return trimmed;
 };
 
-/** Returns a human-readable tenure string from two date strings (dd/mm/yyyy or yyyy-mm-dd) */
-export const formatTenure = (startDateStr?: string, maturityDateStr?: string): string => {
-  if (!startDateStr || !maturityDateStr) return '-';
+/** Returns a human-readable tenure string from two dates (epoch numbers or date strings) */
+export const formatTenure = (startDate?: string | number, maturityDate?: string | number): string => {
+  if (startDate === undefined || startDate === null || !maturityDate) return '-';
 
-  const parseDate = (str: string): Date | null => {
-    const trimmed = str.trim();
+  const parseToDate = (val: string | number): Date | null => {
+    if (typeof val === 'number') {
+      const dt = new Date(val);
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+    const trimmed = val.trim();
     if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
-      const [d, m, y] = trimmed.split('/');
-      return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+      const [d, m, y] = trimmed.split('/').map(Number);
+      return new Date(Date.UTC(y, m - 1, d));
     }
     if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      const [y, m, d] = trimmed.split('-');
-      return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+      const [y, m, d] = trimmed.split('-').map(Number);
+      return new Date(Date.UTC(y, m - 1, d));
     }
     const ts = Date.parse(trimmed.replace(',', ''));
     return isNaN(ts) ? null : new Date(ts);
   };
 
-  const start = parseDate(startDateStr);
-  const end = parseDate(maturityDateStr);
+  const start = parseToDate(startDate);
+  const end = parseToDate(maturityDate);
   if (!start || !end) return '-';
 
-  let years = end.getFullYear() - start.getFullYear();
-  let months = end.getMonth() - start.getMonth();
+  let years = end.getUTCFullYear() - start.getUTCFullYear();
+  let months = end.getUTCMonth() - start.getUTCMonth();
   if (months < 0) { years--; months += 12; }
 
   const parts: string[] = [];
@@ -80,23 +95,27 @@ export const formatTenure = (startDateStr?: string, maturityDateStr?: string): s
 };
 
 export const calculateDepositMetrics = (
-  maturityDateStr: string,
-  startDateStr?: string,
+  maturityDate: string | number,
+  startDate?: string | number,
   tenureYears: number = 1,
   tenureMonths: number = 0
 ): { progressPercent: number; daysRemaining: number } => {
-  const parseDateStr = (str: string): Date | null => {
-    if (!str) return null;
-    const trimmed = str.trim();
+  const parseToDate = (val?: string | number): Date | null => {
+    if (val === undefined || val === null || val === '') return null;
+    if (typeof val === 'number') {
+      const dt = new Date(val);
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+    const trimmed = val.trim();
     // Format: dd/mm/yyyy
     if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
-      const parts = trimmed.split('/');
-      return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      const parts = trimmed.split('/').map(Number);
+      return new Date(Date.UTC(parts[2], parts[1] - 1, parts[0]));
     }
     // Format: yyyy-mm-dd
     if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      const parts = trimmed.split('-');
-      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      const parts = trimmed.split('-').map(Number);
+      return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
     }
     // Format: 24 Oct, 2025 or 24 Oct 2025
     const timestamp = Date.parse(trimmed.replace(',', ''));
@@ -106,7 +125,7 @@ export const calculateDepositMetrics = (
     return null;
   };
 
-  const matDate = parseDateStr(maturityDateStr);
+  const matDate = parseToDate(maturityDate);
   const now = new Date();
 
   if (!matDate || isNaN(matDate.getTime())) {
@@ -114,7 +133,7 @@ export const calculateDepositMetrics = (
   }
 
   // Determine start date
-  let stDate = startDateStr ? parseDateStr(startDateStr) : null;
+  let stDate = startDate !== undefined && startDate !== null ? parseToDate(startDate) : null;
   if (!stDate || isNaN(stDate.getTime())) {
     // Subtract tenure (or 1 year default) from maturity date to get start date
     const totalTenureDays = (tenureYears || 1) * 365 + (tenureMonths || 0) * 30;
@@ -283,6 +302,8 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
       formData.startDate
     );
 
+    const isMatured = metrics.daysRemaining <= 0 || formData.maturityDate <= Date.now();
+
     if (editingDeposit) {
       // Edit existing
       setDeposits((prev: Deposit[]) => prev.map((d: Deposit) => d.id === editingDeposit.id ? {
@@ -296,6 +317,8 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         currentValue: formData.amount * 1.08,
         startDate: formData.startDate,
         maturityDate: formData.maturityDate,
+        status: isMatured ? 'matured' : 'active',
+        maturedDate: isMatured ? (d.maturedDate || formData.maturityDate) : undefined,
         nominee: formData.nominee
       } : d));
     } else {
@@ -311,7 +334,8 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         principalOrMonthly: formData.amount,
         startDate: formData.startDate,
         maturityDate: formData.maturityDate,
-        status: metrics.daysRemaining <= 0 ? 'matured' : 'active',
+        status: isMatured ? 'matured' : 'active',
+        maturedDate: isMatured ? formData.maturityDate : undefined,
         nominee: formData.nominee
       };
       setDeposits((prev: Deposit[]) => [newDep, ...prev]);
@@ -330,44 +354,42 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
   const handleReinvest = (deposit: Deposit) => {
     const years = deposit.tenureYears || 1;
     const months = deposit.tenureMonths || 0;
-    const oldMatStr = deposit.maturityDate || deposit.maturedDate || '01 Jan, 2025';
 
-    // Parse old maturity date
-    let oldDate: Date;
-    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(oldMatStr.trim())) {
-      const parts = oldMatStr.trim().split('/');
-      oldDate = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
-    } else {
-      const ts = Date.parse(oldMatStr.replace(',', ''));
-      oldDate = !isNaN(ts) ? new Date(ts) : new Date();
-    }
+    const parseToDate = (val?: string | number): Date => {
+      if (typeof val === 'number') {
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? new Date() : d;
+      }
+      if (typeof val === 'string' && val.trim()) {
+        const trimmed = val.trim();
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+          const [d, m, y] = trimmed.split('/').map(Number);
+          return new Date(Date.UTC(y, m - 1, d));
+        }
+        const ts = Date.parse(trimmed.replace(',', ''));
+        if (!isNaN(ts)) return new Date(ts);
+      }
+      return new Date();
+    };
 
-    // Add tenure to old maturity date
-    const newDate = new Date(oldDate.getFullYear() + (years || 1), oldDate.getMonth() + (months || 0), oldDate.getDate());
+    const oldDate = parseToDate(deposit.maturityDate || deposit.maturedDate);
+    const newDate = new Date(Date.UTC(
+      oldDate.getUTCFullYear() + (years || 1),
+      oldDate.getUTCMonth() + (months || 0),
+      oldDate.getUTCDate()
+    ));
 
-    // Format new maturity date string matching original style
-    let newMaturityStr = '';
-    if (oldMatStr.includes('/')) {
-      const d = String(newDate.getDate()).padStart(2, '0');
-      const m = String(newDate.getMonth() + 1).padStart(2, '0');
-      const y = newDate.getFullYear();
-      newMaturityStr = `${d}/${m}/${y}`;
-    } else {
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const d = newDate.getDate();
-      const m = monthNames[newDate.getMonth()];
-      const y = newDate.getFullYear();
-      newMaturityStr = `${d} ${m}, ${y}`;
-    }
+    const oldMatEpoch = oldDate.getTime();
+    const newMaturityEpoch = newDate.getTime();
 
-    const metrics = calculateDepositMetrics(newMaturityStr, oldMatStr, years, months);
+    const metrics = calculateDepositMetrics(newMaturityEpoch, oldMatEpoch, years, months);
 
     // Convert matured back to active deposit with new maturity date
     setDeposits((prevDeposits: Deposit[]) => prevDeposits.map((d: Deposit) => d.id === deposit.id ? {
       ...d,
       status: 'active',
-      startDate: oldMatStr,
-      maturityDate: newMaturityStr,
+      startDate: oldMatEpoch,
+      maturityDate: newMaturityEpoch,
       daysRemaining: metrics.daysRemaining,
       progressPercent: metrics.progressPercent,
       maturedDate: undefined
