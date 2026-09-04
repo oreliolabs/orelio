@@ -176,7 +176,18 @@ export function saveFamilyMembers(members: FamilyMember[]): void {
 }
 
 export function getBankAccounts(): BankAccount[] {
-  return getOrelioDatabase().bankAccounts;
+  const accounts = getOrelioDatabase().bankAccounts || [];
+  return accounts.map((acc) => {
+    let lastUpdated = acc.lastUpdated as unknown;
+    if (typeof lastUpdated === 'string') {
+      const parsed = Date.parse(lastUpdated);
+      lastUpdated = !isNaN(parsed) ? parsed : 1788503400000;
+    }
+    return {
+      ...acc,
+      lastUpdated: Number(lastUpdated) || 1788503400000
+    };
+  });
 }
 
 export function saveBankAccounts(accounts: BankAccount[]): void {

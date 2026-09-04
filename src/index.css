@@ -78,3 +78,15 @@ body {
   box-shadow: 0 8px 30px -4px rgba(10, 45, 39, 0.3);
   border-radius: 20px;
 }
+
+/* Hide native number input stepper / spin buttons */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

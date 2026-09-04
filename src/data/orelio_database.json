@@ -36,31 +36,13 @@
   ],
   "bankAccounts": [
     {
-      "id": "1",
-      "bankName": "Kotak Bank Account",
+      "id": "1788509314406",
+      "bankName": "fda",
       "accountType": "Savings Account",
-      "balance": 84094.23,
-      "lastUpdated": "12:00 pm",
-      "accountNumber": "1234 1234 1234",
-      "ifscCode": "KKBK0000234"
-    },
-    {
-      "id": "2",
-      "bankName": "ICICI Bank Account",
-      "accountType": "Savings Account",
-      "balance": 894.74,
-      "lastUpdated": "12:00 pm",
-      "accountNumber": "1234 1234 1234",
-      "ifscCode": "SBIN0001234"
-    },
-    {
-      "id": "3",
-      "bankName": "HDFC Bank Account",
-      "accountType": "Savings Account",
-      "balance": 16905.77,
-      "lastUpdated": "12:00 pm",
-      "accountNumber": "1234 1234 5678",
-      "ifscCode": "HDFC0000012"
+      "accountNumber": "",
+      "ifscCode": "",
+      "balance": 523,
+      "lastUpdated": 1788509314406
     }
   ],
   "deposits": [

@@ -36,7 +36,7 @@ export interface BankAccount {
   bankName: string;
   accountType: string;
   balance: number;
-  lastUpdated: string;
+  lastUpdated: number;
   accountNumber: string;
   ifscCode: string;
 }

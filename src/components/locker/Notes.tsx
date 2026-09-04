@@ -202,192 +202,212 @@ export const Notes: React.FC = () => {
   return (
     <div className="space-y-6 fade-in p-2">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-extrabold text-orelio-navy tracking-tight">My Notes</h2>
-            <span className="flex items-center justify-center bg-orelio-navy text-white text-xs font-bold w-5 h-5 rounded-full">
-              {notes.length}
+      {notes.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-extrabold text-orelio-navy tracking-tight">My Notes</h2>
+              <span className="flex items-center justify-center bg-orelio-navy text-white text-xs font-bold w-5 h-5 rounded-full">
+                {notes.length}
+              </span>
+            </div>
+            <p className="text-sm text-orelio-gray mt-1 font-medium">
+              Jot down your personal investment thoughts and important logs.
+            </p>
+          </div>
+          <div>
+            <PrimaryButton
+              onClick={handleAddClick}
+              icon="add"
+            >
+              Add New Note
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
+
+      {notes.length === 0 ? (
+        <div className="text-center py-20 px-6 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#006A65]/10 text-[#006A65] flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined select-none text-[36px]">
+              edit_note
             </span>
           </div>
-          <p className="text-sm text-orelio-gray mt-1 font-medium">
-            Jot down your personal investment thoughts and important logs.
+          <h3 className="text-xl font-bold text-[#00162A] tracking-tight">No Notes Yet</h3>
+          <p className="text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
+            Jot down your personal investment ideas, financial strategies, and important reminders.
           </p>
-        </div>
-        <div>
-          <PrimaryButton
-            onClick={handleAddClick}
-            icon="add"
-          >
-            Add New Note
-          </PrimaryButton>
-        </div>
-      </div>
-
-      {/* Search & Sort Panel */}
-      <div className="flex flex-col sm:flex-row gap-3 my-8">
-        <div className="relative flex-1">
-          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#73777E] select-none" style={{ fontSize: '18px' }}>
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Search notes by title or content..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-[#C3C6CE]/30 focus:outline-none text-sm font-medium transition-all"
-          />
-        </div>
-        <div className="relative">
-          <select
-            value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value as any);
-              setCurrentPage(1);
-            }}
-            className="appearance-none pl-4 pr-10 py-2 rounded-xl bg-white border border-[#C3C6CE]/30 text-sm font-semibold text-[#3F4945] focus:outline-none  transition-all cursor-pointer w-full sm:w-auto"
-          >
-            <option value="latest">Sort by Latest</option>
-            <option value="oldest">Sort by Oldest</option>
-            <option value="alphabetical">Title A-Z</option>
-          </select>
-          <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#73777E] pointer-events-none select-none text-[20px]" style={{ fontVariationSettings: "'wght' 300" }}>
-            keyboard_arrow_down
-          </span>
-        </div>
-      </div>
-
-      {/* Notes List */}
-      <div className="space-y-4">
-        {paginatedNotes.length > 0 ? (
-          paginatedNotes.map((note) => {
-            const isHovered = hoveredNoteId === note.id;
-            const isMenuOpen = activeMenuId === note.id;
-            const currentAccentColor = isHovered ? '#006A65' : (note.accentColor || '#00162A');
-
-            return (
-              <div
-                key={note.id}
-                onClick={() => handleView(note)}
-                onMouseEnter={() => setHoveredNoteId(note.id)}
-                onMouseLeave={() => setHoveredNoteId(null)}
-                className={`group relative flex items-start justify-between p-5 bg-white border border-[#C3C6CE]/20 rounded-[8px] border-l-4 transition-all duration-300 hover:-translate-y-1 cursor-pointer ${isMenuOpen ? 'z-30' : 'z-10'}`}
-                style={{
-                  borderLeftColor: currentAccentColor,
-                  boxShadow: isHovered
-                    ? '0px 4px 20px 0px rgba(0, 106, 101, 0.1)'
-                    : '0px 4px 20px 0px rgba(0, 0, 0, 0.02)'
-                }}
-              >
-                <div className="flex items-start gap-4 flex-1 min-w-0 pr-8">
-                  {/* Accent Icon Background Square */}
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white transition-colors duration-300"
-                    style={{ backgroundColor: currentAccentColor }}
-                  >
-                    <span className="material-symbols-outlined text-[20px] select-none">description</span>
-                  </div>
-                  {/* Title & snippet */}
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <h3 className="text-base font-bold text-orelio-navy truncate transition-colors group-hover:text-black">
-                      {note.title}
-                    </h3>
-                    <p className="text-sm text-[#3F4945] line-clamp-2 leading-relaxed font-medium">
-                      {note.content}
-                    </p>
-                    <div className="flex items-center gap-1 text-[11px] text-[#73777E] font-bold uppercase tracking-wider pt-0.5">
-                      <span className="material-symbols-outlined select-none" style={{ fontSize: '13px' }}>schedule</span>
-                      LAST UPDATED {formatNoteTime(note.lastUpdated)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Three dot actions */}
-                <div
-                  className="relative"
-                  onClick={(e) => e.stopPropagation()} // Stop triggering view note click
-                >
-                  <button
-                    onClick={() => setActiveMenuId(activeMenuId === note.id ? null : note.id)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] hover:text-[#3F4945] transition-colors"
-                  >
-                    <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>more_vert</span>
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {activeMenuId === note.id && (
-                    <div className="absolute right-0 mt-1 w-36 bg-white border border-[#C3C6CE]/20 rounded-xl shadow-lg py-1.5 z-20 animate-in fade-in slide-in-from-top-1 duration-150">
-                      <button
-                        onClick={() => handleEdit(note)}
-                        className="w-full px-4 py-1.5 text-left text-sm font-medium text-[#3F4945] hover:bg-gray-50 flex items-center gap-2"
-                      >
-                        <span className="material-symbols-outlined select-none" style={{ fontSize: '15px' }}>edit</span>
-                        Edit Note
-                      </button>
-                      <hr className="border-[#C3C6CE]/10 my-1" />
-                      <button
-                        onClick={() => handleDeleteClick(note)}
-                        className="w-full px-4 py-1.5 text-left text-sm font-medium text-[#BA1A1A] hover:bg-red-50 flex items-center gap-2"
-                      >
-                        <span className="material-symbols-outlined select-none" style={{ fontSize: '15px' }}>delete</span>
-                        Delete Note
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <div className="text-center py-12 bg-white border border-[#C3C6CE]/20 rounded-2xl">
-            <span className="material-symbols-outlined text-gray-300 select-none" style={{ fontSize: '48px' }}>note_stack</span>
-            <p className="text-lg font-bold text-orelio-navy mt-3">No notes found</p>
-            <p className="text-sm text-gray-400 mt-1">Try matching another keyword or create a new note.</p>
+          <div className="mt-6">
+            <PrimaryButton
+              onClick={handleAddClick}
+              icon="add"
+            >
+              Add Your First Note
+            </PrimaryButton>
           </div>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 pt-6">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="flex items-center gap-0.5 px-3 py-2 text-sm font-bold text-[#3F4945] hover:text-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
-          >
-            <span className="material-symbols-outlined select-none" style={{ fontSize: '18px', verticalAlign: 'middle' }}>chevron_left</span>
-            Previous
-          </button>
-
-          {Array.from({ length: totalPages }, (_, idx) => {
-            const pageNum = idx + 1;
-            const isActive = pageNum === currentPage;
-            return (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`w-[38px] h-[38px] rounded-[12px] text-sm font-bold flex items-center justify-center transition-all ${isActive
-                  ? 'bg-[#00162A] text-white shadow-sm'
-                  : 'border border-[#E5E7EB] bg-white text-[#3F4945] hover:bg-gray-50 hover:border-gray-300'
-                  }`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="flex items-center gap-0.5 px-3 py-2 text-sm font-bold text-[#3F4945] hover:text-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
-          >
-            Next
-            <span className="material-symbols-outlined select-none" style={{ fontSize: '18px', verticalAlign: 'middle' }}>chevron_right</span>
-          </button>
         </div>
+      ) : (
+        <>
+          {/* Search & Sort Panel */}
+          <div className="flex flex-col sm:flex-row gap-3 my-8">
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#73777E] select-none" style={{ fontSize: '18px' }}>
+                search
+              </span>
+              <input
+                type="text"
+                placeholder="Search notes by title or content..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-[#C3C6CE]/30 focus:outline-none text-sm font-medium transition-all"
+              />
+            </div>
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value as any);
+                  setCurrentPage(1);
+                }}
+                className="appearance-none pl-4 pr-10 py-2 rounded-xl bg-white border border-[#C3C6CE]/30 text-sm font-semibold text-[#3F4945] focus:outline-none  transition-all cursor-pointer w-full sm:w-auto"
+              >
+                <option value="latest">Sort by Latest</option>
+                <option value="oldest">Sort by Oldest</option>
+                <option value="alphabetical">Title A-Z</option>
+              </select>
+              <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#73777E] pointer-events-none select-none text-[20px]" style={{ fontVariationSettings: "'wght' 300" }}>
+                keyboard_arrow_down
+              </span>
+            </div>
+          </div>
+
+          {/* Notes List */}
+          <div className="space-y-4">
+            {paginatedNotes.length > 0 ? (
+              paginatedNotes.map((note) => {
+                const isHovered = hoveredNoteId === note.id;
+                const isMenuOpen = activeMenuId === note.id;
+                const currentAccentColor = isHovered ? '#006A65' : (note.accentColor || '#00162A');
+
+                return (
+                  <div
+                    key={note.id}
+                    onClick={() => handleView(note)}
+                    onMouseEnter={() => setHoveredNoteId(note.id)}
+                    onMouseLeave={() => setHoveredNoteId(null)}
+                    className="p-5 rounded-2xl bg-white border border-[#C3C6CE]/25 hover:border-2 hover:border-[#006A65] shadow-xs hover:shadow-md transition-all cursor-pointer flex items-start justify-between gap-4 group"
+                  >
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      {/* Left icon badge */}
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white transition-colors duration-200"
+                        style={{ backgroundColor: currentAccentColor }}
+                      >
+                        <span className="material-symbols-outlined text-[20px] select-none">description</span>
+                      </div>
+                      {/* Title & snippet */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <h3 className="text-base font-bold text-orelio-navy truncate transition-colors group-hover:text-black">
+                          {note.title}
+                        </h3>
+                        <p className="text-sm text-[#3F4945] line-clamp-2 leading-relaxed font-medium">
+                          {note.content}
+                        </p>
+                        <div className="flex items-center gap-1 text-[11px] text-[#73777E] font-bold uppercase tracking-wider pt-0.5">
+                          <span className="material-symbols-outlined select-none" style={{ fontSize: '13px' }}>schedule</span>
+                          LAST UPDATED {formatNoteTime(note.lastUpdated)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Three dot actions */}
+                    <div
+                      className="relative"
+                      onClick={(e) => e.stopPropagation()} // Stop triggering view note click
+                    >
+                      <button
+                        onClick={() => setActiveMenuId(activeMenuId === note.id ? null : note.id)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] transition-colors"
+                      >
+                        <span className="material-symbols-outlined select-none text-[20px]">more_vert</span>
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {isMenuOpen && (
+                        <div className="absolute right-0 top-9 w-36 bg-white rounded-xl shadow-lg border border-[#C3C6CE]/20 py-1 z-30 animate-in fade-in zoom-in-95 duration-150">
+                          <button
+                            onClick={() => handleEdit(note)}
+                            className="w-full px-4 py-1.5 text-left text-sm font-medium text-[#3F4945] hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined select-none" style={{ fontSize: '15px' }}>edit</span>
+                            Edit Note
+                          </button>
+                          <hr className="border-[#C3C6CE]/10 my-1" />
+                          <button
+                            onClick={() => handleDeleteClick(note)}
+                            className="w-full px-4 py-1.5 text-left text-sm font-medium text-[#BA1A1A] hover:bg-red-50 flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined select-none" style={{ fontSize: '15px' }}>delete</span>
+                            Delete Note
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-12 px-6 flex flex-col items-center justify-center">
+                <span className="material-symbols-outlined text-[#73777E] select-none text-[40px] mb-2">search_off</span>
+                <p className="text-base font-bold text-orelio-navy">No matching notes found</p>
+                <p className="text-sm text-[#707975] mt-1">Try matching another keyword or clearing your search.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-6">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-0.5 px-3 py-2 text-sm font-bold text-[#3F4945] hover:text-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              >
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '18px', verticalAlign: 'middle' }}>chevron_left</span>
+                Previous
+              </button>
+
+              {Array.from({ length: totalPages }, (_, idx) => {
+                const pageNum = idx + 1;
+                const isActive = pageNum === currentPage;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-[38px] h-[38px] rounded-[12px] text-sm font-bold flex items-center justify-center transition-all ${isActive
+                      ? 'bg-[#00162A] text-white shadow-sm'
+                      : 'border border-[#E5E7EB] bg-white text-[#3F4945] hover:bg-gray-50 hover:border-gray-300'
+                      }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-0.5 px-3 py-2 text-sm font-bold text-[#3F4945] hover:text-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              >
+                Next
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '18px', verticalAlign: 'middle' }}>chevron_right</span>
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* VIEW NOTE MODAL */}
@@ -403,6 +423,7 @@ export const Notes: React.FC = () => {
         onClose={() => setIsAddEditOpen(false)}
         selectedNote={selectedNote}
         onSave={handleSaveNote}
+        isFirstNote={notes.length === 0}
       />
 
       {/* DELETE NOTE MODAL */}

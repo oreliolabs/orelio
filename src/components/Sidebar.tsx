@@ -117,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Brand Logo & Header */}
-        <div className="flex items-center justify-between px-6 h-[80px] border-b border-[#C3C6CE]/20 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 h-[64px] border-b border-[#C3C6CE]/20 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-black rounded-[14px] flex items-center justify-center p-2 flex-shrink-0">
               <img src="/logo.svg" alt="Orelio Logo" className="w-full h-full object-contain" />

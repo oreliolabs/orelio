@@ -50,7 +50,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between w-full h-[80px] px-6 md:px-8 bg-white/80 backdrop-blur-md border-b border-[#C3C6CE]/20">
+    <header className="sticky top-0 z-30 flex items-center justify-between w-full h-[64px] px-6 md:px-8 bg-white/80 backdrop-blur-md border-b border-[#C3C6CE]/20">
       
       {/* Left: Mobile Menu Toggle & Search Bar */}
       <div className="flex items-center flex-1 max-w-md gap-4">

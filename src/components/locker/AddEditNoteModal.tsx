@@ -9,6 +9,7 @@ export interface AddEditNoteModalProps {
   onClose: () => void;
   selectedNote: Note | null;
   onSave: (title: string, content: string) => void;
+  isFirstNote?: boolean;
 }
 
 export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
@@ -16,6 +17,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
   onClose,
   selectedNote,
   onSave,
+  isFirstNote = false,
 }) => {
   const [formTitle, setFormTitle] = useState('');
   const [formContent, setFormContent] = useState('');
@@ -50,7 +52,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-[#C3C6CE]/15 pb-3 flex-shrink-0">
           <h3 className="text-lg font-bold text-orelio-navy">
-            {selectedNote ? 'Edit Note' : 'Add Note'}
+            {selectedNote ? 'Edit Note' : (isFirstNote ? 'Add Your First Note' : 'Add Note')}
           </h3>
           <button
             type="button"
