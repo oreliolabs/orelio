@@ -346,9 +346,20 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
                             <span className="text-lg font-extrabold text-orelio-navy group-hover:scale-105 transition-transform duration-300">
                               {f(formatCurrency(account.balance))}
                             </span>
-                            <span className={`material-symbols-outlined text-[#74777F] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                              expand_more
-                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleExpand(account.id);
+                              }}
+                              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#74777F] hover:text-[#00162A] transition-colors cursor-pointer"
+                              aria-label={isExpanded ? "Collapse account details" : "Expand account details"}
+                              title={isExpanded ? "Collapse details" : "Expand details"}
+                            >
+                              <span className={`material-symbols-outlined transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[#006A65]' : ''}`}>
+                                expand_more
+                              </span>
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -414,14 +425,18 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
                         }`}
                     >
                       <div className="overflow-hidden">
-                        <div className="px-5 pb-5 pt-2 border-t border-[#C3C6CE]/15 flex flex-wrap gap-8 items-center text-xs">
-                          <div>
-                            <span className="block text-[10px] font-bold text-[#73777E] uppercase tracking-wider">Account Number</span>
-                            <span className="font-bold text-orelio-navy text-sm mt-0.5 block">{account.accountNumber?.trim() ? f(account.accountNumber) : '-'}</span>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] font-bold text-[#73777E] uppercase tracking-wider">IFSC Code</span>
-                            <span className="font-bold text-orelio-navy text-sm mt-0.5 block">{account.ifscCode?.trim() ? f(account.ifscCode) : '-'}</span>
+                        <div className="px-5 pb-5 pt-3 border-t border-[#C3C6CE]/15 flex items-start gap-4 text-xs">
+                          {/* Spacer matching bank icon width to align Account Number with SAVINGS ACCOUNT */}
+                          <div className="w-10 flex-shrink-0" />
+                          <div className="flex flex-wrap gap-12 sm:gap-20 md:gap-28 items-center">
+                            <div className="min-w-[140px] sm:min-w-[180px]">
+                              <span className="block text-[10px] font-bold text-[#73777E] uppercase tracking-wider">Account Number</span>
+                              <span className="font-bold text-orelio-navy text-sm mt-1 block">{account.accountNumber?.trim() ? f(account.accountNumber) : '-'}</span>
+                            </div>
+                            <div className="min-w-[140px] sm:min-w-[180px]">
+                              <span className="block text-[10px] font-bold text-[#73777E] uppercase tracking-wider">IFSC Code</span>
+                              <span className="font-bold text-orelio-navy text-sm mt-1 block">{account.ifscCode?.trim() ? f(account.ifscCode) : '-'}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
