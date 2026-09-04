@@ -196,11 +196,25 @@ export function saveBankAccounts(accounts: BankAccount[]): void {
 }
 
 export function getDeposits(): Deposit[] {
-  return getOrelioDatabase().deposits;
+  const deps = getOrelioDatabase().deposits || [];
+  return deps.map((d: any) => {
+    const { daysRemaining, progressPercent, accountNumber, ...rest } = d;
+    return {
+      ...rest,
+      depositNumber: d.depositNumber || d.accountNumber || '',
+    };
+  });
 }
 
 export function saveDeposits(deposits: Deposit[]): void {
-  const db = { ...getOrelioDatabase(), deposits: deposits };
+  const cleanDeposits = deposits.map((d: any) => {
+    const { daysRemaining, progressPercent, accountNumber, ...rest } = d;
+    return {
+      ...rest,
+      depositNumber: d.depositNumber || d.accountNumber || '',
+    };
+  });
+  const db = { ...getOrelioDatabase(), deposits: cleanDeposits };
   saveOrelioDatabase(db);
 }
 

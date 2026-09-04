@@ -46,7 +46,8 @@ export interface Deposit {
   type: 'FD' | 'RD';
   nickname: string;
   bankName: string;
-  accountNumber: string;
+  depositNumber: string;
+  accountNumber?: string;
   interestRate: number;
   currentValue: number;
   principalOrMonthly: number;

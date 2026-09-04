@@ -8,7 +8,8 @@ export interface DepositFormData {
   type: 'FD' | 'RD';
   nickname: string;
   bankName: string;
-  accountNumber: string;
+  depositNumber: string;
+  accountNumber?: string;
   amount: number;
   interestRate: number;
   startDate: string;
@@ -99,7 +100,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
   const [formType, setFormType] = useState<'FD' | 'RD'>('FD');
   const [formNickname, setFormNickname] = useState('');
   const [formBankName, setFormBankName] = useState('');
-  const [formAccountNumber, setFormAccountNumber] = useState('');
+  const [formDepositNumber, setFormDepositNumber] = useState('');
   const [formAmount, setFormAmount] = useState('');
   const [formInterestRate, setFormInterestRate] = useState('');
   const [formStartDate, setFormStartDate] = useState('');
@@ -120,7 +121,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       setFormType(editingDeposit.type);
       setFormNickname(editingDeposit.nickname);
       setFormBankName(editingDeposit.bankName || '');
-      setFormAccountNumber(editingDeposit.accountNumber);
+      setFormDepositNumber(editingDeposit.depositNumber || editingDeposit.accountNumber || '');
       setFormAmount(editingDeposit.principalOrMonthly.toString());
       setFormInterestRate(editingDeposit.interestRate.toString());
       setFormStartDate(normalizeToDDMMYYYY(editingDeposit.startDate));
@@ -133,7 +134,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       setFormType('FD');
       setFormNickname('');
       setFormBankName('');
-      setFormAccountNumber('');
+      setFormDepositNumber('');
       setFormAmount('');
       setFormInterestRate('');
       setFormStartDate('');
@@ -233,7 +234,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       type: formType,
       nickname: formNickname || (formType === 'FD' ? 'Fixed Deposit' : 'Recurring Deposit'),
       bankName: formBankName || 'HDFC Bank',
-      accountNumber: formAccountNumber || '50100482918829',
+      depositNumber: formDepositNumber || '50100482918829',
+      accountNumber: formDepositNumber || '50100482918829',
       amount: amountNum,
       interestRate: rateNum,
       startDate: formStartDate,
@@ -313,7 +315,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
               />
             </div>
 
-            {/* Bank Name & Account Number */}
+            {/* Bank Name & Deposit Number */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
@@ -331,7 +333,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
 
               <div className="space-y-1.5">
                 <label className="block text-[11px] font-extrabold tracking-widest text-[#74777F] uppercase">
-                  ACCOUNT NUMBER
+                  DEPOSIT NUMBER
                 </label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-3.5 text-[#74777F] select-none" style={{ fontSize: '18px' }}>
@@ -340,8 +342,8 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
                   <input
                     type="text"
                     placeholder="e.g. 50100482918829"
-                    value={formAccountNumber}
-                    onChange={(e) => setFormAccountNumber(e.target.value)}
+                    value={formDepositNumber}
+                    onChange={(e) => setFormDepositNumber(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-[#C3C6CE]/50 bg-white text-sm text-[#00162A] font-semibold focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65]"
                   />
                 </div>

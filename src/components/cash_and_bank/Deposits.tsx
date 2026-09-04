@@ -270,14 +270,12 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         type: formData.type,
         nickname: formData.nickname,
         bankName: formData.bankName,
-        accountNumber: formData.accountNumber,
+        depositNumber: formData.depositNumber || '',
         principalOrMonthly: formData.amount,
         interestRate: formData.interestRate,
         currentValue: formData.amount * 1.08,
         startDate: formData.startDate,
         maturityDate: formData.maturityDate,
-        daysRemaining: metrics.daysRemaining,
-        progressPercent: metrics.progressPercent,
         nominee: formData.nominee
       } : d));
     } else {
@@ -287,14 +285,12 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         type: formData.type,
         nickname: formData.nickname,
         bankName: formData.bankName,
-        accountNumber: formData.accountNumber || '50100482918829',
+        depositNumber: formData.depositNumber || '50100482918829',
         interestRate: formData.interestRate,
         currentValue: formData.amount,
         principalOrMonthly: formData.amount,
         startDate: formData.startDate,
         maturityDate: formData.maturityDate,
-        daysRemaining: metrics.daysRemaining,
-        progressPercent: metrics.progressPercent,
         status: metrics.daysRemaining <= 0 ? 'matured' : 'active',
         nominee: formData.nominee
       };
@@ -532,7 +528,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                           {deposit.nickname}
                         </h3>
                         <span className="block text-xs font-medium text-[#74777F] mt-1.5">
-                          Deposit No.: {deposit.accountNumber}
+                          Deposit No.: {deposit.depositNumber || deposit.accountNumber}
                         </span>
                       </div>
                     </div>
@@ -750,7 +746,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                           {deposit.nickname}
                         </h3>
                         <span className="block text-xs font-medium text-[#74777F] mt-1.5">
-                          Deposit No.: {deposit.accountNumber}
+                          Deposit No.: {deposit.depositNumber || deposit.accountNumber}
                         </span>
                       </div>
                     </div>
