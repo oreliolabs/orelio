@@ -46,9 +46,8 @@
       "currentValue": 58671196.56,
       "principalOrMonthly": 54325182,
       "startDate": 1788220800000,
-      "maturityDate": 1788480000000,
-      "status": "matured",
-      "maturedDate": 1788480000000
+      "maturityDate": 1819756800000,
+      "status": "active"
     }
   ],
   "stocks": [

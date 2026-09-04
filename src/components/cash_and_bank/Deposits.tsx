@@ -611,7 +611,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                         INTEREST RATE
                       </span>
                       <span className="block text-base font-extrabold text-[#00162A]">
-                        {deposit.interestRate}% p.a.
+                        {formatVal(`${deposit.interestRate}% p.a.`)}
                       </span>
                     </div>
 
@@ -829,7 +829,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                         FINAL RATE
                       </span>
                       <span className="block text-base font-extrabold text-[#74777F]">
-                        {deposit.interestRate}% p.a.
+                        {formatVal(`${deposit.interestRate}% p.a.`)}
                       </span>
                     </div>
 
