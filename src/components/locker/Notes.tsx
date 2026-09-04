@@ -200,7 +200,7 @@ export const Notes: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6 fade-in p-2">
+    <div className="space-y-6 fade-in px-2 pb-2">
       {/* Header section */}
       {notes.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

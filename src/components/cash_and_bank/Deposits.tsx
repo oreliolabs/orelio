@@ -177,6 +177,22 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
     }).format(num).replace('INR', '₹');
   };
 
+  const formatCompactCurrency = (num: number) => {
+    if (!num || num === 0) return '₹0';
+    if (num >= 10000000) {
+      const val = (num / 10000000).toFixed(2).replace(/\.?0+$/, '');
+      return `₹${val} Cr`;
+    }
+    if (num >= 1000000) {
+      const val = (num / 100000).toFixed(1).replace(/\.?0+$/, '');
+      return `₹${val}L`;
+    }
+    if (num >= 1000) {
+      return `₹${Math.round(num / 1000)}k`;
+    }
+    return `₹${num}`;
+  };
+
   // Close context menu on document click
   useEffect(() => {
     const handleOutsideClick = () => setActiveMenuId(null);
@@ -242,9 +258,13 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
     maturedPage * ITEMS_PER_PAGE
   );
 
-  const totalCurrentValue = rawActiveDeposits.reduce((acc: number, curr: Deposit) => acc + curr.currentValue, 0);
+  const totalCurrentValue = rawActiveDeposits.reduce((acc: number, curr: Deposit) => acc + (curr.currentValue || 0), 0);
+  const totalPrincipal = rawActiveDeposits.reduce((acc: number, curr: Deposit) => acc + (curr.principalOrMonthly || 0), 0);
+  const totalGrowthPercent = totalPrincipal > 0 ? ((totalCurrentValue - totalPrincipal) / totalPrincipal) * 100 : 0;
   const fixedDeposits = rawActiveDeposits.filter((d: Deposit) => d.type === 'FD');
   const recurringDeposits = rawActiveDeposits.filter((d: Deposit) => d.type === 'RD');
+  const totalFdValue = fixedDeposits.reduce((acc: number, curr: Deposit) => acc + (curr.currentValue || 0), 0);
+  const totalRdValue = recurringDeposits.reduce((acc: number, curr: Deposit) => acc + (curr.currentValue || 0), 0);
 
   // Form Handlers
   const handleOpenAdd = () => {
@@ -355,30 +375,54 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
   };
 
   return (
-    <div className="space-y-8 fade-in p-1 md:p-2">
+    <div className="space-y-8 fade-in px-1 md:px-2 pb-2">
 
       {/* Top Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-[#00162A] tracking-tight font-sans">
-            My Deposits
-          </h1>
-          <p className="text-sm font-medium text-[#74777F] mt-1">
-            Manage and track your fixed and recurring investments.
-          </p>
+      {deposits.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[#00162A] tracking-tight font-sans">
+              My Deposits
+            </h1>
+            <p className="text-sm font-medium text-[#74777F] mt-1">
+              Manage and track your fixed and recurring investments.
+            </p>
+          </div>
+          <PrimaryButton
+            onClick={handleOpenAdd}
+            icon="add"
+          >
+            New Deposit
+          </PrimaryButton>
         </div>
-        <PrimaryButton
-          onClick={handleOpenAdd}
-          icon="add"
-        >
-          New Deposit
-        </PrimaryButton>
-      </div>
+      )}
 
-      {/* Subtitle Divider */}
-      <hr style={{ borderColor: 'rgba(191, 201, 196, 0.3)' }} />
+      {deposits.length === 0 ? (
+        <div className="text-center py-20 px-6 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#006A65]/10 text-[#006A65] flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined select-none text-[36px]">
+              savings
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-[#00162A] tracking-tight">No Deposits Yet</h3>
+          <p className="text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
+            Track and monitor your fixed and recurring deposits all in one secure place.
+          </p>
+          <div className="mt-6">
+            <PrimaryButton
+              onClick={handleOpenAdd}
+              icon="add"
+            >
+              Add Your First Deposit
+            </PrimaryButton>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Subtitle Divider */}
+          <hr style={{ borderColor: 'rgba(191, 201, 196, 0.3)' }} />
 
-      {/* Summary Cards Grid */}
+          {/* Summary Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {/* Net Current Value Card */}
@@ -389,15 +433,21 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
             </span>
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-3xl font-extrabold text-orelio-navy">
-                {formatVal(formatCurrency(totalCurrentValue > 0 ? totalCurrentValue : 1248500))}
+                {formatVal(formatCurrency(totalCurrentValue))}
               </span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#006A65]/10 text-[#006A65] text-xs font-semibold">
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'wght' 400", fontSize: '16px' }}>trending_up</span>
-                +4.2% this year
-              </span>
+              {rawActiveDeposits.length > 0 && (
+                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
+                  totalGrowthPercent >= 0 ? 'bg-[#006A65]/10 text-[#006A65]' : 'bg-red-50 text-red-600'
+                }`}>
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'wght' 400", fontSize: '16px' }}>
+                    {totalGrowthPercent >= 0 ? 'trending_up' : 'trending_down'}
+                  </span>
+                  {totalGrowthPercent >= 0 ? `+${totalGrowthPercent.toFixed(1)}%` : `${totalGrowthPercent.toFixed(1)}%`} this year
+                </span>
+              )}
             </div>
             <p className="text-sm text-[#73777E]">
-              Net Principal: <span className="text-[#00162A] font-semibold">{formatVal('₹54,32,854')}</span>
+              Net Principal: <span className="text-[#00162A] font-semibold">{formatVal(formatCurrency(totalPrincipal))}</span>
             </p>
           </div>
 
@@ -418,18 +468,18 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
               ACTIVE DEPOSITS
             </span>
             <div className="text-4xl md:text-5xl font-extrabold text-white mt-1">
-              {rawActiveDeposits.length > 0 ? rawActiveDeposits.length : 12}
+              {rawActiveDeposits.length}
             </div>
           </div>
 
           <div className="pt-4 border-t border-white/10 space-y-2.5 text-sm font-medium">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-[#FFFFFF]/70">{fixedDeposits.length > 0 ? fixedDeposits.length : 8} Fixed Deposits</span>
-              <span className="text-white">{formatVal('₹840k')}</span>
+              <span className="text-[#FFFFFF]/70">{fixedDeposits.length} Fixed {fixedDeposits.length === 1 ? 'Deposit' : 'Deposits'}</span>
+              <span className="text-white">{formatVal(formatCompactCurrency(totalFdValue))}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-[#FFFFFF]/70">{recurringDeposits.length > 0 ? recurringDeposits.length : 4} Recurring Deposits</span>
-              <span className="text-white">{formatVal('₹408k')}</span>
+              <span className="text-[#FFFFFF]/70">{recurringDeposits.length} Recurring {recurringDeposits.length === 1 ? 'Deposit' : 'Deposits'}</span>
+              <span className="text-white">{formatVal(formatCompactCurrency(totalRdValue))}</span>
             </div>
           </div>
         </div>
@@ -528,7 +578,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                           {deposit.nickname}
                         </h3>
                         <span className="block text-xs font-medium text-[#74777F] mt-1.5">
-                          Deposit No.: {deposit.depositNumber || deposit.accountNumber}
+                          Deposit No.: {deposit.depositNumber}
                         </span>
                       </div>
                     </div>
@@ -746,7 +796,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
                           {deposit.nickname}
                         </h3>
                         <span className="block text-xs font-medium text-[#74777F] mt-1.5">
-                          Deposit No.: {deposit.depositNumber || deposit.accountNumber}
+                          Deposit No.: {deposit.depositNumber}
                         </span>
                       </div>
                     </div>
@@ -915,6 +965,17 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         </div>
       )}
 
+      {/* Empty state when filtering */}
+      {deposits.length > 0 && activeDepositsList.length === 0 && maturedDepositsList.length === 0 && (
+        <div className="text-center py-12 bg-white border border-[#C3C6CE]/20 rounded-2xl mt-4">
+          <span className="material-symbols-outlined text-gray-300 select-none text-[48px]">savings</span>
+          <p className="text-base font-bold text-orelio-navy mt-3">No {filterType === 'FD' ? 'fixed' : 'recurring'} deposits found</p>
+          <p className="text-sm text-gray-400 mt-1">Try switching to all deposits or register a new deposit.</p>
+        </div>
+      )}
+    </>
+  )}
+
       {/* Add / Edit Deposit Modal */}
       <AddEditDepositModal
         isOpen={isAddEditOpen}
@@ -923,6 +984,7 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
           setEditingDeposit(null);
         }}
         editingDeposit={editingDeposit}
+        isFirstDeposit={deposits.length === 0}
         onSave={handleSaveDeposit}
       />
 

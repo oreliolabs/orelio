@@ -85,7 +85,7 @@ export const ManageFamily: React.FC<ManageFamilyProps> = ({
   };
 
   return (
-    <div className="space-y-8 fade-in p-1">
+    <div className="space-y-8 fade-in px-1 pb-2">
 
       {/* Top Header Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

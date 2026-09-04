@@ -9,7 +9,6 @@ export interface DepositFormData {
   nickname: string;
   bankName: string;
   depositNumber: string;
-  accountNumber?: string;
   amount: number;
   interestRate: number;
   startDate: string;
@@ -21,6 +20,7 @@ interface AddEditDepositModalProps {
   isOpen: boolean;
   onClose: () => void;
   editingDeposit: Deposit | null;
+  isFirstDeposit?: boolean;
   onSave: (formData: DepositFormData) => void;
 }
 
@@ -95,6 +95,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
   isOpen,
   onClose,
   editingDeposit,
+  isFirstDeposit = false,
   onSave,
 }) => {
   const [formType, setFormType] = useState<'FD' | 'RD'>('FD');
@@ -121,7 +122,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       setFormType(editingDeposit.type);
       setFormNickname(editingDeposit.nickname);
       setFormBankName(editingDeposit.bankName || '');
-      setFormDepositNumber(editingDeposit.depositNumber || editingDeposit.accountNumber || '');
+      setFormDepositNumber(editingDeposit.depositNumber || '');
       setFormAmount(editingDeposit.principalOrMonthly.toString());
       setFormInterestRate(editingDeposit.interestRate.toString());
       setFormStartDate(normalizeToDDMMYYYY(editingDeposit.startDate));
@@ -177,50 +178,45 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
 
     let years = d2.getFullYear() - d1.getFullYear();
     let months = d2.getMonth() - d1.getMonth();
-    if (d2.getDate() < d1.getDate()) {
-      months--;
-    }
+
     if (months < 0) {
       years--;
       months += 12;
     }
 
-    const parts = [];
-    if (years > 0) parts.push(`${years} ${years === 1 ? 'Year' : 'Years'}`);
-    if (months > 0) parts.push(`${months} ${months === 1 ? 'Month' : 'Months'}`);
-    if (parts.length === 0) {
+    if (d2.getDate() < d1.getDate()) {
+      months--;
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+    }
+
+    if (years === 0 && months === 0) {
       const days = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
       return `${days} Days`;
     }
 
-    return parts.join(' ');
+    const parts: string[] = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? 'Year' : 'Years'}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? 'Month' : 'Months'}`);
+    return parts.join(', ');
   }, [formStartDate, formMaturityDate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate Start Date
-    const startVal = isValidDDMMYYYY(formStartDate);
-    if (!startVal.valid) {
-      setStartDateError(startVal.error!);
-    } else {
-      setStartDateError('');
-    }
-
-    // Validate Maturity Date
-    const matVal = isValidDDMMYYYY(formMaturityDate);
-    if (!matVal.valid) {
-      setMaturityDateError(matVal.error!);
-    } else {
-      setMaturityDateError('');
-    }
-
-    if (!startVal.valid || !matVal.valid) {
+    const dStart = parseDDMMYYYY(formStartDate);
+    if (!dStart) {
+      setStartDateError('Invalid date format (DD/MM/YYYY)');
       return;
     }
 
-    const dStart = parseDDMMYYYY(formStartDate)!;
-    const dMat = parseDDMMYYYY(formMaturityDate)!;
+    const dMat = parseDDMMYYYY(formMaturityDate);
+    if (!dMat) {
+      setMaturityDateError('Invalid date format (DD/MM/YYYY)');
+      return;
+    }
 
     if (dMat <= dStart) {
       setMaturityDateError('Maturity date must be after start date');
@@ -235,7 +231,6 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       nickname: formNickname || (formType === 'FD' ? 'Fixed Deposit' : 'Recurring Deposit'),
       bankName: formBankName || 'HDFC Bank',
       depositNumber: formDepositNumber || '50100482918829',
-      accountNumber: formDepositNumber || '50100482918829',
       amount: amountNum,
       interestRate: rateNum,
       startDate: formStartDate,
@@ -256,7 +251,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
         {/* Fixed Modal Header with Divider */}
         <div className="p-6 md:px-8 md:pt-6 md:pb-4 border-b border-[#C3C6CE]/30 flex-shrink-0 flex items-center justify-between">
           <h2 className="text-[18px] font-bold text-[#00162A] tracking-tight">
-            {editingDeposit ? 'Edit Deposit' : 'Add New Deposit'}
+            {editingDeposit ? 'Edit Deposit' : isFirstDeposit ? 'Add Your First Deposit' : 'Add New Deposit'}
           </h2>
           <button
             type="button"

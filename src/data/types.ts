@@ -47,7 +47,6 @@ export interface Deposit {
   nickname: string;
   bankName: string;
   depositNumber: string;
-  accountNumber?: string;
   interestRate: number;
   currentValue: number;
   principalOrMonthly: number;
@@ -73,8 +72,8 @@ export interface LoanItem {
   interestRate: number;
   tenureYears: number;
   tenureMonths: number;
-  startDate: string;
-  nextEmiDate: string;
+  startDate: number;
+  nextEmiDate: number;
   monthlyEmi: number;
   repaymentProgressPercent?: number;
   status: 'active' | 'closed';

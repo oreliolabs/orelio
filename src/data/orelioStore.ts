@@ -237,7 +237,16 @@ export function saveStockMetadata(metadata: StockCASMetadata): void {
 }
 
 export function getLoans(): LoanItem[] {
-  return getOrelioDatabase().loans;
+  return getOrelioDatabase().loans.map((loan) => ({
+    ...loan,
+    // Coerce legacy string dates to epoch ms
+    startDate: typeof loan.startDate === 'string'
+      ? (() => { const s = loan.startDate as unknown as string; return new Date(s + (s.includes('T') ? '' : 'T00:00:00Z')).getTime(); })()
+      : loan.startDate,
+    nextEmiDate: typeof loan.nextEmiDate === 'string'
+      ? new Date((loan.nextEmiDate as string) + 'T00:00:00Z').getTime() || Date.now()
+      : loan.nextEmiDate,
+  }));
 }
 
 export function saveLoans(loans: LoanItem[]): void {

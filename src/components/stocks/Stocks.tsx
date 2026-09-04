@@ -49,7 +49,7 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
   };
 
   return (
-    <div className="space-y-6 fade-in p-2">
+    <div className="space-y-6 fade-in px-2 pb-2">
       {/* Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

@@ -138,7 +138,7 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative" ref={dropdownRef}>
                 <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                  LOAN TYPE
+                  LOAN TYPE <span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <button
                   type="button"
@@ -187,7 +187,7 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
 
               <div>
                 <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                  LOAN PROVIDER
+                  LOAN PROVIDER <span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
@@ -203,7 +203,7 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
             {/* Row 2: Loan Nickname */}
             <div>
               <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                LOAN NICKNAME
+                LOAN NICKNAME <span className="text-red-500 ml-0.5">*</span>
               </label>
               <input
                 type="text"
@@ -219,7 +219,7 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                  TOTAL LOAN AMOUNT
+                  TOTAL LOAN AMOUNT <span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[#00162A]">
@@ -240,7 +240,7 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
 
               <div>
                 <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                  START DATE
+                  START DATE <span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <input
                   type="date"
@@ -253,10 +253,10 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
             </div>
 
             {/* Row 4: Annual Interest Rate (%) & Loan Tenure */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                  ANNUAL INTEREST RATE (%)
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2 whitespace-nowrap">
+                  ANNUAL INTEREST RATE (%) <span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -275,9 +275,9 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
                 </div>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2">
-                  LOAN TENURE
+              <div className="md:col-span-3">
+                <label className="block text-[10px] font-extrabold tracking-widest text-[#74777F] uppercase mb-2 whitespace-nowrap">
+                  LOAN TENURE <span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="relative">
@@ -315,7 +315,7 @@ export const AddEditLoanModal: React.FC<AddEditLoanModalProps> = ({
           <div className="flex items-center justify-end gap-3 px-6 md:px-8 py-4 border-t border-[#C3C6CE]/20 flex-shrink-0 bg-white rounded-b-3xl">
             <CancelButton onClick={onClose} />
             <SaveButton type="submit" isSaving={isSaving}>
-              {isEditing ? 'Save Changes' : 'Verify & Add Loan'}
+              {isEditing ? 'Save Changes' : 'Add Loan'}
             </SaveButton>
           </div>
         </form>

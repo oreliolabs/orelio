@@ -36,16 +36,131 @@
   ],
   "bankAccounts": [
     {
-      "id": "1788509314406",
-      "bankName": "fda",
+      "id": "1788508881585",
+      "bankName": "HDFC Bank Account",
       "accountType": "Savings Account",
       "accountNumber": "",
       "ifscCode": "",
-      "balance": 523,
-      "lastUpdated": 1788509314406
+      "balance": 150000,
+      "lastUpdated": 1788508881585
     }
   ],
-  "deposits": [],
+  "deposits": [
+    {
+      "id": "dep-1788511548569",
+      "type": "FD",
+      "nickname": "Test FD",
+      "bankName": "HDFC Bank",
+      "depositNumber": "50100482918829",
+      "interestRate": 7.5,
+      "currentValue": 100000,
+      "principalOrMonthly": 100000,
+      "startDate": "01/01/2025",
+      "maturityDate": "01/01/2026",
+      "status": "matured"
+    },
+    {
+      "id": "dep-1",
+      "type": "FD",
+      "nickname": "Retirement Alpha Fund",
+      "bankName": "HDFC Bank",
+      "interestRate": 7.85,
+      "currentValue": 245000,
+      "principalOrMonthly": 200000,
+      "startDate": "24/10/2023",
+      "maturityDate": "24/10/2025",
+      "status": "active",
+      "nominee": "Priya Sharma",
+      "depositNumber": "50100482918829"
+    },
+    {
+      "id": "dep-2",
+      "type": "RD",
+      "nickname": "Wealth Maximizer Recurring",
+      "bankName": "ICICI Bank",
+      "interestRate": 7.1,
+      "currentValue": 120000,
+      "principalOrMonthly": 10000,
+      "startDate": "01/01/2024",
+      "maturityDate": "01/01/2025",
+      "status": "active",
+      "nominee": "Alexander Bloom",
+      "depositNumber": "100293849102"
+    },
+    {
+      "id": "dep-4",
+      "type": "FD",
+      "nickname": "Tax Saver Growth Deposit",
+      "bankName": "Axis Bank",
+      "interestRate": 7.4,
+      "currentValue": 150000,
+      "principalOrMonthly": 150000,
+      "startDate": "10/03/2021",
+      "maturityDate": "10/03/2026",
+      "status": "active",
+      "nominee": "Alexander Bloom",
+      "depositNumber": "918273645019"
+    },
+    {
+      "id": "dep-5",
+      "type": "FD",
+      "nickname": "High Yield Corporate FD",
+      "bankName": "Bajaj Finance",
+      "interestRate": 8.25,
+      "currentValue": 350000,
+      "principalOrMonthly": 300000,
+      "startDate": "12/08/2023",
+      "maturityDate": "12/08/2026",
+      "status": "active",
+      "nominee": "Priya Sharma",
+      "depositNumber": "BJF829104928"
+    },
+    {
+      "id": "dep-6",
+      "type": "FD",
+      "nickname": "Quarterly Income Generator",
+      "bankName": "Kotak Bank",
+      "interestRate": 7.9,
+      "currentValue": 400000,
+      "principalOrMonthly": 400000,
+      "startDate": "01/06/2023",
+      "maturityDate": "01/06/2024",
+      "status": "matured",
+      "maturedDate": "01/06/2024",
+      "nominee": "Alexander Bloom",
+      "depositNumber": "7261524390"
+    },
+    {
+      "id": "dep-7",
+      "type": "FD",
+      "nickname": "Digital Reserve Deposit",
+      "bankName": "IDFC First Bank",
+      "interestRate": 6.8,
+      "currentValue": 75000,
+      "principalOrMonthly": 75000,
+      "startDate": "14/02/2023",
+      "maturityDate": "14/02/2024",
+      "status": "matured",
+      "maturedDate": "14/02/2024",
+      "nominee": "Alexander Bloom",
+      "depositNumber": "1029384756"
+    },
+    {
+      "id": "dep-9",
+      "type": "FD",
+      "nickname": "Emergency Rainy Day Fund",
+      "bankName": "HDFC Bank",
+      "interestRate": 7.25,
+      "currentValue": 320000,
+      "principalOrMonthly": 300000,
+      "startDate": "05/09/2023",
+      "maturityDate": "05/09/2024",
+      "status": "matured",
+      "maturedDate": "05/09/2024",
+      "nominee": "Priya Sharma",
+      "depositNumber": "50100293847162"
+    }
+  ],
   "stocks": [
     {
       "id": "stock-1",
@@ -91,61 +206,80 @@
     "totalInvestedValue": 529200,
     "uploadedAt": "2026-09-03T10:00:00.000Z"
   },
-  "loans": [
+  "loans": [],
+  "policies": [
+    {
+      "id": "pol-1",
+      "policyType": "Property Insurance",
+      "policyName": "Estate Protection Plan",
+      "policyNumber": "POL-2231-LL",
+      "provider": "AXA Private",
+      "sumInsured": 2500000,
+      "annualPremium": 15200,
+      "premiumFrequency": "Annual",
+      "startDate": "2024-01-22",
+      "expiryDate": "2027-01-22",
+      "premiumAmount": 15200
+    },
+    {
+      "id": "pol-2",
+      "policyType": "Health Insurance",
+      "policyName": "Executive Health Shield",
+      "policyNumber": "STAR-8812-HC",
+      "provider": "Star Health",
+      "sumInsured": 1500000,
+      "annualPremium": 24500,
+      "premiumFrequency": "Annual",
+      "startDate": "2024-03-10",
+      "expiryDate": "2027-03-10",
+      "premiumAmount": 24500
+    },
+    {
+      "id": "pol-3",
+      "policyType": "Term Insurance",
+      "policyName": "Family Term Protection",
+      "policyNumber": "HDFC-LIFE-901",
+      "provider": "HDFC Life",
+      "sumInsured": 10000000,
+      "annualPremium": 38000,
+      "premiumFrequency": "Annual",
+      "startDate": "2023-08-15",
+      "expiryDate": "2038-08-15",
+      "premiumAmount": 38000
+    }
+  ],
+  "notes": [
     {
       "id": "1",
-      "type": "Mortgage",
-      "nickname": "Home Loan",
-      "provider": "HSBC",
-      "accountNumber": "**** 9210",
-      "totalAmount": 1450000,
-      "outstandingBalance": 842000,
-      "interestRate": 4.82,
-      "tenureYears": 30,
-      "tenureMonths": 0,
-      "startDate": "2018-10-12",
-      "nextEmiDate": "Oct 12, 2026",
-      "monthlyEmi": 12450,
-      "repaymentProgressPercent": 42,
-      "status": "active"
+      "title": "The Art of Small Beginnings",
+      "content": "Not every meaningful change arrives with a grand announcement. Sometimes, the most enduring habits, the most solid financial portfolios, and the deepest personal reflections start in the quietest way imaginable. A single rupee set aside, a single sentence written, or a single moment of quiet alignment can lay the foundation for a lifetime of growth.",
+      "lastUpdated": "12:00 PM"
     },
     {
       "id": "2",
-      "type": "Auto Loan",
-      "nickname": "BMW Vehicle Loan",
-      "provider": "HDFC Bank",
-      "accountNumber": "**** 4091",
-      "totalAmount": 1850000,
-      "outstandingBalance": 1210000,
-      "interestRate": 8.45,
-      "tenureYears": 5,
-      "tenureMonths": 0,
-      "startDate": "2022-03-15",
-      "nextEmiDate": "Oct 15, 2026",
-      "monthlyEmi": 37890,
-      "repaymentProgressPercent": 35,
-      "status": "active"
+      "title": "Conversations in Silence",
+      "content": "Some of the best conversations happen in silence. When we quiet the noise around us, we can finally hear the underlying currents of our thoughts, goals, and strategies. Writing down these quiet insights helps transform brief ideas into permanent systems, ensuring we stay focused on long-term values rather than short-term market noises.",
+      "lastUpdated": "11:30 AM"
     },
     {
       "id": "3",
-      "type": "Credit Line",
-      "nickname": "Private Credit Line",
-      "provider": "Standard Chartered",
-      "accountNumber": "**** 8122",
-      "totalAmount": 500000,
-      "outstandingBalance": 125000,
-      "interestRate": 10.25,
-      "tenureYears": 2,
-      "tenureMonths": 0,
-      "startDate": "2023-06-01",
-      "nextEmiDate": "Oct 01, 2026",
-      "monthlyEmi": 9400,
-      "repaymentProgressPercent": 75,
-      "status": "active"
+      "title": "Quarterly Asset Allocation Checklist",
+      "content": "Review cash reserves, equity weightings across portfolios, and ensure Locker records (wills, digital passwords) are updated. Balance target ratios when stocks rise past their threshold. Maintain safety margins for loans.",
+      "lastUpdated": "YESTERDAY"
+    },
+    {
+      "id": "4",
+      "title": "Retirement Vision Board",
+      "content": "Mapping out passive income milestones for age 60. Core streams include dividend stocks, EPF accumulations, and rental yielding real estate. Focus on stability over raw growth in later stages. Regularly audit health cover limits.",
+      "lastUpdated": "3 DAYS AGO"
+    },
+    {
+      "id": "5",
+      "title": "Emergency Fund Rules",
+      "content": "Emergency reserves must cover 6 months of fixed family expenses. Keep cash strictly in savings accounts or short-term liquid FDs. Never deploy emergency funds into volatile equity assets.",
+      "lastUpdated": "1 WEEK AGO"
     }
   ],
-  "policies": [],
-  "notes": [],
   "assetAllocation": [
     {
       "name": "Stocks",

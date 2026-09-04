@@ -91,7 +91,7 @@ function App() {
 
       case 'settings':
         return (
-          <div className="space-y-6 fade-in p-2 w-full">
+          <div className="space-y-6 fade-in px-2 pb-2 w-full">
             <div>
               <h2 className="text-2xl font-extrabold text-orelio-navy">Settings</h2>
             </div>
@@ -186,7 +186,7 @@ function App() {
         />
 
         {/* Dynamic Inner Page Content */}
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto pb-16">
+        <main className="flex-1 px-6 md:px-8 pt-4 md:pt-5 max-w-7xl w-full mx-auto pb-16">
           {renderContent()}
         </main>
       </div>

@@ -212,7 +212,7 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
   };
 
   return (
-    <div className="space-y-6 fade-in p-2">
+    <div className="space-y-6 fade-in px-2 pb-2">
       {/* Header section */}
       {accounts.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
