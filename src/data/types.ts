@@ -83,7 +83,7 @@ export interface Note {
   id: string;
   title: string;
   content: string;
-  lastUpdated: string;
+  lastUpdated: number;
   accentColor?: string;
 }
 
@@ -107,7 +107,7 @@ export interface OrelioDatabase {
   bankAccounts: BankAccount[];
   deposits: Deposit[];
   stocks: StockHolding[];
-  stockMetadata: StockCASMetadata;
+  stockMetadata?: StockCASMetadata | null;
   loans: LoanItem[];
   policies: Policy[];
   notes: Note[];

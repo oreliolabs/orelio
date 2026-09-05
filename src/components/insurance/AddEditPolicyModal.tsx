@@ -12,6 +12,29 @@ interface AddEditPolicyModalProps {
   isFirstPolicy?: boolean;
 }
 
+const toInputDate = (val?: number | string): string => {
+  if (!val) return '';
+  if (typeof val === 'number') {
+    const dt = new Date(val);
+    if (!isNaN(dt.getTime())) {
+      const y = dt.getUTCFullYear();
+      const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(dt.getUTCDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return '';
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  const dt = new Date(val);
+  if (!isNaN(dt.getTime())) {
+    const y = dt.getUTCFullYear();
+    const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(dt.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  return '';
+};
+
 export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
   isOpen,
   onClose,
@@ -38,8 +61,8 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
       setPremiumAmount(((editingPolicy.premiumAmount ?? (editingPolicy as any).annualPremium) ?? '').toString());
       setPremiumFrequency(editingPolicy.premiumFrequency);
       setSumInsured(editingPolicy.sumInsured.toString());
-      setStartDate(editingPolicy.startDate);
-      setExpiryDate(editingPolicy.expiryDate);
+      setStartDate(toInputDate(editingPolicy.startDate));
+      setExpiryDate(toInputDate(editingPolicy.expiryDate));
     } else {
       setPolicyType('Life Insurance');
       setProvider('');

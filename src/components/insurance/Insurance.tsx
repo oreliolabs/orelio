@@ -40,15 +40,28 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
     return '₹ ' + (val || 0).toLocaleString('en-IN');
   };
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'N/A';
+  const formatDate = (dateVal: number | string) => {
+    if (!dateVal) return 'N/A';
     try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
+      const num = typeof dateVal === 'number' ? dateVal : Number(dateVal);
+      const d = !isNaN(num) ? new Date(num) : new Date(dateVal);
+      if (isNaN(d.getTime())) return String(dateVal);
       return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
     } catch {
-      return dateStr;
+      return String(dateVal);
     }
+  };
+
+  const toEpoch = (dateVal: string | number): number => {
+    if (!dateVal) return Date.now();
+    if (typeof dateVal === 'number') return dateVal;
+    const trimmed = dateVal.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split('-').map(Number);
+      return Date.UTC(y, m - 1, d);
+    }
+    const parsed = Date.parse(trimmed);
+    return !isNaN(parsed) ? parsed : Date.now();
   };
 
   const getPolicyIcon = (type: PolicyType) => {
@@ -90,6 +103,8 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
   // Save policy handler (Create or Edit)
   const handleSavePolicy = (formData: PolicyFormData) => {
     const premAmount = parseFloat(formData.premiumAmount || '0') || 0;
+    const startEpoch = toEpoch(formData.startDate);
+    const expiryEpoch = toEpoch(formData.expiryDate);
     if (editingPolicy) {
       setPolicies(prev =>
         prev.map(p =>
@@ -103,8 +118,8 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
               premiumAmount: premAmount,
               premiumFrequency: formData.premiumFrequency,
               sumInsured: parseFloat(formData.sumInsured) || 0,
-              startDate: formData.startDate,
-              expiryDate: formData.expiryDate
+              startDate: startEpoch,
+              expiryDate: expiryEpoch
             }
             : p
         )
@@ -119,8 +134,8 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
         premiumAmount: premAmount,
         premiumFrequency: formData.premiumFrequency,
         sumInsured: parseFloat(formData.sumInsured) || 0,
-        startDate: formData.startDate,
-        expiryDate: formData.expiryDate
+        startDate: startEpoch,
+        expiryDate: expiryEpoch
       };
       setPolicies(prev => [...prev, newPolicy]);
     }

@@ -43,6 +43,34 @@ export function getOrelioDatabase(): OrelioDatabase {
           ...cloneSeed(),
           ...parsed
         };
+        if (merged.notes) {
+          merged.notes = merged.notes.map((n) => ({
+            ...n,
+            lastUpdated:
+              typeof n.lastUpdated === 'number'
+                ? n.lastUpdated
+                : typeof n.lastUpdated === 'string' && !isNaN(Date.parse(n.lastUpdated))
+                ? new Date(n.lastUpdated).getTime()
+                : Date.now()
+          }));
+        }
+        if (merged.policies) {
+          merged.policies = merged.policies.map((p) => ({
+            ...p,
+            startDate:
+              typeof p.startDate === 'number'
+                ? p.startDate
+                : typeof p.startDate === 'string' && !isNaN(Date.parse(p.startDate))
+                ? new Date(p.startDate).getTime()
+                : Date.now(),
+            expiryDate:
+              typeof p.expiryDate === 'number'
+                ? p.expiryDate
+                : typeof p.expiryDate === 'string' && !isNaN(Date.parse(p.expiryDate))
+                ? new Date(p.expiryDate).getTime()
+                : Date.now()
+          }));
+        }
         memoryDatabase = merged;
         return merged;
       }
@@ -65,10 +93,36 @@ function sanitizeDatabase(db: OrelioDatabase): OrelioDatabase {
           return rest;
         })
       : [],
+    policies: db.policies
+      ? db.policies.map((p) => ({
+          ...p,
+          startDate:
+            typeof p.startDate === 'number'
+              ? p.startDate
+              : typeof p.startDate === 'string' && !isNaN(Date.parse(p.startDate))
+              ? new Date(p.startDate).getTime()
+              : Date.now(),
+          expiryDate:
+            typeof p.expiryDate === 'number'
+              ? p.expiryDate
+              : typeof p.expiryDate === 'string' && !isNaN(Date.parse(p.expiryDate))
+              ? new Date(p.expiryDate).getTime()
+              : Date.now()
+        }))
+      : [],
     notes: db.notes
       ? db.notes.map((n) => {
           const { accentColor, ...rest } = n;
-          return rest;
+          const lastUpdated =
+            typeof rest.lastUpdated === 'number'
+              ? rest.lastUpdated
+              : typeof rest.lastUpdated === 'string' && !isNaN(Date.parse(rest.lastUpdated))
+              ? new Date(rest.lastUpdated).getTime()
+              : Date.now();
+          return {
+            ...rest,
+            lastUpdated
+          };
         })
       : []
   };
@@ -282,11 +336,11 @@ export function saveStocks(stocks: StockHolding[]): void {
   saveOrelioDatabase(db);
 }
 
-export function getStockMetadata(): StockCASMetadata {
-  return getOrelioDatabase().stockMetadata;
+export function getStockMetadata(): StockCASMetadata | null {
+  return getOrelioDatabase().stockMetadata ?? null;
 }
 
-export function saveStockMetadata(metadata: StockCASMetadata): void {
+export function saveStockMetadata(metadata: StockCASMetadata | null): void {
   const db = { ...getOrelioDatabase(), stockMetadata: metadata };
   saveOrelioDatabase(db);
 }

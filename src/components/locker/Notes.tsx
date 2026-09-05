@@ -7,11 +7,12 @@ import { getNotes, saveNotes } from '../../data/orelioStore';
 import type { Note } from '../../data/types';
 export type { Note } from '../../data/types';
 
-export function formatNoteTime(dateStr: string): string {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
+export function formatNoteTime(dateInput: number | string): string {
+  if (!dateInput) return '';
+  const num = typeof dateInput === 'number' ? dateInput : Number(dateInput);
+  const date = !isNaN(num) ? new Date(num) : new Date(dateInput);
   if (isNaN(date.getTime())) {
-    return dateStr;
+    return String(dateInput);
   }
 
   const now = new Date();
@@ -105,7 +106,7 @@ export const Notes: React.FC = () => {
 
   // Form Save
   const handleSaveNote = (title: string, content: string) => {
-    const currentTime = new Date().toISOString();
+    const currentTime = Date.now();
 
     if (selectedNote) {
       // Edit mode
@@ -175,10 +176,10 @@ export const Notes: React.FC = () => {
     if (sortBy === 'alphabetical') {
       result.sort((a, b) => a.title.localeCompare(b.title));
     } else if (sortBy === 'oldest') {
-      result.sort((a, b) => new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime());
+      result.sort((a, b) => Number(a.lastUpdated) - Number(b.lastUpdated));
     } else {
       // 'latest' newest first
-      result.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
+      result.sort((a, b) => Number(b.lastUpdated) - Number(a.lastUpdated));
     }
 
     return result;

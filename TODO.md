@@ -7,11 +7,11 @@ Issues like - 1. deposit page numbers show real numbers please - P0 2. empty sta
     4. settings
     5. deposits
     6. bank accounts
-	7. eye button hides stuff on these pages - insurance, deposits, bank accounts, loans and credit
+    7. eye button hides stuff on these pages - insurance, deposits, bank accounts, loans and credit
 
     today
-	1. dashboard
-	2. stocks and mutual funds
+    1. dashboard
+    2. stocks and mutual funds
     3. eye button hides stuff on these pages - stocks
     4. all the types to be in specific folders and not here and there
     5. User accounts - Rajesh ka data rajesh mein, spouse ka data spouse mein and all members ka data is aggregated

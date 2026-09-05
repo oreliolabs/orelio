@@ -72,8 +72,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
                 strokeWidth="2.5" 
                 strokeLinecap="round"
               />
-              {/* End Point Dot */}
-              <circle cx="600" cy="10" r="5" fill="#006A65" stroke="#fff" strokeWidth="2" />
+
             </svg>
           </div>
         </div>
