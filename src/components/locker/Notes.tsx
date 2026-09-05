@@ -3,7 +3,7 @@ import { PrimaryButton } from '../common/PrimaryButton';
 import { AddEditNoteModal } from './AddEditNoteModal';
 import { ViewNoteModal } from './ViewNoteModal';
 import { DeleteNoteModal } from './DeleteNoteModal';
-import { getNotes, saveNotes } from '../../data/orelioStore';
+import { getNotes, saveNotes, getPrimaryMemberId } from '../../data/orelioStore';
 import type { Note } from '../../data/types';
 export type { Note } from '../../data/types';
 
@@ -55,12 +55,16 @@ export function formatNoteTime(dateInput: number | string): string {
   return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
 }
 
-export const Notes: React.FC = () => {
-  const [notes, setNotes] = useState<Note[]>(() => getNotes());
+interface NotesProps {
+  selectedMemberId?: string | 'all';
+}
+
+export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
+  const [notes, setNotes] = useState<Note[]>(() => getNotes(selectedMemberId));
 
   useEffect(() => {
-    saveNotes(notes);
-  }, [notes]);
+    saveNotes(notes, selectedMemberId);
+  }, [notes, selectedMemberId]);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,6 +111,7 @@ export const Notes: React.FC = () => {
   // Form Save
   const handleSaveNote = (title: string, content: string) => {
     const currentTime = Date.now();
+    const targetMemberId = selectedMemberId === 'all' ? getPrimaryMemberId() : selectedMemberId;
 
     if (selectedNote) {
       // Edit mode
@@ -114,7 +119,8 @@ export const Notes: React.FC = () => {
         ...n,
         title,
         content,
-        lastUpdated: currentTime
+        lastUpdated: currentTime,
+        memberId: n.memberId || targetMemberId
       } : n));
     } else {
       // Add mode
@@ -122,7 +128,8 @@ export const Notes: React.FC = () => {
         id: Date.now().toString(),
         title,
         content,
-        lastUpdated: currentTime
+        lastUpdated: currentTime,
+        memberId: targetMemberId
       };
       setNotes([newNote, ...notes]);
       setCurrentPage(1); // Go back to first page to see the new note

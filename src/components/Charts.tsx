@@ -3,8 +3,8 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
 import { getAssetAllocation, getLiabilityAllocation } from '../data/orelioStore';
 
-export const AssetAllocationChart: React.FC = () => {
-  const assetData = getAssetAllocation();
+export const AssetAllocationChart: React.FC<{ selectedMemberId?: string | 'all' }> = ({ selectedMemberId = 'all' }) => {
+  const assetData = getAssetAllocation(selectedMemberId);
   return (
     <div className="w-full h-full flex flex-col md:flex-row items-center justify-between gap-6">
       
@@ -61,8 +61,8 @@ export const AssetAllocationChart: React.FC = () => {
   );
 };
 
-export const LiabilityChart: React.FC = () => {
-  const liabilityData = getLiabilityAllocation();
+export const LiabilityChart: React.FC<{ selectedMemberId?: string | 'all' }> = ({ selectedMemberId = 'all' }) => {
+  const liabilityData = getLiabilityAllocation(selectedMemberId);
   return (
     <div className="w-full h-full flex flex-col md:flex-row items-center justify-between gap-6">
       

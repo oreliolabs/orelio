@@ -4,19 +4,20 @@ import { PrimaryButton } from '../common/PrimaryButton';
 import { SaveButton } from '../common/SaveButton';
 import { CancelButton } from '../common/CancelButton';
 
-import { getBankAccounts, saveBankAccounts } from '../../data/orelioStore';
+import { getBankAccounts, saveBankAccounts, getPrimaryMemberId } from '../../data/orelioStore';
 import type { BankAccount } from '../../data/types';
 
 interface BankAccountsProps {
   isPrivate: boolean;
+  selectedMemberId?: string | 'all';
 }
 
-export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
-  const [accounts, setAccounts] = useState<BankAccount[]>(() => getBankAccounts());
+export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate, selectedMemberId = 'all' }) => {
+  const [accounts, setAccounts] = useState<BankAccount[]>(() => getBankAccounts(selectedMemberId));
 
   useEffect(() => {
-    saveBankAccounts(accounts);
-  }, [accounts]);
+    saveBankAccounts(accounts, selectedMemberId);
+  }, [accounts, selectedMemberId]);
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set(['2'])); // Seeding ICICI as expanded by default like in SVG
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
@@ -171,6 +172,8 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
     e.preventDefault();
     const bal = parseFloat(formBalance) || 0;
 
+    const targetMemberId = selectedMemberId === 'all' ? getPrimaryMemberId() : selectedMemberId;
+
     if (selectedAccount) {
       // Editing
       setAccounts(prev => prev.map(acc =>
@@ -182,7 +185,8 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
             accountNumber: formAccountNumber,
             ifscCode: formIfscCode,
             balance: bal,
-            lastUpdated: Date.now()
+            lastUpdated: Date.now(),
+            memberId: acc.memberId || targetMemberId
           }
           : acc
       ));
@@ -195,7 +199,8 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ isPrivate }) => {
         accountNumber: formAccountNumber,
         ifscCode: formIfscCode,
         balance: bal,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
+        memberId: targetMemberId
       };
       setAccounts(prev => [...prev, newAcc]);
     }

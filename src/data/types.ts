@@ -53,6 +53,7 @@ export interface BankAccount {
   lastUpdated: number;
   accountNumber: string;
   ifscCode: string;
+  memberId?: string;
 }
 
 export interface Deposit {
@@ -73,6 +74,7 @@ export interface Deposit {
   status: 'active' | 'matured';
   maturedDate?: number;
   nominee?: string;
+  memberId?: string;
 }
 
 export interface LoanItem {
@@ -91,6 +93,7 @@ export interface LoanItem {
   monthlyEmi: number;
   repaymentProgressPercent?: number;
   status: 'active' | 'closed';
+  memberId?: string;
 }
 
 export interface Note {
@@ -99,6 +102,7 @@ export interface Note {
   content: string;
   lastUpdated: number;
   accentColor?: string;
+  memberId?: string;
 }
 
 export interface ChartDataItem {

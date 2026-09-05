@@ -3,20 +3,21 @@ import { PrimaryButton } from '../common/PrimaryButton';
 import { DeleteConfirmationModal } from '../common/DeleteConfirmationModal';
 import { AddEditLoanModal } from './AddEditLoanModal';
 import type { LoanFormData } from './AddEditLoanModal';
-import { getLoans, saveLoans } from '../../data/orelioStore';
+import { getLoans, saveLoans, getPrimaryMemberId } from '../../data/orelioStore';
 import type { LoanItem } from '../../data/types';
 export type { LoanItem } from '../../data/types';
 
 interface LoansAndCreditProps {
   isPrivate?: boolean;
+  selectedMemberId?: string | 'all';
 }
 
-export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = false }) => {
-  const [loans, setLoans] = useState<LoanItem[]>(() => getLoans());
+export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = false, selectedMemberId = 'all' }) => {
+  const [loans, setLoans] = useState<LoanItem[]>(() => getLoans(selectedMemberId));
 
   useEffect(() => {
-    saveLoans(loans);
-  }, [loans]);
+    saveLoans(loans, selectedMemberId);
+  }, [loans, selectedMemberId]);
 
   // Modal and menu state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -118,13 +119,15 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
             tenureYears: formData.tenureYears,
             tenureMonths: formData.tenureMonths,
             startDate: formData.startDate ? dateStringToEpoch(formData.startDate) : item.startDate,
-            repaymentProgressPercent: progress
+            repaymentProgressPercent: progress,
+            memberId: item.memberId || (selectedMemberId === 'all' ? getPrimaryMemberId() : selectedMemberId)
           };
         }
         return item;
       }));
     } else {
       // Add new loan
+      const targetMemberId = selectedMemberId === 'all' ? getPrimaryMemberId() : selectedMemberId;
       const newLoan: LoanItem = {
         id: Date.now().toString(),
         type: formData.type,
@@ -140,7 +143,8 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
         nextEmiDate: (() => { const d = new Date(); d.setUTCMonth(d.getUTCMonth() + 1); d.setUTCDate(1); return d.getTime(); })(),
         monthlyEmi: Math.round((formData.totalAmount * (formData.interestRate / 100)) / 12 + (formData.totalAmount / (formData.tenureYears * 12 || 12))),
         repaymentProgressPercent: 0,
-        status: 'active'
+        status: 'active',
+        memberId: targetMemberId
       };
       setLoans([...loans, newLoan]);
     }

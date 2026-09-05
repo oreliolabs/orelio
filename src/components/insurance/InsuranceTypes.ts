@@ -19,6 +19,7 @@ export interface Policy {
   premiumFrequency: PremiumFrequency;
   startDate: number;
   expiryDate: number;
+  memberId?: string;
 }
 
 export interface PolicyFormData {

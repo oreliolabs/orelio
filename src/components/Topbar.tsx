@@ -13,16 +13,22 @@ interface TopbarProps {
   setIsPrivate: (val: boolean) => void;
   onMenuClick: () => void;
   members: FamilyMember[];
+  selectedMemberId?: string | 'all';
+  onSelectMemberId?: (id: string | 'all') => void;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({ 
   isPrivate, 
   setIsPrivate, 
   onMenuClick,
-  members
+  members,
+  selectedMemberId: controlledSelectedMemberId,
+  onSelectMemberId
 }) => {
   const [familyDropdownOpen, setFamilyDropdownOpen] = useState(false);
-  const [selectedMemberId, setSelectedMemberId] = useState<string | 'all'>('all');
+  const [internalSelectedMemberId, setInternalSelectedMemberId] = useState<string | 'all'>('all');
+
+  const selectedMemberId = controlledSelectedMemberId !== undefined ? controlledSelectedMemberId : internalSelectedMemberId;
 
   const allOption = `All Members (${members.length})`;
 
@@ -38,14 +44,22 @@ export const Topbar: React.FC<TopbarProps> = ({
   // If selected member was removed, reset to "All"
   React.useEffect(() => {
     if (selectedMemberId !== 'all' && !members.find(m => m.id === selectedMemberId)) {
-      setSelectedMemberId('all');
+      if (onSelectMemberId) {
+        onSelectMemberId('all');
+      } else {
+        setInternalSelectedMemberId('all');
+      }
     }
-  }, [members, selectedMemberId]);
+  }, [members, selectedMemberId, onSelectMemberId]);
 
   const selectedLabel = familyOptions.find(o => o.id === selectedMemberId)?.label ?? allOption;
 
   const handleFamilySelect = (id: string | 'all') => {
-    setSelectedMemberId(id);
+    if (onSelectMemberId) {
+      onSelectMemberId(id);
+    } else {
+      setInternalSelectedMemberId(id);
+    }
     setFamilyDropdownOpen(false);
   };
 

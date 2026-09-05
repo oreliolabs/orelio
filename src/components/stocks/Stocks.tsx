@@ -10,7 +10,9 @@ import {
   getDebtHoldings,
   saveDebtHoldings,
   getStockMetadata,
-  saveStockMetadata
+  saveStockMetadata,
+  getPrimaryMemberId,
+  getFamilyMembers
 } from '../../data/orelioStore';
 import type {
   StockHolding,
@@ -22,15 +24,16 @@ import type {
 
 interface StocksProps {
   isPrivate: boolean;
+  selectedMemberId?: string | 'all';
 }
 
 type TabType = 'ALL' | 'STOCKS' | 'MUTUAL_FUNDS' | 'DEBTS';
 
-export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
-  const [stocks, setStocks] = useState<StockHolding[]>(() => getStocks());
-  const [mutualFunds, setMutualFunds] = useState<MutualFundHolding[]>(() => getMutualFunds());
-  const [debts, setDebts] = useState<DebtHolding[]>(() => getDebtHoldings());
-  const [metadata, setMetadata] = useState<StockCASMetadata | null>(() => getStockMetadata());
+export const Stocks: React.FC<StocksProps> = ({ isPrivate, selectedMemberId = 'all' }) => {
+  const [stocks, setStocks] = useState<StockHolding[]>(() => getStocks(selectedMemberId));
+  const [mutualFunds, setMutualFunds] = useState<MutualFundHolding[]>(() => getMutualFunds(selectedMemberId));
+  const [debts, setDebts] = useState<DebtHolding[]>(() => getDebtHoldings(selectedMemberId));
+  const [metadata, setMetadata] = useState<StockCASMetadata | null>(() => getStockMetadata(selectedMemberId));
 
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
   const [selectedAccount, setSelectedAccount] = useState<string>('ALL');
@@ -42,11 +45,11 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
 
   // Persist to central orelioStore
   useEffect(() => {
-    saveStocks(stocks);
-    saveMutualFunds(mutualFunds);
-    saveDebtHoldings(debts);
-    saveStockMetadata(metadata);
-  }, [stocks, mutualFunds, debts, metadata]);
+    saveStocks(stocks, selectedMemberId);
+    saveMutualFunds(mutualFunds, selectedMemberId);
+    saveDebtHoldings(debts, selectedMemberId);
+    saveStockMetadata(metadata, selectedMemberId);
+  }, [stocks, mutualFunds, debts, metadata, selectedMemberId]);
 
   // Format Helpers
   const formatCurrency = (val: number, maxDecimals: number = 2) => {
@@ -183,14 +186,30 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
   }, [activeTab, selectedAccount, searchQuery]);
 
   const handleCASSuccess = (data: ParsedCASResult) => {
-    setStocks(data.stocks);
-    setMutualFunds(data.mutualFunds);
-    setDebts(data.debts);
-    setMetadata(data.metadata);
-    saveStocks(data.stocks);
-    saveMutualFunds(data.mutualFunds);
-    saveDebtHoldings(data.debts);
-    saveStockMetadata(data.metadata);
+    let targetMemberId = selectedMemberId;
+    if (!targetMemberId || targetMemberId === 'all') {
+      const members = getFamilyMembers();
+      const matched = members.find(m => {
+        const fullName = `${m.firstName} ${m.lastName}`.toLowerCase();
+        const inv = (data.metadata?.investorName || '').toLowerCase();
+        return inv.includes(m.firstName.toLowerCase()) || fullName.includes(inv);
+      });
+      targetMemberId = matched?.id || getPrimaryMemberId();
+    }
+
+    const taggedStocks = data.stocks.map(s => ({ ...s, memberId: targetMemberId }));
+    const taggedMFs = data.mutualFunds.map(m => ({ ...m, memberId: targetMemberId }));
+    const taggedDebts = data.debts.map(d => ({ ...d, memberId: targetMemberId }));
+    const taggedMeta = data.metadata ? { ...data.metadata, memberId: targetMemberId } : null;
+
+    setStocks(taggedStocks);
+    setMutualFunds(taggedMFs);
+    setDebts(taggedDebts);
+    setMetadata(taggedMeta);
+    saveStocks(taggedStocks, targetMemberId);
+    saveMutualFunds(taggedMFs, targetMemberId);
+    saveDebtHoldings(taggedDebts, targetMemberId);
+    saveStockMetadata(taggedMeta, targetMemberId);
     setCurrentPage(1);
   };
 
@@ -199,10 +218,10 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
     setMutualFunds([]);
     setDebts([]);
     setMetadata(null);
-    saveStocks([]);
-    saveMutualFunds([]);
-    saveDebtHoldings([]);
-    saveStockMetadata(null);
+    saveStocks([], selectedMemberId);
+    saveMutualFunds([], selectedMemberId);
+    saveDebtHoldings([], selectedMemberId);
+    saveStockMetadata(null, selectedMemberId);
     setCurrentPage(1);
     setIsDeleteModalOpen(false);
   };

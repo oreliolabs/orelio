@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import type { Policy, PolicyFormData, PolicyType } from './InsuranceTypes';
-import { getPolicies, savePolicies } from '../../data/orelioStore';
+import { getPolicies, savePolicies, getPrimaryMemberId } from '../../data/orelioStore';
 import { AddEditPolicyModal } from './AddEditPolicyModal';
 import { DeletePolicyModal } from './DeletePolicyModal';
 import { PrimaryButton } from '../common/PrimaryButton';
 
 interface InsuranceProps {
   isPrivate: boolean;
+  selectedMemberId?: string | 'all';
 }
 
-export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
-  const [policies, setPolicies] = useState<Policy[]>(() => getPolicies());
+export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberId = 'all' }) => {
+  const [policies, setPolicies] = useState<Policy[]>(() => getPolicies(selectedMemberId));
 
   useEffect(() => {
-    savePolicies(policies);
-  }, [policies]);
+    savePolicies(policies, selectedMemberId);
+  }, [policies, selectedMemberId]);
 
   // Modal & Menu states
   const [activeMenuPolicyId, setActiveMenuPolicyId] = useState<string | null>(null);
@@ -119,12 +120,14 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
               premiumFrequency: formData.premiumFrequency,
               sumInsured: parseFloat(formData.sumInsured) || 0,
               startDate: startEpoch,
-              expiryDate: expiryEpoch
+              expiryDate: expiryEpoch,
+              memberId: p.memberId || (selectedMemberId === 'all' ? getPrimaryMemberId() : selectedMemberId)
             }
             : p
         )
       );
     } else {
+      const targetMemberId = selectedMemberId === 'all' ? getPrimaryMemberId() : selectedMemberId;
       const newPolicy: Policy = {
         id: 'pol-' + Date.now(),
         policyType: formData.policyType,
@@ -135,7 +138,8 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate }) => {
         premiumFrequency: formData.premiumFrequency,
         sumInsured: parseFloat(formData.sumInsured) || 0,
         startDate: startEpoch,
-        expiryDate: expiryEpoch
+        expiryDate: expiryEpoch,
+        memberId: targetMemberId
       };
       setPolicies(prev => [...prev, newPolicy]);
     }

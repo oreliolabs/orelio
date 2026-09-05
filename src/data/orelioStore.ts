@@ -17,7 +17,7 @@ import type {
   OverviewMetrics
 } from './types';
 
-const STORAGE_KEY = 'orelio_database_v1';
+const STORAGE_KEY = 'orelio_database_v2';
 
 // In-memory cache ensures fast lookups and support for non-browser/test runtimes
 let memoryDatabase: OrelioDatabase | null = null;
@@ -199,6 +199,18 @@ export function resetToDatabaseDefaults(): OrelioDatabase {
 // Entity-Specific Getters & Setters
 // ----------------------------------------------------
 
+export function getPrimaryMemberId(): string {
+  const members = getFamilyMembers();
+  const selfMember = members.find((m) => m.role && m.role.toLowerCase() === 'self');
+  return selfMember?.id || members[0]?.id || '1';
+}
+
+function matchesMember(itemMemberId?: string, targetMemberId?: string | 'all'): boolean {
+  if (!targetMemberId || targetMemberId === 'all') return true;
+  const primaryId = getPrimaryMemberId();
+  return (itemMemberId || primaryId) === targetMemberId;
+}
+
 export function getUserProfile(): UserProfile {
   return getOrelioDatabase().userProfile;
 }
@@ -223,7 +235,7 @@ export function saveUserSettings(settings: UserSettings): void {
 }
 
 export function getFamilyMembers(): FamilyMember[] {
-  return getOrelioDatabase().familyMembers;
+  return getOrelioDatabase().familyMembers || [];
 }
 
 export function saveFamilyMembers(members: FamilyMember[]): void {
@@ -231,24 +243,33 @@ export function saveFamilyMembers(members: FamilyMember[]): void {
   saveOrelioDatabase(db);
 }
 
-export function getBankAccounts(): BankAccount[] {
+export function getBankAccounts(memberId?: string | 'all'): BankAccount[] {
   const accounts = getOrelioDatabase().bankAccounts || [];
-  return accounts.map((acc) => {
-    let lastUpdated = acc.lastUpdated as unknown;
-    if (typeof lastUpdated === 'string') {
-      const parsed = Date.parse(lastUpdated);
-      lastUpdated = !isNaN(parsed) ? parsed : 1788503400000;
-    }
-    return {
-      ...acc,
-      lastUpdated: Number(lastUpdated) || 1788503400000
-    };
-  });
+  return accounts
+    .filter((acc) => matchesMember(acc.memberId, memberId))
+    .map((acc) => {
+      let lastUpdated = acc.lastUpdated as unknown;
+      if (typeof lastUpdated === 'string') {
+        const parsed = Date.parse(lastUpdated);
+        lastUpdated = !isNaN(parsed) ? parsed : 1788503400000;
+      }
+      return {
+        ...acc,
+        lastUpdated: Number(lastUpdated) || 1788503400000
+      };
+    });
 }
 
-export function saveBankAccounts(accounts: BankAccount[]): void {
-  const db = { ...getOrelioDatabase(), bankAccounts: accounts };
-  saveOrelioDatabase(db);
+export function saveBankAccounts(accounts: BankAccount[], memberId?: string | 'all'): void {
+  const db = getOrelioDatabase();
+  let updatedAccounts: BankAccount[];
+  if (memberId && memberId !== 'all') {
+    const others = (db.bankAccounts || []).filter((a) => !matchesMember(a.memberId, memberId));
+    updatedAccounts = [...others, ...accounts];
+  } else {
+    updatedAccounts = accounts;
+  }
+  saveOrelioDatabase({ ...db, bankAccounts: updatedAccounts });
 }
 
 function parseDepositDateToEpoch(val: unknown): number | undefined {
@@ -268,43 +289,45 @@ function parseDepositDateToEpoch(val: unknown): number | undefined {
   return undefined;
 }
 
-export function getDeposits(): Deposit[] {
+export function getDeposits(memberId?: string | 'all'): Deposit[] {
   const deps = getOrelioDatabase().deposits || [];
   const now = Date.now();
   let hasAutoMatured = false;
 
-  const resolved: Deposit[] = deps.map((d: any) => {
-    const { daysRemaining, progressPercent, accountNumber, ...rest } = d;
-    const startEpoch = parseDepositDateToEpoch(d.startDate);
-    const maturityEpoch = parseDepositDateToEpoch(d.maturityDate) ?? now;
-    const isPastMaturity = maturityEpoch <= now;
-    const status: 'active' | 'matured' = (isPastMaturity || d.status === 'matured') ? 'matured' : 'active';
-    const maturedDate = status === 'matured'
-      ? (parseDepositDateToEpoch(d.maturedDate) ?? maturityEpoch)
-      : undefined;
+  const resolved: Deposit[] = deps
+    .filter((d: any) => matchesMember(d.memberId, memberId))
+    .map((d: any) => {
+      const { daysRemaining, progressPercent, accountNumber, ...rest } = d;
+      const startEpoch = parseDepositDateToEpoch(d.startDate);
+      const maturityEpoch = parseDepositDateToEpoch(d.maturityDate) ?? now;
+      const isPastMaturity = maturityEpoch <= now;
+      const status: 'active' | 'matured' = (isPastMaturity || d.status === 'matured') ? 'matured' : 'active';
+      const maturedDate = status === 'matured'
+        ? (parseDepositDateToEpoch(d.maturedDate) ?? maturityEpoch)
+        : undefined;
 
-    if (isPastMaturity && d.status !== 'matured') {
-      hasAutoMatured = true;
-    }
+      if (isPastMaturity && d.status !== 'matured') {
+        hasAutoMatured = true;
+      }
 
-    return {
-      ...rest,
-      depositNumber: d.depositNumber || d.accountNumber || '',
-      startDate: startEpoch,
-      maturityDate: maturityEpoch,
-      status,
-      ...(maturedDate !== undefined ? { maturedDate } : {})
-    };
-  });
+      return {
+        ...rest,
+        depositNumber: d.depositNumber || d.accountNumber || '',
+        startDate: startEpoch,
+        maturityDate: maturityEpoch,
+        status,
+        ...(maturedDate !== undefined ? { maturedDate } : {})
+      };
+    });
 
   if (hasAutoMatured) {
-    saveDeposits(resolved);
+    saveDeposits(resolved, memberId);
   }
 
   return resolved;
 }
 
-export function saveDeposits(deposits: Deposit[]): void {
+export function saveDeposits(deposits: Deposit[], memberId?: string | 'all'): void {
   const now = Date.now();
   const cleanDeposits = deposits.map((d: any) => {
     const { daysRemaining, progressPercent, accountNumber, ...rest } = d;
@@ -325,94 +348,296 @@ export function saveDeposits(deposits: Deposit[]): void {
       ...(maturedDate !== undefined ? { maturedDate } : {})
     };
   });
-  const db = { ...getOrelioDatabase(), deposits: cleanDeposits };
+
+  const db = getOrelioDatabase();
+  let updatedDeposits: Deposit[];
+  if (memberId && memberId !== 'all') {
+    const others = (db.deposits || []).filter((d: any) => !matchesMember(d.memberId, memberId));
+    updatedDeposits = [...others, ...cleanDeposits];
+  } else {
+    updatedDeposits = cleanDeposits;
+  }
+
+  saveOrelioDatabase({ ...db, deposits: updatedDeposits });
+}
+
+export function getStocks(memberId?: string | 'all'): StockHolding[] {
+  const allStocks = getOrelioDatabase().stocks || [];
+  return allStocks.filter((s) => matchesMember(s.memberId, memberId));
+}
+
+export function saveStocks(stocks: StockHolding[], memberId?: string | 'all'): void {
+  const db = getOrelioDatabase();
+  let updatedStocks: StockHolding[];
+  if (memberId && memberId !== 'all') {
+    const others = (db.stocks || []).filter((s) => !matchesMember(s.memberId, memberId));
+    updatedStocks = [...others, ...stocks];
+  } else {
+    updatedStocks = stocks;
+  }
+  saveOrelioDatabase({ ...db, stocks: updatedStocks });
+}
+
+export function getStockMetadata(memberId?: string | 'all'): StockCASMetadata | null {
+  const db = getOrelioDatabase() as any;
+  const primaryId = getPrimaryMemberId();
+  if (memberId && memberId !== 'all') {
+    if (db.stockMetadatas && db.stockMetadatas[memberId]) {
+      return db.stockMetadatas[memberId];
+    }
+    const meta = db.stockMetadata ?? null;
+    if (meta && (meta.memberId || primaryId) === memberId) {
+      return meta;
+    }
+    return null;
+  }
+  return db.stockMetadata ?? null;
+}
+
+export function saveStockMetadata(metadata: StockCASMetadata | null, memberId?: string | 'all'): void {
+  const db = getOrelioDatabase() as any;
+  const primaryId = getPrimaryMemberId();
+  const targetId = (!memberId || memberId === 'all') ? primaryId : memberId;
+  const taggedMeta = metadata ? { ...metadata, memberId: targetId } : null;
+
+  if (!db.stockMetadatas) db.stockMetadatas = {};
+  if (taggedMeta) {
+    db.stockMetadatas[targetId] = taggedMeta;
+  } else {
+    delete db.stockMetadatas[targetId];
+  }
+
+  if (targetId === primaryId || !memberId || memberId === 'all') {
+    db.stockMetadata = taggedMeta;
+  }
+
   saveOrelioDatabase(db);
 }
 
-export function getStocks(): StockHolding[] {
-  return getOrelioDatabase().stocks;
+export function getMutualFunds(memberId?: string | 'all'): MutualFundHolding[] {
+  const allFunds = getOrelioDatabase().mutualFunds || [];
+  return allFunds.filter((m) => matchesMember(m.memberId, memberId));
 }
 
-export function saveStocks(stocks: StockHolding[]): void {
-  const db = { ...getOrelioDatabase(), stocks: stocks };
-  saveOrelioDatabase(db);
+export function saveMutualFunds(mutualFunds: MutualFundHolding[], memberId?: string | 'all'): void {
+  const db = getOrelioDatabase();
+  let updatedFunds: MutualFundHolding[];
+  if (memberId && memberId !== 'all') {
+    const others = (db.mutualFunds || []).filter((m) => !matchesMember(m.memberId, memberId));
+    updatedFunds = [...others, ...mutualFunds];
+  } else {
+    updatedFunds = mutualFunds;
+  }
+  saveOrelioDatabase({ ...db, mutualFunds: updatedFunds });
 }
 
-export function getStockMetadata(): StockCASMetadata | null {
-  return getOrelioDatabase().stockMetadata ?? null;
+export function getDebtHoldings(memberId?: string | 'all'): DebtHolding[] {
+  const allDebts = getOrelioDatabase().debtHoldings || [];
+  return allDebts.filter((d) => matchesMember(d.memberId, memberId));
 }
 
-export function saveStockMetadata(metadata: StockCASMetadata | null): void {
-  const db = { ...getOrelioDatabase(), stockMetadata: metadata };
-  saveOrelioDatabase(db);
+export function saveDebtHoldings(debts: DebtHolding[], memberId?: string | 'all'): void {
+  const db = getOrelioDatabase();
+  let updatedDebts: DebtHolding[];
+  if (memberId && memberId !== 'all') {
+    const others = (db.debtHoldings || []).filter((d) => !matchesMember(d.memberId, memberId));
+    updatedDebts = [...others, ...debts];
+  } else {
+    updatedDebts = debts;
+  }
+  saveOrelioDatabase({ ...db, debtHoldings: updatedDebts });
 }
 
-export function getMutualFunds(): MutualFundHolding[] {
-  return getOrelioDatabase().mutualFunds || [];
+export function getLoans(memberId?: string | 'all'): LoanItem[] {
+  const allLoans = getOrelioDatabase().loans || [];
+  return allLoans
+    .filter((loan) => matchesMember(loan.memberId, memberId))
+    .map((loan) => ({
+      ...loan,
+      startDate: typeof loan.startDate === 'string'
+        ? (() => { const s = loan.startDate as unknown as string; return new Date(s + (s.includes('T') ? '' : 'T00:00:00Z')).getTime(); })()
+        : loan.startDate,
+      nextEmiDate: typeof loan.nextEmiDate === 'string'
+        ? new Date((loan.nextEmiDate as string) + 'T00:00:00Z').getTime() || Date.now()
+        : loan.nextEmiDate
+    }));
 }
 
-export function saveMutualFunds(mutualFunds: MutualFundHolding[]): void {
-  const db = { ...getOrelioDatabase(), mutualFunds };
-  saveOrelioDatabase(db);
+export function saveLoans(loans: LoanItem[], memberId?: string | 'all'): void {
+  const db = getOrelioDatabase();
+  let updatedLoans: LoanItem[];
+  if (memberId && memberId !== 'all') {
+    const others = (db.loans || []).filter((l) => !matchesMember(l.memberId, memberId));
+    updatedLoans = [...others, ...loans];
+  } else {
+    updatedLoans = loans;
+  }
+  saveOrelioDatabase({ ...db, loans: updatedLoans });
 }
 
-export function getDebtHoldings(): DebtHolding[] {
-  return getOrelioDatabase().debtHoldings || [];
-}
-
-export function saveDebtHoldings(debts: DebtHolding[]): void {
-  const db = { ...getOrelioDatabase(), debtHoldings: debts };
-  saveOrelioDatabase(db);
-}
-
-export function getLoans(): LoanItem[] {
-  return getOrelioDatabase().loans.map((loan) => ({
-    ...loan,
-    // Coerce legacy string dates to epoch ms
-    startDate: typeof loan.startDate === 'string'
-      ? (() => { const s = loan.startDate as unknown as string; return new Date(s + (s.includes('T') ? '' : 'T00:00:00Z')).getTime(); })()
-      : loan.startDate,
-    nextEmiDate: typeof loan.nextEmiDate === 'string'
-      ? new Date((loan.nextEmiDate as string) + 'T00:00:00Z').getTime() || Date.now()
-      : loan.nextEmiDate,
-  }));
-}
-
-export function saveLoans(loans: LoanItem[]): void {
-  const db = { ...getOrelioDatabase(), loans: loans };
-  saveOrelioDatabase(db);
-}
-
-export function getPolicies(): Policy[] {
+export function getPolicies(memberId?: string | 'all'): Policy[] {
   const policies = getOrelioDatabase().policies || [];
-  return policies.map((p: any) => ({
-    ...p,
-    premiumAmount: typeof p.premiumAmount === 'number' ? p.premiumAmount : (typeof p.annualPremium === 'number' ? p.annualPremium : 0)
+  return policies
+    .filter((p: any) => matchesMember(p.memberId, memberId))
+    .map((p: any) => ({
+      ...p,
+      premiumAmount: typeof p.premiumAmount === 'number' ? p.premiumAmount : (typeof p.annualPremium === 'number' ? p.annualPremium : 0)
+    }));
+}
+
+export function savePolicies(policies: Policy[], memberId?: string | 'all'): void {
+  const db = getOrelioDatabase();
+  let updatedPolicies: Policy[];
+  if (memberId && memberId !== 'all') {
+    const others = (db.policies || []).filter((p: any) => !matchesMember(p.memberId, memberId));
+    updatedPolicies = [...others, ...policies];
+  } else {
+    updatedPolicies = policies;
+  }
+  saveOrelioDatabase({ ...db, policies: updatedPolicies });
+}
+
+export function getNotes(memberId?: string | 'all'): Note[] {
+  const allNotes = getOrelioDatabase().notes || [];
+  return allNotes.filter((n) => matchesMember(n.memberId, memberId));
+}
+
+export function saveNotes(notes: Note[], memberId?: string | 'all'): void {
+  const db = getOrelioDatabase();
+  let updatedNotes: Note[];
+  if (memberId && memberId !== 'all') {
+    const others = (db.notes || []).filter((n) => !matchesMember(n.memberId, memberId));
+    updatedNotes = [...others, ...notes];
+  } else {
+    updatedNotes = notes;
+  }
+  saveOrelioDatabase({ ...db, notes: updatedNotes });
+}
+
+function formatIndianCurrencyCompact(num: number): string {
+  if (num >= 10000000) {
+    const val = (num / 10000000).toFixed(2).replace(/\.?0+$/, '');
+    return `₹ ${val} Cr`;
+  }
+  if (num >= 100000) {
+    const val = (num / 100000).toFixed(1).replace(/\.?0+$/, '');
+    return `₹ ${val} L`;
+  }
+  if (num >= 1000) {
+    return `₹ ${(num / 1000).toFixed(0)}k`;
+  }
+  return `₹ ${num.toLocaleString('en-IN')}`;
+}
+
+export function getOverviewMetrics(memberId?: string | 'all'): OverviewMetrics {
+  const stocks = getStocks(memberId);
+  const mfs = getMutualFunds(memberId);
+  const debts = getDebtHoldings(memberId);
+  const bankAccounts = getBankAccounts(memberId);
+  const deposits = getDeposits(memberId);
+  const loans = getLoans(memberId);
+
+  const marketLinked = stocks.reduce((acc, s) => acc + s.marketValue, 0) +
+                       mfs.reduce((acc, m) => acc + m.marketValue, 0) +
+                       debts.reduce((acc, d) => acc + d.marketValue, 0);
+  const cash = bankAccounts.reduce((acc, b) => acc + b.balance, 0);
+  const fixedIncome = deposits
+    .filter((d) => d.status === 'active')
+    .reduce((acc, d) => acc + (d.currentValue || d.principalOrMonthly || 0), 0);
+
+  const totalAssets = marketLinked + cash + fixedIncome;
+  const totalLiabilities = loans.reduce((acc, l) => acc + (l.outstandingBalance || 0), 0);
+  const netWorth = totalAssets - totalLiabilities;
+
+  const netWorthDisplay = formatIndianCurrencyCompact(netWorth);
+
+  let yearGrowthAmount = '+₹ 18.2 L';
+  let yearGrowthPercent = 14.2;
+
+  if (memberId && memberId !== 'all') {
+    const growthEst = Math.round(netWorth * 0.12);
+    yearGrowthAmount = `+${formatIndianCurrencyCompact(growthEst)}`;
+    yearGrowthPercent = 12.0;
+  }
+
+  return {
+    netWorth,
+    netWorthDisplay,
+    yearGrowthAmount,
+    yearGrowthPercent
+  };
+}
+
+export function getAssetAllocation(memberId?: string | 'all'): ChartDataItem[] {
+  const stocks = getStocks(memberId);
+  const mfs = getMutualFunds(memberId);
+  const debts = getDebtHoldings(memberId);
+  const deposits = getDeposits(memberId);
+  const accounts = getBankAccounts(memberId);
+
+  const stocksVal = stocks.reduce((acc, s) => acc + s.marketValue, 0);
+  const mfsVal = mfs.reduce((acc, m) => acc + m.marketValue, 0);
+  const debtsVal = debts.reduce((acc, d) => acc + d.marketValue, 0);
+  const fdsVal = deposits.reduce((acc, d) => acc + (d.currentValue || d.principalOrMonthly || 0), 0);
+  const cashVal = accounts.reduce((acc, a) => acc + a.balance, 0);
+
+  const total = stocksVal + mfsVal + debtsVal + fdsVal + cashVal;
+  if (total <= 0) {
+    return [
+      { name: 'Stocks', value: 0, color: '#0284C7' },
+      { name: 'Mutual Funds', value: 0, color: '#4F46E5' },
+      { name: 'Fixed Deposits', value: 0, color: '#0D9488' },
+      { name: 'Cash', value: 0, color: '#F59E0B' },
+      { name: 'Bonds', value: 0, color: '#0F766E' }
+    ];
+  }
+
+  const sPct = Math.round((stocksVal / total) * 100);
+  const mPct = Math.round((mfsVal / total) * 100);
+  const fPct = Math.round((fdsVal / total) * 100);
+  const cPct = Math.round((cashVal / total) * 100);
+  const bPct = Math.max(0, 100 - (sPct + mPct + fPct + cPct));
+
+  return [
+    { name: 'Stocks', value: sPct, color: '#0284C7' },
+    { name: 'Bonds', value: bPct, color: '#0F766E' },
+    { name: 'Fixed Deposits', value: fPct, color: '#0D9488' },
+    { name: 'Mutual Funds', value: mPct, color: '#4F46E5' },
+    { name: 'Cash', value: cPct, color: '#F59E0B' }
+  ];
+}
+
+export function getLiabilityAllocation(memberId?: string | 'all'): ChartDataItem[] {
+  const loans = getLoans(memberId);
+  if (loans.length === 0) {
+    return [
+      { name: 'No Active Loans', value: 100, color: '#10B981' }
+    ];
+  }
+  const totalLiabilities = loans.reduce((acc, l) => acc + (l.outstandingBalance || 0), 0);
+  if (totalLiabilities <= 0) {
+    return [
+      { name: 'No Active Loans', value: 100, color: '#10B981' }
+    ];
+  }
+
+  const groupTotals: Record<string, number> = {};
+  loans.forEach((l) => {
+    const t = l.type || 'Other';
+    groupTotals[t] = (groupTotals[t] || 0) + (l.outstandingBalance || 0);
+  });
+
+  const colors: Record<string, string> = {
+    'Home Loan': '#DC2626',
+    'Car Loan': '#F59E0B',
+    'Personal Loan': '#4F46E5',
+    'Education Loan': '#0D9488',
+    'Other': '#9CA3AF'
+  };
+
+  return Object.entries(groupTotals).map(([name, val]) => ({
+    name,
+    value: Math.round((val / totalLiabilities) * 100),
+    color: colors[name] || '#6366F1'
   }));
-}
-
-export function savePolicies(policies: Policy[]): void {
-  const db = { ...getOrelioDatabase(), policies: policies };
-  saveOrelioDatabase(db);
-}
-
-export function getNotes(): Note[] {
-  return getOrelioDatabase().notes;
-}
-
-export function saveNotes(notes: Note[]): void {
-  const db = { ...getOrelioDatabase(), notes: notes };
-  saveOrelioDatabase(db);
-}
-
-export function getAssetAllocation(): ChartDataItem[] {
-  return getOrelioDatabase().assetAllocation;
-}
-
-export function getLiabilityAllocation(): ChartDataItem[] {
-  return getOrelioDatabase().liabilityAllocation;
-}
-
-export function getOverviewMetrics(): OverviewMetrics {
-  return getOrelioDatabase().overviewMetrics;
 }

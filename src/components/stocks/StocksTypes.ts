@@ -12,6 +12,7 @@ export interface StockHolding {
   sector?: string;
   dematAccount?: string; // e.g. 'Groww', 'Zerodha'
   assetType?: 'EQUITY';
+  memberId?: string;
 }
 
 export interface MutualFundHolding {
@@ -27,6 +28,7 @@ export interface MutualFundHolding {
   category?: string; // e.g. 'Index Fund', 'Mid Cap Fund', 'ETF'
   dematAccount?: string; // e.g. 'Zerodha'
   assetType?: 'MUTUAL_FUND';
+  memberId?: string;
 }
 
 export interface DebtHolding {
@@ -41,6 +43,7 @@ export interface DebtHolding {
   maturityDate?: string;
   dematAccount?: string; // e.g. 'Fourdegreewater'
   assetType?: 'DEBT';
+  memberId?: string;
 }
 
 export interface DematAccountSummary {
@@ -69,6 +72,7 @@ export interface StockCASMetadata {
   debtsValue?: number;
   dematAccounts?: DematAccountSummary[];
   uploadedAt: string;
+  memberId?: string;
 }
 
 export interface ParsedCASResult {

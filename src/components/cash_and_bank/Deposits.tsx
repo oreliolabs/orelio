@@ -3,7 +3,7 @@ import { AddEditDepositModal } from './AddEditDepositModal';
 import type { DepositFormData } from './AddEditDepositModal';
 import { DeleteDepositModal } from './DeleteDepositModal';
 import { PrimaryButton } from '../common/PrimaryButton';
-import { getDeposits, saveDeposits } from '../../data/orelioStore';
+import { getDeposits, saveDeposits, getPrimaryMemberId } from '../../data/orelioStore';
 import type { Deposit } from '../../data/types';
 export type { Deposit } from '../../data/types';
 
@@ -159,14 +159,15 @@ export const calculateDepositMetrics = (
 
 interface DepositsProps {
   isPrivate: boolean;
+  selectedMemberId?: string | 'all';
 }
 
-export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
-  const [deposits, setDeposits] = useState<Deposit[]>(() => getDeposits());
+export const Deposits: React.FC<DepositsProps> = ({ isPrivate, selectedMemberId = 'all' }) => {
+  const [deposits, setDeposits] = useState<Deposit[]>(() => getDeposits(selectedMemberId));
 
   useEffect(() => {
-    saveDeposits(deposits);
-  }, [deposits]);
+    saveDeposits(deposits, selectedMemberId);
+  }, [deposits, selectedMemberId]);
 
   // Context Menu & Expansion State
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -304,6 +305,8 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
 
     const isMatured = metrics.daysRemaining <= 0 || formData.maturityDate <= Date.now();
 
+    const targetMemberId = selectedMemberId === 'all' ? getPrimaryMemberId() : selectedMemberId;
+
     if (editingDeposit) {
       // Edit existing
       setDeposits((prev: Deposit[]) => prev.map((d: Deposit) => d.id === editingDeposit.id ? {
@@ -319,7 +322,8 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         maturityDate: formData.maturityDate,
         status: isMatured ? 'matured' : 'active',
         maturedDate: isMatured ? (d.maturedDate || formData.maturityDate) : undefined,
-        nominee: formData.nominee
+        nominee: formData.nominee,
+        memberId: d.memberId || targetMemberId
       } : d));
     } else {
       // Add new
@@ -336,7 +340,8 @@ export const Deposits: React.FC<DepositsProps> = ({ isPrivate }) => {
         maturityDate: formData.maturityDate,
         status: isMatured ? 'matured' : 'active',
         maturedDate: isMatured ? formData.maturityDate : undefined,
-        nominee: formData.nominee
+        nominee: formData.nominee,
+        memberId: targetMemberId
       };
       setDeposits((prev: Deposit[]) => [newDep, ...prev]);
     }

@@ -10,14 +10,69 @@ import {
   Activity, 
   PiggyBank 
 } from 'lucide-react';
-import { getOverviewMetrics } from '../data/orelioStore';
+import { 
+  getOverviewMetrics,
+  getStocks,
+  getMutualFunds,
+  getDebtHoldings,
+  getBankAccounts,
+  getDeposits,
+  getLoans,
+  getPolicies
+} from '../data/orelioStore';
 
 interface OverviewProps {
   isPrivate: boolean;
+  selectedMemberId?: string | 'all';
 }
 
-export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
-  const metrics = getOverviewMetrics();
+export const Overview: React.FC<OverviewProps> = ({ isPrivate, selectedMemberId = 'all' }) => {
+  const metrics = getOverviewMetrics(selectedMemberId);
+  const stocks = getStocks(selectedMemberId);
+  const mfs = getMutualFunds(selectedMemberId);
+  const debts = getDebtHoldings(selectedMemberId);
+  const bankAccounts = getBankAccounts(selectedMemberId);
+  const deposits = getDeposits(selectedMemberId);
+  const loans = getLoans(selectedMemberId);
+  const policies = getPolicies(selectedMemberId);
+
+  const marketLinked = stocks.reduce((acc, s) => acc + s.marketValue, 0) +
+                       mfs.reduce((acc, m) => acc + m.marketValue, 0) +
+                       debts.reduce((acc, d) => acc + d.marketValue, 0);
+  const cash = bankAccounts.reduce((acc, b) => acc + b.balance, 0);
+  const fixedIncome = deposits
+    .filter((d) => d.status === 'active')
+    .reduce((acc, d) => acc + (d.currentValue || d.principalOrMonthly || 0), 0);
+
+  const totalAssets = marketLinked + cash + fixedIncome;
+  const totalLiabilities = loans.reduce((acc, l) => acc + (l.outstandingBalance || 0), 0);
+  const totalInsurance = policies.reduce((acc, p) => acc + (p.sumInsured || 0), 0);
+
+  const debtToAssetRatio = totalAssets > 0 ? (totalLiabilities / totalAssets).toFixed(2) : '0.00';
+  const debtRatioNum = parseFloat(debtToAssetRatio);
+  const debtUtilPercent = Math.min(100, Math.round(debtRatioNum * 100));
+
+  const formatCompact = (num: number) => {
+    if (num >= 10000000) {
+      const val = (num / 10000000).toFixed(2).replace(/\.?0+$/, '');
+      return `₹ ${val} Cr`;
+    }
+    if (num >= 100000) {
+      const val = (num / 100000).toFixed(1).replace(/\.?0+$/, '');
+      return `₹ ${val} L`;
+    }
+    if (num >= 1000) {
+      return `₹ ${Math.round(num / 1000)}k`;
+    }
+    return `₹ ${num.toLocaleString('en-IN')}`;
+  };
+
+  const upcomingDeposit = deposits
+    .filter((d) => d.status === 'active' && d.maturityDate)
+    .sort((a, b) => (a.maturityDate || 0) - (b.maturityDate || 0))[0];
+
+  const upcomingDepositDate = upcomingDeposit ? new Date(upcomingDeposit.maturityDate).toLocaleDateString('en-GB') : '';
+  const upcomingDepositAmount = upcomingDeposit ? formatCompact(upcomingDeposit.currentValue || upcomingDeposit.principalOrMonthly) : '';
 
   // Helper to mask values in private mode
   const f = (val: string) => (isPrivate ? '••••' : val);
@@ -70,7 +125,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
                 fill="none" 
                 stroke="#006A65" 
                 strokeWidth="2.5" 
-                strokeLinecap="round"
+                strokeLinecap="round" 
               />
 
             </svg>
@@ -92,9 +147,13 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
             </div>
             
             <div className="space-y-1.5">
-              <h3 className="text-lg font-bold text-white leading-snug">Fixed Deposit maturing soon</h3>
+              <h3 className="text-lg font-bold text-white leading-snug">
+                {upcomingDeposit ? 'Fixed Deposit maturing soon' : 'Portfolio in Good Standing'}
+              </h3>
               <p className="text-xs text-emerald-100/80 leading-relaxed font-medium">
-                IDFC First Bank FD for {f('₹25L')} expires on 12/02/2024. Plan your reinvestment options.
+                {upcomingDeposit 
+                  ? `${upcomingDeposit.bankName} FD for ${f(upcomingDepositAmount)} expires on ${upcomingDepositDate}. Plan your reinvestment options.`
+                  : 'All fixed income reserves are active. Review your wealth allocation regularly.'}
               </p>
             </div>
           </div>
@@ -114,7 +173,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
           <div className="flex justify-between items-start">
             <div>
               <span className="block text-xs font-bold tracking-wider text-orelio-gray uppercase">Total Assets</span>
-              <span className="block text-2xl font-extrabold text-orelio-navy mt-1">{f('₹ 2.79 Cr')}</span>
+              <span className="block text-2xl font-extrabold text-orelio-navy mt-1">{f(formatCompact(totalAssets))}</span>
             </div>
             <span className="p-2.5 rounded-xl bg-sky-50 text-sky-600 border border-sky-100">
               <TrendingUp size={18} />
@@ -136,7 +195,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
           <div className="flex justify-between items-start">
             <div>
               <span className="block text-xs font-bold tracking-wider text-orelio-gray uppercase">Loans & Credit</span>
-              <span className="block text-2xl font-extrabold text-orelio-navy mt-1">{f('₹ 2.79 L')}</span>
+              <span className="block text-2xl font-extrabold text-orelio-navy mt-1">{f(formatCompact(totalLiabilities))}</span>
             </div>
             <span className="p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
               <Wallet size={18} />
@@ -145,10 +204,10 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
           <div>
             <div className="flex justify-between text-[11px] font-bold text-orelio-gray tracking-wider uppercase mb-1.5">
               <span>Debt Utilization</span>
-              <span className="text-orelio-navy">4%</span>
+              <span className="text-orelio-navy">{debtUtilPercent}%</span>
             </div>
             <div className="w-full h-2 rounded-full bg-orelio-light-gray">
-              <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: '4%' }} />
+              <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${Math.max(2, Math.min(100, debtUtilPercent))}%` }} />
             </div>
           </div>
         </div>
@@ -158,7 +217,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
           <div className="flex justify-between items-start">
             <div>
               <span className="block text-xs font-bold tracking-wider text-orelio-gray uppercase">Insurance</span>
-              <span className="block text-2xl font-extrabold text-orelio-navy mt-1">{f('₹ 2.79 Cr')}</span>
+              <span className="block text-2xl font-extrabold text-orelio-navy mt-1">{f(formatCompact(totalInsurance))}</span>
             </div>
             <span className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
               <ShieldCheck size={18} />
@@ -200,7 +259,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
                 </div>
               </div>
               <div className="text-right pl-3">
-                <span className="block text-sm font-bold text-orelio-navy">{f('₹ 1.24 Cr')}</span>
+                <span className="block text-sm font-bold text-orelio-navy">{f(formatCompact(marketLinked))}</span>
                 <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 mt-0.5">
                   <ArrowUpRight size={10} className="stroke-[2.5]" />
                   <span>+14.2%</span>
@@ -220,7 +279,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
                 </div>
               </div>
               <div className="text-right pl-3">
-                <span className="block text-sm font-bold text-orelio-navy">{f('₹ 82.5 L')}</span>
+                <span className="block text-sm font-bold text-orelio-navy">{f(formatCompact(fixedIncome))}</span>
                 <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 mt-0.5">
                   <ArrowUpRight size={10} className="stroke-[2.5]" />
                   <span>+7.1%</span>
@@ -240,7 +299,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
                 </div>
               </div>
               <div className="text-right pl-3">
-                <span className="block text-sm font-bold text-orelio-navy">{f('₹ 23.5 L')}</span>
+                <span className="block text-sm font-bold text-orelio-navy">{f(formatCompact(cash))}</span>
                 <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-rose-600 mt-0.5">
                   <ArrowDownRight size={10} className="stroke-[2.5]" />
                   <span>-2.4%</span>
@@ -266,16 +325,18 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
             </div>
 
             <div className="space-y-2">
-              <div className="text-5xl font-extrabold tracking-tight text-white">{f('0.15')}</div>
+              <div className="text-5xl font-extrabold tracking-tight text-white">{f(debtToAssetRatio)}</div>
               <p className="text-xs text-emerald-100/80 leading-relaxed font-medium">
-                You have built a solid financial safety net that handles life's surprises well. Keep it up!
+                {debtRatioNum < 0.35 
+                  ? "You have built a solid financial safety net that handles life's surprises well. Keep it up!"
+                  : "Keep an eye on debt levels relative to assets to maintain long-term financial security."}
               </p>
             </div>
           </div>
 
           <div className="relative z-10 w-full bg-emerald-950/40 border border-emerald-500/20 rounded-xl p-3 text-[11px] text-emerald-200 mt-6 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse" />
-            <span>Under healthy threshold (&lt; 0.35)</span>
+            <span>{debtRatioNum < 0.35 ? 'Under healthy threshold (< 0.35)' : 'Monitor debt threshold'}</span>
           </div>
         </div>
 
@@ -291,7 +352,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
             <h3 className="text-lg font-bold text-orelio-navy mt-0.5">Total Assets Allocation</h3>
           </div>
           <div className="h-full flex items-center">
-            <AssetAllocationChart />
+            <AssetAllocationChart selectedMemberId={selectedMemberId} />
           </div>
         </div>
 
@@ -302,7 +363,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate }) => {
             <h3 className="text-lg font-bold text-orelio-navy mt-0.5">Loans & Credit Liability</h3>
           </div>
           <div className="h-full flex items-center">
-            <LiabilityChart />
+            <LiabilityChart selectedMemberId={selectedMemberId} />
           </div>
         </div>
 

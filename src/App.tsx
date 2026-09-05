@@ -35,6 +35,16 @@ function App() {
   };
   
   const [members, setMembers] = useState<FamilyMember[]>(() => getFamilyMembers());
+  const [selectedMemberId, setSelectedMemberId] = useState<string | 'all'>(() => {
+    return (typeof localStorage !== 'undefined' && localStorage.getItem('orelio_selected_member_id')) || 'all';
+  });
+
+  const handleSelectMemberId = (id: string | 'all') => {
+    setSelectedMemberId(id);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('orelio_selected_member_id', id);
+    }
+  };
 
   // Modal states lifted to App.tsx
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -46,26 +56,26 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <Overview isPrivate={isPrivate} />;
+        return <Overview isPrivate={isPrivate} selectedMemberId={selectedMemberId} />;
       
       // Asset categories
       case 'stocks':
-        return <Stocks isPrivate={isPrivate} />;
+        return <Stocks isPrivate={isPrivate} selectedMemberId={selectedMemberId} />;
 
       case 'notes':
-        return <Notes />;
+        return <Notes selectedMemberId={selectedMemberId} />;
 
       case 'savings':
-        return <BankAccounts isPrivate={isPrivate} />;
+        return <BankAccounts isPrivate={isPrivate} selectedMemberId={selectedMemberId} />;
 
       case 'fds':
-        return <Deposits isPrivate={isPrivate} />;
+        return <Deposits isPrivate={isPrivate} selectedMemberId={selectedMemberId} />;
 
       case 'insurance':
-        return <Insurance isPrivate={isPrivate} />;
+        return <Insurance isPrivate={isPrivate} selectedMemberId={selectedMemberId} />;
 
       case 'loans-credit':
-        return <LoansAndCredit isPrivate={isPrivate} />;
+        return <LoansAndCredit isPrivate={isPrivate} selectedMemberId={selectedMemberId} />;
 
       case 'manage-family':
         return (
@@ -183,10 +193,12 @@ function App() {
           setIsPrivate={setIsPrivate} 
           onMenuClick={() => setMobileSidebarOpen(true)}
           members={members}
+          selectedMemberId={selectedMemberId}
+          onSelectMemberId={handleSelectMemberId}
         />
 
         {/* Dynamic Inner Page Content */}
-        <main className="flex-1 px-6 md:px-8 pt-4 md:pt-5 max-w-7xl w-full mx-auto pb-16">
+        <main key={selectedMemberId} className="flex-1 px-6 md:px-8 pt-4 md:pt-5 max-w-7xl w-full mx-auto pb-16">
           {renderContent()}
         </main>
       </div>
@@ -219,6 +231,9 @@ function App() {
             const nextMembers = members.filter(m => m.id !== selectedMember.id);
             setMembers(nextMembers);
             saveFamilyMembers(nextMembers);
+            if (selectedMemberId === selectedMember.id) {
+              handleSelectMemberId('all');
+            }
             setIsRemoveModalOpen(false);
           }}
         />
