@@ -203,18 +203,18 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
 
   return (
     <div className="space-y-6 fade-in px-2 pb-2">
-      {/* Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-extrabold text-[#00162A]">Stocks & Mutual Funds</h2>
+      {/* Header Row - visible only when holdings exist */}
+      {totalHoldingsCount > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-extrabold text-[#00162A]">Stocks & Mutual Funds</h2>
+            </div>
+            <p className="text-sm font-medium text-[#707975] mt-1">
+              Manage and track your equity holdings, mutual funds, and portfolio performance.
+            </p>
           </div>
-          <p className="text-sm font-medium text-[#707975] mt-1">
-            Manage and track your equity holdings, mutual funds, and portfolio performance.
-          </p>
-        </div>
-        <div className="flex items-center gap-2.5">
-          {totalHoldingsCount > 0 && (
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => setIsDeleteModalOpen(true)}
@@ -225,15 +225,15 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
                 delete
               </span>
             </button>
-          )}
-          <PrimaryButton
-            icon="upload_file"
-            onClick={() => setIsUploadModalOpen(true)}
-          >
-            Upload CAS Statement
-          </PrimaryButton>
+            <PrimaryButton
+              icon="upload_file"
+              onClick={() => setIsUploadModalOpen(true)}
+            >
+              Upload CAS Statement
+            </PrimaryButton>
+          </div>
         </div>
-      </div>
+      )}
 
       {totalHoldingsCount === 0 ? (
         <div className="text-center py-20 px-6 flex flex-col items-center justify-center">
@@ -246,7 +246,7 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
             No Stocks or Mutual Funds Yet
           </h3>
           <p className="text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
-            Upload your CDSL, NSDL, or CAMS Consolidated Account Statement (CAS) to import your stock and mutual fund investments.
+            Upload your CAMS Consolidated Account Statement (CAS) to import your stock and mutual fund investments.
           </p>
           <div className="mt-6">
             <PrimaryButton

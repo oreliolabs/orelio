@@ -1,11 +1,19 @@
 import type { StockHolding, MutualFundHolding, DebtHolding, StockCASMetadata } from './StocksTypes';
-import { getSampleCASData } from '../../utils/casParser';
 
-const baseline = getSampleCASData();
-
-export const INITIAL_STOCKS: StockHolding[] = baseline.stocks;
-export const DEMO_CAS_STOCKS: StockHolding[] = baseline.stocks;
-export const DEMO_CAS_MUTUAL_FUNDS: MutualFundHolding[] = baseline.mutualFunds;
-export const DEMO_CAS_DEBTS: DebtHolding[] = baseline.debts;
-export const DEMO_STOCK_METADATA: StockCASMetadata = baseline.metadata;
+export const INITIAL_STOCKS: StockHolding[] = [];
+export const DEMO_CAS_STOCKS: StockHolding[] = [];
+export const DEMO_CAS_MUTUAL_FUNDS: MutualFundHolding[] = [];
+export const DEMO_CAS_DEBTS: DebtHolding[] = [];
+export const DEMO_STOCK_METADATA: StockCASMetadata = {
+  investorName: 'Demo User',
+  pan: 'ABCDE1234F',
+  depository: 'CDSL',
+  statementPeriod: 'Current Period',
+  totalMarketValue: 0,
+  totalInvestedValue: 0,
+  equityValue: 0,
+  mutualFundsValue: 0,
+  debtsValue: 0,
+  uploadedAt: new Date().toISOString()
+};
 
