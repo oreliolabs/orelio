@@ -63,6 +63,14 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
     return isPrivate ? '••••' : `${val.toFixed(1)}%`;
   };
 
+  const cleanDisplayName = (name: string): string => {
+    return name
+      .replace(/\s*EP-[DC]R\b.*$/i, '')
+      .replace(/\s*Txn:\s*\d+.*$/i, '')
+      .replace(/\s*CtBo:\s*\d+.*$/i, '')
+      .trim();
+  };
+
   // Metrics
   const {
     totalStocksValue,
@@ -246,7 +254,7 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
             No Stocks or Mutual Funds Yet
           </h3>
           <p className="text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
-            Upload your CAMS Consolidated Account Statement (CAS) to import your stock and mutual fund investments.
+            Upload your Consolidated Account Statement (CAS) to import your stock and mutual fund investments.
           </p>
           <div className="mt-6">
             <PrimaryButton
@@ -477,28 +485,26 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
 
             {/* Account & Search Filters */}
             <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-              {availableAccounts.length > 1 && (
-                <div className="relative">
-                  <select
-                    value={selectedAccount}
-                    onChange={(e) => setSelectedAccount(e.target.value)}
-                    className="appearance-none pl-4 pr-10 py-2 bg-white border border-[#C3C6CE]/50 rounded-xl text-xs font-bold text-[#00162A] focus:outline-none focus:border-[#006A65] shadow-xs cursor-pointer"
-                  >
-                    <option value="ALL">All Brokers</option>
-                    {availableAccounts.map((acc) => (
-                      <option key={acc} value={acc}>
-                        {acc}
-                      </option>
-                    ))}
-                  </select>
-                  <span
-                    className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#74777F] pointer-events-none select-none text-[18px]"
-                    style={{ fontVariationSettings: "'wght' 300" }}
-                  >
-                    keyboard_arrow_down
-                  </span>
-                </div>
-              )}
+              <div className="relative">
+                <select
+                  value={selectedAccount}
+                  onChange={(e) => setSelectedAccount(e.target.value)}
+                  className="appearance-none pl-4 pr-10 py-2 bg-white border border-[#C3C6CE]/50 rounded-xl text-xs font-bold text-[#00162A] focus:outline-none focus:border-[#006A65] shadow-xs cursor-pointer"
+                >
+                  <option value="ALL">All Brokers</option>
+                  {availableAccounts.map((acc) => (
+                    <option key={acc} value={acc}>
+                      {acc}
+                    </option>
+                  ))}
+                </select>
+                <span
+                  className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#74777F] pointer-events-none select-none text-[18px]"
+                  style={{ fontVariationSettings: "'wght' 300" }}
+                >
+                  keyboard_arrow_down
+                </span>
+              </div>
 
               <div className="relative flex-1 sm:w-64">
                 <span className="material-symbols-outlined select-none text-base text-[#74777F] absolute left-3 top-1/2 -translate-y-1/2">
@@ -519,16 +525,16 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
           <div className="glass-card p-6 overflow-hidden border border-[#C3C6CE]/20 shadow-[0_4px_20px_0_rgba(0,0,0,0.02)]">
             <div className="overflow-x-auto">
               <table
-                className="w-full text-left text-sm font-medium border-collapse text-[#00162A]"
+                className="w-full min-w-[700px] table-fixed text-left text-sm font-medium border-collapse text-[#00162A]"
                 style={{ color: '#00162A' }}
               >
                 <thead>
                   <tr className="border-b border-[#C3C6CE]/20 text-[#74777F] text-xs tracking-wider uppercase">
-                    <th className="pb-3 font-bold">Asset / Instrument</th>
-                    <th className="pb-3 font-bold">Account / Broker</th>
-                    <th className="pb-3 font-bold">Units / Qty</th>
-                    <th className="pb-3 font-bold">Price / NAV</th>
-                    <th className="pb-3 font-bold">Market Value</th>
+                    <th className="pb-3 font-bold w-[36%] pr-3">Asset / Instrument</th>
+                    <th className="pb-3 font-bold w-[16%] pr-3">Account / Broker</th>
+                    <th className="pb-3 font-bold w-[16%] pr-3">Units / Qty</th>
+                    <th className="pb-3 font-bold w-[16%] pr-3">Price / NAV</th>
+                    <th className="pb-3 font-bold w-[16%]">Market Value</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#C3C6CE]/10 text-[#00162A]">
@@ -544,31 +550,33 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
                         const stock = item as StockHolding;
                         return (
                           <tr key={stock.id} className="hover:bg-[#FBFCFD]/80 transition-colors">
-                            <td className="py-4">
-                              <div className="flex items-center gap-2.5">
+                            <td className="py-4 pr-3">
+                              <div className="flex items-center gap-2.5 min-w-0">
                                 <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center flex-shrink-0">
                                   <span className="material-symbols-outlined select-none text-base">show_chart</span>
                                 </div>
-                                <div>
-                                  <span className="block font-bold text-[#00162A]">{stock.companyName}</span>
-                                  <span className="block text-xs text-[#74777F] font-medium">
+                                <div className="min-w-0 flex-1">
+                                  <span className="block font-bold text-[#00162A] truncate" title={stock.companyName}>
+                                    {cleanDisplayName(stock.companyName)}
+                                  </span>
+                                  <span className="block text-xs text-[#74777F] font-medium truncate">
                                     {stock.symbol} {stock.sector ? `• ${stock.sector}` : ''}
                                   </span>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4">
-                              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#F2F4F5] text-[#3F4945]">
+                            <td className="py-4 pr-3">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#F2F4F5] text-[#3F4945] truncate inline-block max-w-full">
                                 {stock.dematAccount || 'Demat'}
                               </span>
                             </td>
-                            <td className="py-4 font-semibold">
+                            <td className="py-4 pr-3 font-semibold truncate">
                               {formatUnits(stock.quantity)}
                             </td>
-                            <td className="py-4">
+                            <td className="py-4 pr-3 truncate">
                               {formatCurrency(stock.currentPrice)}
                             </td>
-                            <td className="py-4 font-bold text-[#00162A]">
+                            <td className="py-4 font-bold text-[#00162A] truncate">
                               {formatCurrency(stock.marketValue)}
                             </td>
                           </tr>
@@ -579,31 +587,33 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
                         const mf = item as MutualFundHolding;
                         return (
                           <tr key={mf.id} className="hover:bg-[#FBFCFD]/80 transition-colors">
-                            <td className="py-4">
-                              <div className="flex items-center gap-2.5">
+                            <td className="py-4 pr-3">
+                              <div className="flex items-center gap-2.5 min-w-0">
                                 <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center flex-shrink-0">
                                   <span className="material-symbols-outlined select-none text-base">pie_chart</span>
                                 </div>
-                                <div>
-                                  <span className="block font-bold text-[#00162A]">{mf.schemeName}</span>
-                                  <span className="block text-xs text-[#74777F] font-medium">
+                                <div className="min-w-0 flex-1">
+                                  <span className="block font-bold text-[#00162A] truncate" title={mf.schemeName}>
+                                    {cleanDisplayName(mf.schemeName)}
+                                  </span>
+                                  <span className="block text-xs text-[#74777F] font-medium truncate">
                                     {mf.amc || 'Mutual Fund'} • {mf.category || 'Direct Plan'}
                                   </span>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4">
-                              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#F2F4F5] text-[#3F4945]">
+                            <td className="py-4 pr-3">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#F2F4F5] text-[#3F4945] truncate inline-block max-w-full">
                                 {mf.dematAccount || 'Zerodha'}
                               </span>
                             </td>
-                            <td className="py-4 font-semibold">
+                            <td className="py-4 pr-3 font-semibold truncate">
                               {formatUnits(mf.units, 3)}
                             </td>
-                            <td className="py-4">
+                            <td className="py-4 pr-3 truncate">
                               {formatCurrency(mf.nav, 4)}
                             </td>
-                            <td className="py-4 font-bold text-[#00162A]">
+                            <td className="py-4 font-bold text-[#00162A] truncate">
                               {formatCurrency(mf.marketValue)}
                             </td>
                           </tr>
@@ -614,31 +624,33 @@ export const Stocks: React.FC<StocksProps> = ({ isPrivate }) => {
                       const debt = item as DebtHolding;
                       return (
                         <tr key={debt.id} className="hover:bg-[#FBFCFD]/80 transition-colors">
-                          <td className="py-4">
-                            <div className="flex items-center gap-2.5">
+                          <td className="py-4 pr-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
                               <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center flex-shrink-0">
                                 <span className="material-symbols-outlined select-none text-base">receipt_long</span>
                               </div>
-                              <div>
-                                <span className="block font-bold text-[#00162A]">{debt.issuer}</span>
-                                <span className="block text-xs text-[#74777F] font-medium">
+                              <div className="min-w-0 flex-1">
+                                <span className="block font-bold text-[#00162A] truncate" title={debt.issuer}>
+                                  {cleanDisplayName(debt.issuer)}
+                                </span>
+                                <span className="block text-xs text-[#74777F] font-medium truncate">
                                   {debt.interestRate ? `${debt.interestRate} NCD` : 'Bond'} • {debt.isin}
                                 </span>
                               </div>
                             </div>
                           </td>
-                          <td className="py-4">
-                            <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#F2F4F5] text-[#3F4945]">
+                          <td className="py-4 pr-3">
+                            <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#F2F4F5] text-[#3F4945] truncate inline-block max-w-full">
                               {debt.dematAccount || 'NSDL'}
                             </span>
                           </td>
-                          <td className="py-4 font-semibold">
+                          <td className="py-4 pr-3 font-semibold truncate">
                             {formatUnits(debt.quantity)}
                           </td>
-                          <td className="py-4">
+                          <td className="py-4 pr-3 truncate">
                             {formatCurrency(debt.marketPrice)}
                           </td>
-                          <td className="py-4 font-bold text-[#00162A]">
+                          <td className="py-4 font-bold text-[#00162A] truncate">
                             {formatCurrency(debt.marketValue)}
                           </td>
                         </tr>

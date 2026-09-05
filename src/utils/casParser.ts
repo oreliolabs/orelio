@@ -36,6 +36,9 @@ function cleanSecurityName(raw: string): string {
     .replace(/EQUITY SHARES/gi, '')
     .replace(/#NEW EQ SH WITH FV RS\.?\d+\/?-?\s*AFTER SUB-?DIVISION/gi, '')
     .replace(/#\d+\.?\d*%.*$/i, '')
+    .replace(/\s*EP-[DC]R\b.*$/i, '')
+    .replace(/\s*Txn:\s*\d+.*$/i, '')
+    .replace(/\s*CtBo:\s*\d+.*$/i, '')
     .replace(/[#]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -223,10 +226,45 @@ export function parseCASText(text: string): ParsedCASResult {
   const isinLineRegex = /(IN[A-Z0-9]{10})\s+([^\n\r]+?)\s+([0-9,]+(?:\.[0-9]+)?)\s+(?:--\s+)?(?:--\s+)?(?:--\s+)?(?:[0-9,]+(?:\.[0-9]+)?\s+)?([0-9,]+(?:\.[0-9]+)?)\s+([0-9,]+(?:\.[0-9]+)?)/g;
   let match: RegExpExecArray | null;
 
-  let currentDemat = 'Primary Demat';
-  // Check if text indicates Groww or Zerodha or NSDL
-  if (text.includes('ZERODHA')) currentDemat = 'Zerodha';
-  else if (text.includes('GROWW')) currentDemat = 'Groww';
+  function getDematAccountAtPos(text: string, pos: number): string {
+    const textBefore = text.slice(0, pos);
+
+    const dpRegex = /DP Name\s*:\s*([^\n\r]+?)(?:\s+BO ID|\s+DP ID|\s+DPID|DP का नाम)/gi;
+    let lastDpName = '';
+    let m: RegExpExecArray | null;
+    while ((m = dpRegex.exec(textBefore)) !== null) {
+      lastDpName = m[1].trim();
+    }
+
+    if (lastDpName) {
+      const upper = lastDpName.toUpperCase();
+      if (upper.includes('GROWW')) return 'Groww';
+      if (upper.includes('ZERODHA')) return 'Zerodha';
+      if (upper.includes('FOURDEGREE') || upper.includes('WINT')) return 'Fourdegreewater';
+      if (upper.includes('INDSTOCKS')) return 'Indstocks';
+      if (upper.includes('ANGEL')) return 'Angel One';
+      if (upper.includes('UPSTOX') || upper.includes('RKSV')) return 'Upstox';
+      if (upper.includes('HDFC')) return 'HDFC Securities';
+      if (upper.includes('ICICI')) return 'ICICI Direct';
+      if (upper.includes('KOTAK')) return 'Kotak Securities';
+      if (upper.includes('MOTILAL')) return 'Motilal Oswal';
+      if (upper.includes('5PAISA')) return '5paisa';
+      return lastDpName.split(/\s+/).slice(0, 2).join(' ') || 'Demat';
+    }
+
+    const growwPos = textBefore.lastIndexOf('GROWW');
+    const zerodhaPos = textBefore.lastIndexOf('ZERODHA');
+    const fourdegreePos = textBefore.lastIndexOf('FOURDEGREE');
+    const indstocksPos = textBefore.lastIndexOf('INDSTOCKS');
+
+    const maxPos = Math.max(growwPos, zerodhaPos, fourdegreePos, indstocksPos);
+    if (maxPos === -1) return 'Primary Demat';
+    if (maxPos === growwPos) return 'Groww';
+    if (maxPos === zerodhaPos) return 'Zerodha';
+    if (maxPos === fourdegreePos) return 'Fourdegreewater';
+    if (maxPos === indstocksPos) return 'Indstocks';
+    return 'Primary Demat';
+  }
 
   while ((match = isinLineRegex.exec(text)) !== null) {
     const isin = match[1];
@@ -236,6 +274,8 @@ export function parseCASText(text: string): ParsedCASResult {
     const value = parseNum(match[5]);
 
     if (balance <= 0 && value <= 0) continue; // Skip zero-balance holdings
+
+    const currentDemat = getDematAccountAtPos(text, match.index);
 
     const isMF = isin.startsWith('INF') || /MUTUAL FUND|INDEX FUND|ETF|BEES|GROWTH/i.test(rawDesc);
     const isDebt = isin.slice(6, 8) === '07' || /NCD|SEC|BOND|TAX NCUM|DEBT/i.test(rawDesc);
