@@ -1,7 +1,21 @@
-import type { StockHolding, StockCASMetadata } from '../components/stocks/StocksTypes';
+import type {
+  StockHolding,
+  MutualFundHolding,
+  DebtHolding,
+  DematAccountSummary,
+  StockCASMetadata,
+  ParsedCASResult
+} from '../components/stocks/StocksTypes';
 import type { Policy, PolicyType, PremiumFrequency } from '../components/insurance/InsuranceTypes';
 
-export type { StockHolding, StockCASMetadata };
+export type {
+  StockHolding,
+  MutualFundHolding,
+  DebtHolding,
+  DematAccountSummary,
+  StockCASMetadata,
+  ParsedCASResult
+};
 export type { Policy, PolicyType, PremiumFrequency };
 
 export interface UserProfile {
@@ -107,6 +121,8 @@ export interface OrelioDatabase {
   bankAccounts: BankAccount[];
   deposits: Deposit[];
   stocks: StockHolding[];
+  mutualFunds?: MutualFundHolding[];
+  debtHoldings?: DebtHolding[];
   stockMetadata?: StockCASMetadata | null;
   loans: LoanItem[];
   policies: Policy[];

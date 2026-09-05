@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { SaveButton } from '../common/SaveButton';
 import { CancelButton } from '../common/CancelButton';
-import { DEMO_CAS_STOCKS, DEMO_STOCK_METADATA } from './sampleStocksData';
-import type { StockHolding, StockCASMetadata } from './StocksTypes';
+import { parseCASFile } from '../../utils/casParser';
+import type { ParsedCASResult } from './StocksTypes';
 
 interface UploadStockCASModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (data: { holdings: StockHolding[]; metadata: StockCASMetadata }) => void;
+  onSuccess: (data: ParsedCASResult) => void;
 }
 
 export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
@@ -45,12 +45,12 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
   if (!isOpen) return null;
 
   const handleFileSelect = (selectedFile: File) => {
-    const validExtensions = ['.pdf', '.json', '.csv', '.xlsx'];
+    const validExtensions = ['.pdf', '.json', '.csv', '.txt'];
     const lowerName = selectedFile.name.toLowerCase();
     const isValid = validExtensions.some((ext) => lowerName.endsWith(ext));
 
     if (!isValid) {
-      setErrorMessage('Please upload a valid CAS file in PDF, JSON, or CSV format.');
+      setErrorMessage('Please upload a valid CAS file in PDF, JSON, TXT, or CSV format.');
       return;
     }
 
@@ -73,6 +73,7 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
     }
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
@@ -84,27 +85,8 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
     setErrorMessage(null);
 
     try {
-      // Simulate real-world parsing delay
-      await new Promise((resolve) => setTimeout(resolve, 900));
-
-      // Use the parsed demo holdings with dynamic metadata from the uploaded file
-      const fileName = file.name;
-      const depository: 'CDSL' | 'NSDL' | 'CAMS' = fileName.toLowerCase().includes('nsdl')
-        ? 'NSDL'
-        : fileName.toLowerCase().includes('cams')
-        ? 'CAMS'
-        : 'CDSL';
-
-      const metadata: StockCASMetadata = {
-        ...DEMO_STOCK_METADATA,
-        depository,
-        uploadedAt: new Date().toISOString()
-      };
-
-      onSuccess({
-        holdings: DEMO_CAS_STOCKS,
-        metadata
-      });
+      const parsedData = await parseCASFile(file, password.trim());
+      onSuccess(parsedData);
       onClose();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to parse CAS statement';
@@ -137,7 +119,7 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
                 Upload CAS Statement
               </h2>
               <p className="text-xs text-[#707975] mt-1">
-                Upload your CDSL, NSDL, or CAMS Consolidated Account Statement to import your demat stock holdings.
+                Upload your CAMS (Consolidated Account Statement) to import your demat holdings.
               </p>
             </div>
           </div>
@@ -164,11 +146,11 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
             className={`
-              border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3
+              border-2 border-dashed rounded-2xl p-20 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3
               ${isDragging
                 ? 'border-[#006A65] bg-[#E6F4F1]/30 scale-[0.99]'
                 : file
-                ? 'border-emerald-400 bg-emerald-50/20'
+                ? 'border-[#006A65] bg-[#E6F4F1]/30'
                 : 'border-[#C3C6CE]/60 hover:border-[#006A65] hover:bg-[#FBFCFD]'
               }
             `}
@@ -205,17 +187,17 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
                     Drag & Drop your CAS statement here
                   </p>
                   <p className="text-xs text-[#707975] mt-0.5">
-                    Supports CDSL, NSDL, CAMS or Broker CSV/PDF
+                    Supports CAMS PDF only
                   </p>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
+            {/* <div className="flex items-center gap-2 pt-1">
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F2F4F5] text-[#43474D]">PDF</span>
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F2F4F5] text-[#43474D]">CSV</span>
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F2F4F5] text-[#43474D]">JSON</span>
-            </div>
+            </div> */}
           </div>
 
           {/* Password Prompt for PDF files */}
@@ -226,7 +208,7 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
                   <span className="material-symbols-outlined select-none text-sm text-[#006A65]">lock</span>
                   <span>PDF Password (if encrypted)</span>
                 </label>
-                <span className="text-[10px] text-[#74777F] font-semibold">Optional if unprotected</span>
+                <span className="text-[10px] text-[#74777F] font-semibold">(Optional if unprotected)</span>
               </div>
 
               <div className="relative">
@@ -234,7 +216,7 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="e.g. PAN + DOB (e.g. ABCDE1234F01011990)"
+                  placeholder="e.g. PAN (e.g. ABCDE1234F)"
                   className="w-full px-3.5 py-2.5 bg-white border border-[#C3C6CE]/60 rounded-xl text-xs font-medium text-[#00162A] placeholder-[#74777F]/60 focus:outline-none focus:border-[#006A65] pr-10"
                 />
                 <button
@@ -249,7 +231,7 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
               </div>
 
               <p className="text-[11px] text-[#707975] leading-relaxed">
-                Tip: CDSL/NSDL CAS PDFs are typically password protected with your 10-character PAN in uppercase followed by your Date of Birth (DDMMYYYY).
+                Tip: CAS PDFs are typically password protected with your 10-character PAN in uppercase.
               </p>
             </div>
           )}
@@ -273,7 +255,7 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
               disabled={!file || isProcessing}
               isSaving={isProcessing}
             >
-              {isProcessing ? 'Processing Statement...' : 'Import Stock Holdings'}
+              {isProcessing ? 'Processing Statement...' : 'Import Holdings'}
             </SaveButton>
           </div>
         </form>

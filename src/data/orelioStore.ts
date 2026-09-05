@@ -7,6 +7,8 @@ import type {
   BankAccount,
   Deposit,
   StockHolding,
+  MutualFundHolding,
+  DebtHolding,
   StockCASMetadata,
   LoanItem,
   Policy,
@@ -342,6 +344,24 @@ export function getStockMetadata(): StockCASMetadata | null {
 
 export function saveStockMetadata(metadata: StockCASMetadata | null): void {
   const db = { ...getOrelioDatabase(), stockMetadata: metadata };
+  saveOrelioDatabase(db);
+}
+
+export function getMutualFunds(): MutualFundHolding[] {
+  return getOrelioDatabase().mutualFunds || [];
+}
+
+export function saveMutualFunds(mutualFunds: MutualFundHolding[]): void {
+  const db = { ...getOrelioDatabase(), mutualFunds };
+  saveOrelioDatabase(db);
+}
+
+export function getDebtHoldings(): DebtHolding[] {
+  return getOrelioDatabase().debtHoldings || [];
+}
+
+export function saveDebtHoldings(debts: DebtHolding[]): void {
+  const db = { ...getOrelioDatabase(), debtHoldings: debts };
   saveOrelioDatabase(db);
 }
 
