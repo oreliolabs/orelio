@@ -34,28 +34,7 @@
       "gender": "Female"
     }
   ],
-  "bankAccounts": [
-    {
-      "id": "1788615528531",
-      "bankName": "self",
-      "accountType": "Savings Account",
-      "accountNumber": "fdas",
-      "ifscCode": "fad",
-      "balance": 500,
-      "lastUpdated": 1788615528531,
-      "memberId": "1"
-    },
-    {
-      "id": "1788615509947",
-      "bankName": "child",
-      "accountType": "Savings Account",
-      "accountNumber": "431241",
-      "ifscCode": "4341",
-      "balance": 4312,
-      "lastUpdated": 1788615509947,
-      "memberId": "1788452518369"
-    }
-  ],
+  "bankAccounts": [],
   "deposits": [
     {
       "id": "dep-1788520647362",
@@ -69,21 +48,6 @@
       "startDate": 1788220800000,
       "maturityDate": 1819756800000,
       "status": "active"
-    },
-    {
-      "id": "dep-1788615590677",
-      "type": "FD",
-      "nickname": "fdasdfa",
-      "bankName": "fddfds",
-      "depositNumber": "4523",
-      "interestRate": 54,
-      "currentValue": 5243542,
-      "principalOrMonthly": 5243542,
-      "startDate": 1005436800000,
-      "maturityDate": 1352592000000,
-      "status": "matured",
-      "maturedDate": 1352592000000,
-      "memberId": "1788452518369"
     }
   ],
   "stocks": [
