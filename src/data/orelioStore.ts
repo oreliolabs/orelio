@@ -3,6 +3,7 @@ import type {
   OrelioDatabase,
   UserProfile,
   UserSettings,
+  SecurityConfig,
   FamilyMember,
   BankAccount,
   Deposit,
@@ -16,6 +17,7 @@ import type {
   ChartDataItem,
   OverviewMetrics
 } from './types';
+import { hashPassword, verifyPassword } from '../utils/crypto';
 
 const STORAGE_KEY = 'orelio_database_v2';
 
@@ -232,6 +234,37 @@ export function getUserSettings(): UserSettings {
 export function saveUserSettings(settings: UserSettings): void {
   const db = { ...getOrelioDatabase(), settings };
   saveOrelioDatabase(db);
+}
+
+export function getSecurityConfig(): SecurityConfig {
+  const db = getOrelioDatabase();
+  return (
+    db.security || {
+      passwordHash: '5f3961209d482acecd35a444647c9490:bd9c21fe015b23d078efb6a2f5cda220c400b3b59db5bd87216964ae8b17f43c',
+      passwordHint: 'Default: orelio123',
+      lastChanged: 1788776000000
+    }
+  );
+}
+
+export function saveSecurityConfig(security: SecurityConfig): void {
+  const db = { ...getOrelioDatabase(), security };
+  saveOrelioDatabase(db);
+}
+
+export async function verifyMasterPassword(password: string): Promise<boolean> {
+  const security = getSecurityConfig();
+  return verifyPassword(password, security.passwordHash);
+}
+
+export async function updateMasterPassword(newPassword: string, hint?: string): Promise<void> {
+  const newHash = await hashPassword(newPassword);
+  const updated: SecurityConfig = {
+    passwordHash: newHash,
+    passwordHint: hint || undefined,
+    lastChanged: Date.now()
+  };
+  saveSecurityConfig(updated);
 }
 
 export function getFamilyMembers(): FamilyMember[] {

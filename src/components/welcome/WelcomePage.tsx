@@ -1,18 +1,45 @@
 import React, { useState } from 'react';
-import { getUserProfile } from '../../data/orelioStore';
+import { getUserProfile, verifyMasterPassword, getSecurityConfig } from '../../data/orelioStore';
 
 interface WelcomePageProps {
   onSignIn: () => void;
 }
 
 export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSignInClick = () => {
+  const security = getSecurityConfig();
+
+  const handleUnlockSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password.trim()) {
+      setErrorMessage('Please enter your master password.');
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
-      onSignIn();
-    }, 450);
+    setErrorMessage(null);
+
+    try {
+      const isValid = await verifyMasterPassword(password);
+      if (!isValid) {
+        setIsLoading(false);
+        setErrorMessage('Incorrect master password. Please verify and try again.');
+        return;
+      }
+
+      setIsUnlocked(true);
+      setTimeout(() => {
+        onSignIn();
+      }, 350);
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMessage('Error verifying password. Please try again.');
+    }
   };
 
   return (
@@ -63,8 +90,8 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
           Consolidate your family's equities, mutual funds, bank accounts, and private assets in one single high-security ledger.
         </p>
 
-        {/* Sign In Card */}
-        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left">
+        {/* Sign In / Unlock Card */}
+        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-5 text-left">
           {/* Active User Persona Banner */}
           {(() => {
             const userProfile = getUserProfile();
@@ -83,40 +110,99 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
                     {userProfile.email}
                   </span>
                 </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold text-[#006A65] bg-[#E6F4F1] uppercase">
-                  Ready
+                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold text-[#006A65] bg-[#E6F4F1] uppercase flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#006A65]" />
+                  Locked
                 </span>
               </div>
             );
           })()}
 
-          {/* Primary Action Button */}
-          <button
-            type="button"
-            onClick={handleSignInClick}
-            disabled={isLoading}
-            className="w-full h-12 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-[#006A65]/20 transition-all duration-200 active:scale-[0.99] cursor-pointer disabled:opacity-60"
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined select-none animate-spin text-lg">progress_activity</span>
-                <span>Opening Wealth Ledger...</span>
-              </div>
-            ) : (
-              <>
-                <span>Sign In to Dashboard</span>
-                <span className="material-symbols-outlined select-none text-lg">
-                  arrow_forward
+          {/* Master Password Form */}
+          <form onSubmit={handleUnlockSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#00162A]" htmlFor="master-password">
+                Update Master Password
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-[18px] pointer-events-none">
+                  lock
                 </span>
-              </>
+                <input
+                  id="master-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  placeholder="Enter master password"
+                  autoFocus
+                  disabled={isLoading || isUnlocked}
+                  className="w-full h-11 pl-10 pr-11 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm text-[#00162A] placeholder:text-[#A0A5AA] focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2.5 w-8 h-8 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <span className="material-symbols-outlined select-none text-[18px]">
+                    {showPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="p-3 rounded-xl bg-[#FFF8F7] border border-[#BA1A1A]/20 flex items-center gap-2 text-xs text-[#BA1A1A] animate-in fade-in duration-200">
+                <span className="material-symbols-outlined select-none text-base shrink-0">error</span>
+                <span>{errorMessage}</span>
+              </div>
             )}
-          </button>
+
+            {/* Password Hint during beta/development */}
+            {security.passwordHint && !errorMessage && (
+              <div className="flex items-center justify-between text-[11px] text-[#707975] px-0.5">
+                <span className="flex items-center gap-1 text-[#006A65] font-medium">
+                  <span className="material-symbols-outlined select-none text-[13px]">key</span>
+                  <span>{security.passwordHint}</span>
+                </span>
+                <span className="text-[10px] text-[#A0A5AA]">PBKDF2 SHA-256</span>
+              </div>
+            )}
+
+            {/* Unlock Action Button */}
+            <button
+              type="submit"
+              disabled={isLoading || isUnlocked}
+              className="w-full h-12 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-[#006A65]/20 transition-all duration-200 active:scale-[0.99] cursor-pointer disabled:opacity-75"
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined select-none animate-spin text-lg">progress_activity</span>
+                  <span>Verifying Vault Password...</span>
+                </div>
+              ) : isUnlocked ? (
+                <div className="flex items-center gap-2 text-emerald-100">
+                  <span className="material-symbols-outlined select-none text-lg">check_circle</span>
+                  <span>Vault Unlocked</span>
+                </div>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined select-none text-lg">lock_open</span>
+                  <span>Unlock Wealth Ledger</span>
+                </>
+              )}
+            </button>
+          </form>
 
           {/* Quick Security Notes */}
           <div className="pt-2 border-t border-[#C3C6CE]/20 flex items-center justify-between text-[11px] text-[#74777F]">
             <span className="flex items-center gap-1">
               <span className="material-symbols-outlined select-none text-xs text-emerald-600">verified_user</span>
-              <span>Biometric & PIN Enabled</span>
+              <span>Encrypted Local Vault</span>
             </span>
             <span>Zero Third-Party Tracking</span>
           </div>

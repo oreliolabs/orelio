@@ -10,6 +10,7 @@ import { Insurance } from './components/insurance/Insurance';
 import { LoansAndCredit } from './components/loans_and_credit/LoansAndCredit';
 import { Stocks } from './components/stocks/Stocks';
 import { WelcomePage } from './components/welcome/WelcomePage';
+import { ChangePasswordModal } from './components/settings/ChangePasswordModal';
 import { Briefcase } from 'lucide-react';
 
 import { getFamilyMembers, saveFamilyMembers, getUserSettings, saveUserSettings } from './data/orelioStore';
@@ -49,6 +50,7 @@ function App() {
   // Modal states lifted to App.tsx
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -133,6 +135,31 @@ function App() {
                 </div>
                 <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg">
                   {settings.currency} ({settings.currencySymbol})
+                </span>
+              </div>
+
+              <div className="p-6 flex items-center justify-between">
+                <div className="space-y-1 pr-4">
+                  <span className="block font-bold text-orelio-navy text-sm">Update Master Password</span>
+                  <span className="block text-xs text-orelio-gray font-medium">Password required to unlock your ledger after logout.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsChangePasswordModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#C3C6CE]/35 bg-white text-orelio-navy hover:bg-[#F2F4F5] text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-98"
+                >
+                  <span className="material-symbols-outlined select-none text-[15px] text-[#006A65]">key</span>
+                  <span>Update Password</span>
+                </button>
+              </div>
+
+              <div className="p-6 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="block font-bold text-orelio-navy text-sm">Version</span>
+                  <span className="block text-xs text-orelio-gray font-medium">Current application release build and status.</span>
+                </div>
+                <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg">
+                  v0.1.0 <span className="text-[#006A65] font-extrabold ml-1">(Beta)</span>
                 </span>
               </div>
             </div>
@@ -238,6 +265,12 @@ function App() {
           }}
         />
       )}
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+      />
 
     </div>
   );

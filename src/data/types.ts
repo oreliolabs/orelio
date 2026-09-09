@@ -118,9 +118,16 @@ export interface OverviewMetrics {
   yearGrowthPercent: number;
 }
 
+export interface SecurityConfig {
+  passwordHash: string;
+  passwordHint?: string;
+  lastChanged?: number;
+}
+
 export interface OrelioDatabase {
   userProfile: UserProfile;
   settings: UserSettings;
+  security?: SecurityConfig;
   familyMembers: FamilyMember[];
   bankAccounts: BankAccount[];
   deposits: Deposit[];
