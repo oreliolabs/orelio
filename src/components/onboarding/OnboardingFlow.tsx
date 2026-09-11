@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { UserProfile } from '../../data/types';
 import { createNewUser } from '../../data/orelioStore';
 
@@ -16,6 +16,41 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   isFirstUser = false
 }) => {
   const [step, setStep] = useState<OnboardingStep>(1);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const [isStepTransitioning, setIsStepTransitioning] = useState(false);
+  const [hasNavigated, setHasNavigated] = useState(false);
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current);
+      }
+    };
+  }, []);
+
+  const goToStep = (nextStep: OnboardingStep, dir?: 'forward' | 'backward') => {
+    if (isStepTransitioning) return;
+    const targetDir = dir || (nextStep > step ? 'forward' : 'backward');
+    setDirection(targetDir);
+    setHasNavigated(true);
+    setIsStepTransitioning(true);
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+    }
+    transitionTimerRef.current = setTimeout(() => {
+      setStep(nextStep);
+      setIsStepTransitioning(false);
+    }, 160);
+  };
+
+  const getStepAnimClass = () => {
+    if (!hasNavigated) return 'step-card-enter';
+    if (isStepTransitioning) {
+      return direction === 'forward' ? 'step-exit-forward' : 'step-exit-backward';
+    }
+    return direction === 'forward' ? 'step-enter-forward' : 'step-enter-backward';
+  };
 
   // Form State
   const [name, setName] = useState('');
@@ -69,7 +104,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       return;
     }
     setErrorMessage(null);
-    setStep(2);
+    goToStep(2, 'forward');
   };
 
   // Step 2 -> Step 3
@@ -80,13 +115,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       return;
     }
     setErrorMessage(null);
-    setStep(3);
+    goToStep(3, 'forward');
   };
 
   // Step 3 -> Step 4
   const handleNextFromGender = () => {
     setErrorMessage(null);
-    setStep(4);
+    goToStep(4, 'forward');
   };
 
   // Step 4 -> Create User -> Step 5
@@ -124,7 +159,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
       setCreatedUser(newUser);
       setIsSubmitting(false);
-      setStep(5); // Move to celebratory Welcome screen
+      goToStep(5, 'forward'); // Move to celebratory Welcome screen
     } catch (err) {
       setIsSubmitting(false);
       setErrorMessage('Failed to create vault profile. Please try again.');
@@ -151,9 +186,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       <div className="absolute top-1/2 -right-32 w-96 h-96 bg-[#E6F4F1]/50 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#006A65]/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top Header */}
+      {/* Top Header with Integrated Progress */}
       <header className="w-full px-4 sm:px-12 py-5 flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-3">
+        {/* Left: Branding */}
+        <div className="flex items-center gap-3 min-w-[120px]">
           <div className="w-10 h-10 bg-black rounded-[14px] flex items-center justify-center p-2 flex-shrink-0 shadow-sm">
             <img src="/logo.svg" alt="Orelio Logo" className="w-full h-full object-contain" />
           </div>
@@ -165,41 +201,47 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           </div>
         </div>
 
-        {/* Close button if not first user */}
-        {onCancel && !isFirstUser && step < 5 && (
-          <button
-            type="button"
-            onClick={handleCancelClick}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
-            title="Close"
-          >
-            <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
-          </button>
+        {/* Center: Step Progress Indicator & Segmented Pills */}
+        {step <= 4 && (
+          <div className="flex flex-col items-center gap-1.5">
+            <span key={step} className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-[#006A65] animate-in fade-in duration-200">
+              Step {step} of 4
+            </span>
+            <div className="flex items-center gap-1.5">
+              {[1, 2, 3, 4].map((s) => (
+                <div
+                  key={s}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    s <= step ? 'w-6 sm:w-8 bg-[#006A65]' : 'w-4 sm:w-5 bg-[#C3C6CE]/40'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         )}
+
+        {/* Right: Close button or balanced spacer */}
+        <div className="flex items-center justify-end min-w-[120px]">
+          {onCancel && !isFirstUser && step < 5 ? (
+            <button
+              type="button"
+              onClick={handleCancelClick}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
+              title="Close"
+            >
+              <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
+            </button>
+          ) : (
+            <div className="w-8 h-8" />
+          )}
+        </div>
       </header>
 
       {/* Animated Body Wrapper */}
-      <div className={`flex-1 flex flex-col justify-between ${isExiting ? 'page-exit-backward pointer-events-none' : 'page-enter-forward'}`}>
-
-      {/* Progress Bar (Steps 1 to 4) */}
-      {step <= 4 && (
-        <div className="w-full max-w-md mx-auto px-6 relative z-10">
-          <div className="flex items-center text-xs font-bold text-[#707975] mb-2">
-            <span className="uppercase tracking-wider text-[11px] text-[#006A65]">
-              Step {step} of 4
-            </span>
-          </div>
-          <div className="w-full h-1.5 bg-[#C3C6CE]/25 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#006A65] rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${(step / 4) * 100}%` }}
-            />
-          </div>
-        </div>
-      )}
+      <div className={`flex-1 flex flex-col justify-center ${isExiting ? 'page-exit-backward pointer-events-none' : 'page-enter-forward'}`}>
 
       {/* Main Container */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-8 max-w-lg mx-auto w-full relative z-10">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-4 pb-16 sm:pb-20 max-w-lg mx-auto w-full relative z-10">
         {/* Error Notification */}
         {errorMessage && (
           <div className="w-full mb-4 p-3 rounded-2xl bg-[#FFF8F7] border border-[#BA1A1A]/20 flex items-center gap-2.5 text-xs text-[#BA1A1A] animate-in fade-in duration-200">
@@ -212,30 +254,31 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 1: Name                                          */}
         {/* ---------------------------------------------------- */}
         {step === 1 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left step-card-enter">
+          <div className={`w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left ${getStepAnimClass()}`}>
             {/* Step Icon */}
-            <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
-              <span className="material-symbols-outlined select-none text-2xl">badge</span>
+            <div className="w-10 h-10 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
+              <span className="material-symbols-outlined material-symbols-filled select-none text-[20px]" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>badge</span>
             </div>
 
-            {/* Heading */}
-            <div className="space-y-1.5">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#00162A] tracking-tight">
-                What is your name?
-              </h2>
-              <p className="text-xs sm:text-sm text-[#707975] leading-relaxed">
-                Welcome to Orelio. Let's personalize your private wealth ledger profile.
-              </p>
-            </div>
+            {/* Intro text */}
+            <p className="text-xs sm:text-sm text-[#707975] leading-relaxed">
+              Welcome to Orelio! Let's personalize your private wealth ledger profile.
+            </p>
 
             {/* Input Form */}
             <form onSubmit={handleNextFromName} className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="onboard-name" className="block text-xs font-bold text-[#00162A] uppercase tracking-wider">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#00162A] tracking-tight mb-2.5">
+                  What's your name?
+                </h2>
+                <label htmlFor="onboard-name" className="block text-[11px] font-bold text-[#00162A] uppercase tracking-wider mb-2">
                   Full Name
                 </label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-xl pointer-events-none">
+                  <span
+                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
+                    style={{ fontSize: '18px' }}
+                  >
                     person
                   </span>
                   <input
@@ -246,9 +289,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       setName(e.target.value);
                       if (errorMessage) setErrorMessage(null);
                     }}
-                    placeholder="e.g. Sejal Kore"
+                    placeholder="e.g. Bhaumik Kore"
                     autoFocus
-                    className="w-full h-13 pl-11 pr-4 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-base font-semibold text-[#00162A] placeholder:text-[#A0A5AA] placeholder:font-normal focus:bg-white focus:border-[#006A65] focus:ring-4 focus:ring-[#006A65]/10 outline-none transition-all"
+                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm font-semibold text-[#00162A] placeholder:text-[#A0A5AA] placeholder:font-normal focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -260,7 +303,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 className="w-full h-12 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-[#006A65]/20 transition-all duration-200 active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 <span>Continue</span>
-                <span className="material-symbols-outlined select-none text-lg">arrow_forward</span>
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_forward</span>
               </button>
             </form>
           </div>
@@ -270,33 +313,34 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 2: Date of Birth                                */}
         {/* ---------------------------------------------------- */}
         {step === 2 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left step-card-enter">
+          <div className={`w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left ${getStepAnimClass()}`}>
             {/* Step Icon */}
-            <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
-              <span className="material-symbols-outlined select-none text-2xl">cake</span>
-            </div>
-
-            {/* Heading */}
-            <div className="space-y-1.5">
-              <span className="inline-block text-xs font-bold text-[#006A65] bg-[#E6F4F1] px-2.5 py-0.5 rounded-full">
-                Nice to meet you, {firstName}
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#00162A] tracking-tight">
-                When were you born?
-              </h2>
-              <p className="text-xs sm:text-sm text-[#707975] leading-relaxed">
-                Used for calculating retirement milestones, life stage goals, and insurance projections.
-              </p>
+            <div className="w-10 h-10 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
+              <span className="material-symbols-outlined material-symbols-filled select-none text-[20px]" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>cake</span>
             </div>
 
             {/* Input Form */}
             <form onSubmit={handleNextFromDob} className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="onboard-dob" className="block text-xs font-bold text-[#00162A] uppercase tracking-wider">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#00162A] tracking-tight mb-2.5">
+                  When were you born?
+                </h2>
+                <label htmlFor="onboard-dob" className="block text-[11px] font-bold text-[#00162A] uppercase tracking-wider mb-2">
                   Date of Birth
                 </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-xl pointer-events-none">
+                <div
+                  className="relative flex items-center cursor-pointer"
+                  onClick={() => {
+                    const inputEl = document.getElementById('onboard-dob') as HTMLInputElement;
+                    try {
+                      inputEl?.showPicker?.();
+                    } catch {}
+                  }}
+                >
+                  <span
+                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
+                    style={{ fontSize: '16px' }}
+                  >
                     calendar_today
                   </span>
                   <input
@@ -307,15 +351,20 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       setDob(e.target.value);
                       if (errorMessage) setErrorMessage(null);
                     }}
+                    onClick={(e) => {
+                      try {
+                        (e.currentTarget as HTMLInputElement).showPicker?.();
+                      } catch {}
+                    }}
                     autoFocus
-                    className="w-full h-13 pl-11 pr-4 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-base font-semibold text-[#00162A] focus:bg-white focus:border-[#006A65] focus:ring-4 focus:ring-[#006A65]/10 outline-none transition-all"
+                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm font-semibold text-[#00162A] focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all cursor-pointer no-native-calendar"
                   />
                 </div>
 
                 {/* Age preview badge */}
                 {calculatedAge !== null && (
-                  <div className="flex items-center gap-2 pt-1 text-xs text-[#006A65] font-semibold animate-in fade-in">
-                    <span className="material-symbols-outlined select-none text-base">verified</span>
+                  <div className="flex items-center gap-1.5 mt-3 text-xs text-[#006A65] font-semibold animate-in fade-in">
+                    <span className="material-symbols-outlined select-none leading-none" style={{ fontSize: '16px' }}>verified</span>
                     <span>Current age: {calculatedAge} years old</span>
                   </div>
                 )}
@@ -327,11 +376,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   type="button"
                   onClick={() => {
                     setErrorMessage(null);
-                    setStep(1);
+                    goToStep(1, 'backward');
                   }}
-                  className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-xs font-bold text-[#43474D] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-sm sm:text-base font-bold text-[#43474D] flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  <span className="material-symbols-outlined select-none text-base">arrow_back</span>
+                  <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_back</span>
                   <span>Back</span>
                 </button>
                 <button
@@ -340,7 +389,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   className="flex-1 h-12 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-[#006A65]/20 transition-all duration-200 active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                 >
                   <span>Continue</span>
-                  <span className="material-symbols-outlined select-none text-lg">arrow_forward</span>
+                  <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_forward</span>
                 </button>
               </div>
             </form>
@@ -351,24 +400,19 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 3: Gender                                       */}
         {/* ---------------------------------------------------- */}
         {step === 3 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left step-card-enter">
+          <div className={`w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left ${getStepAnimClass()}`}>
             {/* Step Icon */}
-            <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
-              <span className="material-symbols-outlined select-none text-2xl">diversity_3</span>
+            <div className="w-10 h-10 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
+              <span className="material-symbols-outlined select-none text-[20px]" style={{ fontSize: '20px' }}>diversity_3</span>
             </div>
 
             {/* Heading */}
-            <div className="space-y-1.5">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#00162A] tracking-tight">
-                Select your gender
-              </h2>
-              <p className="text-xs sm:text-sm text-[#707975] leading-relaxed">
-                Helps tailor demographic analytics, term insurance recommendations, and health coverage records.
-              </p>
-            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#00162A] tracking-tight">
+              Select your gender
+            </h2>
 
             {/* Gender Selection Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 { id: 'Female', label: 'Female', icon: 'woman' },
                 { id: 'Male', label: 'Male', icon: 'man' },
@@ -411,11 +455,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 type="button"
                 onClick={() => {
                   setErrorMessage(null);
-                  setStep(2);
+                  goToStep(2, 'backward');
                 }}
-                className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-xs font-bold text-[#43474D] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-sm sm:text-base font-bold text-[#43474D] flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined select-none text-base">arrow_back</span>
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_back</span>
                 <span>Back</span>
               </button>
               <button
@@ -424,7 +468,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 className="flex-1 h-12 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-[#006A65]/20 transition-all duration-200 active:scale-[0.99] cursor-pointer"
               >
                 <span>Continue</span>
-                <span className="material-symbols-outlined select-none text-lg">arrow_forward</span>
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_forward</span>
               </button>
             </div>
           </div>
@@ -434,15 +478,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 4: Password                              */}
         {/* ---------------------------------------------------- */}
         {step === 4 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left step-card-enter">
+          <div className={`w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left ${getStepAnimClass()}`}>
             {/* Step Icon */}
-            <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
-              <span className="material-symbols-outlined select-none text-2xl">shield_lock</span>
+            <div className="w-10 h-10 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
+              <span className="material-symbols-outlined select-none text-[20px]" style={{ fontSize: '20px' }}>shield_lock</span>
             </div>
 
             {/* Heading */}
             <div className="space-y-1.5">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#00162A] tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#00162A] tracking-tight">
                 Secure your vault
               </h2>
               <p className="text-xs sm:text-sm text-[#707975] leading-relaxed">
@@ -456,12 +500,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               <div className="space-y-1.5">
                 <label
                   htmlFor="onboard-password"
-                  className="block text-xs font-bold text-[#00162A] uppercase tracking-wider"
+                  className="block text-[11px] font-bold text-[#00162A] uppercase tracking-wider"
                 >
                   Password <span className="text-[#BA1A1A]">*</span>
                 </label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-xl pointer-events-none">
+                  <span
+                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
+                    style={{ fontSize: '16px' }}
+                  >
                     lock
                   </span>
                   <input
@@ -474,12 +521,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     }}
                     placeholder="At least 4 characters"
                     autoFocus
-                    className="w-full h-12 pl-11 pr-11 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm font-semibold text-[#00162A] placeholder:text-[#A0A5AA] placeholder:font-normal focus:bg-white focus:border-[#006A65] focus:ring-4 focus:ring-[#006A65]/10 outline-none transition-all"
+                    className="w-full h-11 pl-10 pr-10 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm font-semibold text-[#00162A] placeholder:text-[#A0A5AA] placeholder:font-normal focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 w-8 h-8 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
+                    className="absolute right-2.5 w-7 h-7 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     <span className="material-symbols-outlined select-none text-[18px]">
@@ -493,12 +540,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               <div className="space-y-1.5">
                 <label
                   htmlFor="onboard-confirm-password"
-                  className="block text-xs font-bold text-[#00162A] uppercase tracking-wider"
+                  className="block text-[11px] font-bold text-[#00162A] uppercase tracking-wider"
                 >
                   Confirm Password <span className="text-[#BA1A1A]">*</span>
                 </label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-xl pointer-events-none">
+                  <span
+                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
+                    style={{ fontSize: '16px' }}
+                  >
                     lock_reset
                   </span>
                   <input
@@ -510,12 +560,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       if (errorMessage) setErrorMessage(null);
                     }}
                     placeholder="Re-enter password"
-                    className="w-full h-12 pl-11 pr-11 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm font-semibold text-[#00162A] placeholder:text-[#A0A5AA] placeholder:font-normal focus:bg-white focus:border-[#006A65] focus:ring-4 focus:ring-[#006A65]/10 outline-none transition-all"
+                    className="w-full h-11 pl-10 pr-10 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm font-semibold text-[#00162A] placeholder:text-[#A0A5AA] placeholder:font-normal focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 w-8 h-8 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
+                    className="absolute right-2.5 w-7 h-7 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
                     title={showConfirmPassword ? 'Hide password' : 'Show password'}
                   >
                     <span className="material-symbols-outlined select-none text-[18px]">
@@ -530,14 +580,17 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="onboard-hint"
-                    className="block text-xs font-bold text-[#00162A] uppercase tracking-wider"
+                    className="block text-[11px] font-bold text-[#00162A] uppercase tracking-wider"
                   >
                     Reminder Hint
                   </label>
                   <span className="text-[11px] text-[#707975]">Optional</span>
                 </div>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-xl pointer-events-none">
+                  <span
+                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
+                    style={{ fontSize: '16px' }}
+                  >
                     key
                   </span>
                   <input
@@ -546,7 +599,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     value={passwordHint}
                     onChange={(e) => setPasswordHint(e.target.value)}
                     placeholder="e.g. Favorite childhood pet"
-                    className="w-full h-12 pl-11 pr-4 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm text-[#00162A] placeholder:text-[#A0A5AA] focus:bg-white focus:border-[#006A65] focus:ring-4 focus:ring-[#006A65]/10 outline-none transition-all"
+                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm text-[#00162A] placeholder:text-[#A0A5AA] focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -558,11 +611,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   disabled={isSubmitting}
                   onClick={() => {
                     setErrorMessage(null);
-                    setStep(3);
+                    goToStep(3, 'backward');
                   }}
-                  className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-xs font-bold text-[#43474D] flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-sm sm:text-base font-bold text-[#43474D] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined select-none text-base">arrow_back</span>
+                  <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_back</span>
                   <span>Back</span>
                 </button>
                 <button
@@ -591,7 +644,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 5: Welcome Message & Celebration Screen         */}
         {/* ---------------------------------------------------- */}
         {step === 5 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_16px_50px_rgba(0,0,0,0.08)] border border-[#C3C6CE]/30 space-y-6 text-center step-card-enter">
+          <div className={`w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_16px_50px_rgba(0,0,0,0.08)] border border-[#C3C6CE]/30 space-y-6 text-center ${getStepAnimClass()}`}>
             {/* Celebration Icon with Halo */}
             <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full bg-[#006A65]/10 animate-ping duration-1000" />
@@ -606,7 +659,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-[#006A65]" />
                 Vault Successfully Created
               </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#00162A] tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#00162A] tracking-tight">
                 Welcome to Orelio, {firstName}!
               </h2>
               <p className="text-xs sm:text-sm text-[#707975] max-w-sm mx-auto leading-relaxed">
@@ -670,7 +723,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 className="w-full h-13 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-[#006A65]/25 transition-all duration-200 active:scale-[0.99] cursor-pointer"
               >
                 <span>Enter Your Wealth Ledger</span>
-                <span className="material-symbols-outlined select-none text-xl">arrow_forward</span>
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_forward</span>
               </button>
             </div>
           </div>
