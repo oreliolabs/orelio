@@ -10,10 +10,11 @@ import { Insurance } from './components/insurance/Insurance';
 import { LoansAndCredit } from './components/loans_and_credit/LoansAndCredit';
 import { Stocks } from './components/stocks/Stocks';
 import { WelcomePage } from './components/welcome/WelcomePage';
+import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { ChangePasswordModal } from './components/settings/ChangePasswordModal';
 import { Briefcase } from 'lucide-react';
 
-import { getFamilyMembers, saveFamilyMembers, getUserSettings, saveUserSettings } from './data/orelioStore';
+import { getAllUsers, getFamilyMembers, saveFamilyMembers, getUserSettings, saveUserSettings } from './data/orelioStore';
 import type { FamilyMember, UserSettings } from './data/types';
 
 function App() {
@@ -196,6 +197,9 @@ function App() {
   };
 
   if (!isAuthenticated) {
+    if (getAllUsers().length === 0) {
+      return <OnboardingFlow onComplete={handleSignIn} isFirstUser={true} />;
+    }
     return <WelcomePage onSignIn={handleSignIn} />;
   }
 

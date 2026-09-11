@@ -1,6 +1,8 @@
 import orelioDatabaseSeed from './orelio_database.json';
 import type {
   OrelioDatabase,
+  UserRecord,
+  UserVaultData,
   UserProfile,
   UserSettings,
   SecurityConfig,
@@ -28,77 +30,17 @@ function cloneSeed(): OrelioDatabase {
   return JSON.parse(JSON.stringify(orelioDatabaseSeed)) as OrelioDatabase;
 }
 
-/**
- * Loads the current database.
- * Uses cached updates from memory or localStorage if available,
- * otherwise falls back directly to the source of truth JSON file.
- */
-export function getOrelioDatabase(): OrelioDatabase {
-  if (memoryDatabase) {
-    return memoryDatabase;
-  }
-
-  if (typeof localStorage !== 'undefined') {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const merged: OrelioDatabase = {
-          ...cloneSeed(),
-          ...parsed
-        };
-        if (merged.notes) {
-          merged.notes = merged.notes.map((n) => ({
-            ...n,
-            lastUpdated:
-              typeof n.lastUpdated === 'number'
-                ? n.lastUpdated
-                : typeof n.lastUpdated === 'string' && !isNaN(Date.parse(n.lastUpdated))
-                ? new Date(n.lastUpdated).getTime()
-                : Date.now()
-          }));
-        }
-        if (merged.policies) {
-          merged.policies = merged.policies.map((p) => ({
-            ...p,
-            startDate:
-              typeof p.startDate === 'number'
-                ? p.startDate
-                : typeof p.startDate === 'string' && !isNaN(Date.parse(p.startDate))
-                ? new Date(p.startDate).getTime()
-                : Date.now(),
-            expiryDate:
-              typeof p.expiryDate === 'number'
-                ? p.expiryDate
-                : typeof p.expiryDate === 'string' && !isNaN(Date.parse(p.expiryDate))
-                ? new Date(p.expiryDate).getTime()
-                : Date.now()
-          }));
-        }
-        memoryDatabase = merged;
-        return merged;
-      }
-    } catch (err) {
-      console.warn('[OrelioStore] Error reading localStorage, falling back to JSON seed:', err);
-    }
-  }
-
-  const seed = cloneSeed();
-  memoryDatabase = seed;
-  return seed;
-}
-
-function sanitizeDatabase(db: OrelioDatabase): OrelioDatabase {
+function sanitizeVault(vault: UserVaultData): UserVaultData {
   return {
-    ...db,
-    familyMembers: db.familyMembers
-      ? db.familyMembers.map((m) => {
+    ...vault,
+    familyMembers: vault.familyMembers
+      ? vault.familyMembers.map((m) => {
           const { age, ...rest } = m;
           return rest;
         })
       : [],
-    policies: db.policies
-      ? db.policies.map((p) => ({
+    policies: vault.policies
+      ? vault.policies.map((p) => ({
           ...p,
           startDate:
             typeof p.startDate === 'number'
@@ -114,8 +56,8 @@ function sanitizeDatabase(db: OrelioDatabase): OrelioDatabase {
               : Date.now()
         }))
       : [],
-    notes: db.notes
-      ? db.notes.map((n) => {
+    notes: vault.notes
+      ? vault.notes.map((n) => {
           const { accentColor, ...rest } = n;
           const lastUpdated =
             typeof rest.lastUpdated === 'number'
@@ -130,6 +72,191 @@ function sanitizeDatabase(db: OrelioDatabase): OrelioDatabase {
         })
       : []
   };
+}
+
+function sanitizeDatabase(db: OrelioDatabase): OrelioDatabase {
+  const sanitizedUsers: Record<string, UserRecord> = {};
+
+  if (db.users && typeof db.users === 'object' && !Array.isArray(db.users)) {
+    for (const [uid, userRecord] of Object.entries(db.users)) {
+      if (!userRecord) continue;
+      sanitizedUsers[uid] = {
+        profile: userRecord.profile || {
+          id: uid,
+          name: 'User',
+          email: '',
+          currency: 'INR',
+          currencySymbol: '₹',
+          tier: 'STANDARD'
+        },
+        security: userRecord.security || {
+          passwordHash: '',
+          passwordHint: '',
+          lastChanged: Date.now()
+        },
+        vault: sanitizeVault(userRecord.vault || createEmptyVault(userRecord.profile))
+      };
+    }
+  } else if (Array.isArray(db.users)) {
+    for (const user of db.users as any[]) {
+      const legacyDb = db as any;
+      const vault = legacyDb.userVaults?.[user.id] || createEmptyVault(user);
+      sanitizedUsers[user.id] = {
+        profile: user,
+        security: {
+          passwordHash: user.passwordHash || legacyDb.security?.passwordHash || '',
+          passwordHint: user.passwordHint || legacyDb.security?.passwordHint || '',
+          lastChanged: Date.now()
+        },
+        vault: sanitizeVault(vault)
+      };
+    }
+  }
+
+  const activeId = db.activeUserId || Object.keys(sanitizedUsers)[0] || 'usr-alexander-bloom';
+
+  return {
+    activeUserId: activeId,
+    users: sanitizedUsers
+  };
+}
+
+/**
+ * Loads the current database.
+ * Uses cached updates from memory or localStorage if available,
+ * otherwise falls back directly to the source of truth JSON file.
+ */
+export function getOrelioDatabase(): OrelioDatabase {
+  if (memoryDatabase) {
+    return memoryDatabase;
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const seed = cloneSeed();
+        const merged: OrelioDatabase = {
+          ...seed,
+          ...parsed,
+          users: {
+            ...(seed.users || {}),
+            ...(parsed.users && typeof parsed.users === 'object' && !Array.isArray(parsed.users) ? parsed.users : {})
+          }
+        };
+        const sanitized = sanitizeDatabase(merged);
+        memoryDatabase = sanitized;
+        return sanitized;
+      }
+    } catch (err) {
+      console.warn('[OrelioStore] Error reading localStorage, falling back to JSON seed:', err);
+    }
+  }
+
+  const seed = sanitizeDatabase(cloneSeed());
+  memoryDatabase = seed;
+  return seed;
+}
+
+export function createEmptyVault(user?: UserProfile): UserVaultData {
+  const nameParts = (user?.name || 'Self').trim().split(' ');
+  const firstName = nameParts[0] || 'User';
+  const lastName = nameParts.slice(1).join(' ') || '';
+
+  let dmyDob = '';
+  if (user?.dob) {
+    if (user.dob.includes('-')) {
+      const [y, m, d] = user.dob.split('-');
+      dmyDob = `${d}/${m}/${y}`;
+    } else {
+      dmyDob = user.dob;
+    }
+  }
+
+  return {
+    familyMembers: [
+      {
+        id: '1',
+        firstName,
+        lastName,
+        role: 'Self',
+        dob: dmyDob,
+        gender: user?.gender || 'Female',
+        isDependent: false
+      }
+    ],
+    bankAccounts: [],
+    deposits: [],
+    stocks: [],
+    mutualFunds: [],
+    debtHoldings: [],
+    stockMetadata: null,
+    stockMetadatas: {},
+    loans: [],
+    policies: [],
+    notes: [],
+    settings: {
+      privacyModeDefault: false,
+      currency: user?.currency || 'INR',
+      currencySymbol: user?.currencySymbol || '₹',
+      theme: 'light'
+    }
+  };
+}
+
+export function getActiveUser(dbInput?: OrelioDatabase): UserRecord {
+  const db = dbInput || getOrelioDatabase();
+  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+
+  if (db.users && db.users[activeId]) {
+    return db.users[activeId];
+  }
+
+  const fallbackUser: UserRecord = {
+    profile: {
+      id: activeId,
+      name: 'User',
+      email: '',
+      currency: 'INR',
+      currencySymbol: '₹',
+      tier: 'STANDARD'
+    },
+    security: {
+      passwordHash: '',
+      passwordHint: '',
+      lastChanged: Date.now()
+    },
+    vault: createEmptyVault()
+  };
+
+  if (!db.users || Array.isArray(db.users)) {
+    db.users = {};
+  }
+  db.users[activeId] = fallbackUser;
+  return fallbackUser;
+}
+
+export function getActiveVault(dbInput?: OrelioDatabase): UserVaultData {
+  const user = getActiveUser(dbInput);
+  if (!user.vault) {
+    user.vault = createEmptyVault(user.profile);
+  }
+  return user.vault;
+}
+
+export function updateActiveVault(updater: (vault: UserVaultData) => UserVaultData): void {
+  const db = getOrelioDatabase();
+  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  if (!db.users || Array.isArray(db.users)) {
+    db.users = {};
+  }
+  if (!db.users[activeId]) {
+    db.users[activeId] = getActiveUser(db);
+  }
+  const currentVault = db.users[activeId].vault || createEmptyVault(db.users[activeId].profile);
+  db.users[activeId].vault = updater(currentVault);
+  saveOrelioDatabase(db);
 }
 
 /**
@@ -213,17 +340,159 @@ function matchesMember(itemMemberId?: string, targetMemberId?: string | 'all'): 
   return (itemMemberId || primaryId) === targetMemberId;
 }
 
+export function getAllUsers(): UserProfile[] {
+  const db = getOrelioDatabase();
+  if (db.users && typeof db.users === 'object' && !Array.isArray(db.users)) {
+    const list = Object.values(db.users).map((u) => u.profile).filter(Boolean);
+    if (list.length > 0) {
+      return list;
+    }
+  } else if (Array.isArray(db.users) && (db.users as any).length > 0) {
+    return db.users as any;
+  }
+  const defaultUser: UserProfile = {
+    id: 'usr-alexander-bloom',
+    name: 'Alexander Bloom',
+    email: 'alexander.bloom@example.com',
+    currency: 'INR',
+    currencySymbol: '₹',
+    tier: 'STANDARD'
+  };
+  return [defaultUser];
+}
+
 export function getUserProfile(): UserProfile {
-  return getOrelioDatabase().userProfile;
+  const db = getOrelioDatabase();
+  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]) {
+    return db.users[activeId].profile;
+  }
+  return {
+    id: activeId,
+    name: 'User',
+    email: '',
+    currency: 'INR',
+    currencySymbol: '₹',
+    tier: 'STANDARD'
+  };
 }
 
 export function saveUserProfile(profile: UserProfile): void {
-  const db = { ...getOrelioDatabase(), userProfile: profile };
+  const db = getOrelioDatabase();
+  if (!db.users || Array.isArray(db.users)) {
+    db.users = {};
+  }
+  if (!db.users[profile.id]) {
+    db.users[profile.id] = {
+      profile,
+      security: {
+        passwordHash: profile.passwordHash || '',
+        passwordHint: profile.passwordHint || '',
+        lastChanged: Date.now()
+      },
+      vault: createEmptyVault(profile)
+    };
+  } else {
+    db.users[profile.id].profile = profile;
+    if (profile.passwordHash) {
+      if (!db.users[profile.id].security) {
+        db.users[profile.id].security = { passwordHash: profile.passwordHash, passwordHint: profile.passwordHint || '' };
+      } else {
+        db.users[profile.id].security!.passwordHash = profile.passwordHash;
+        if (profile.passwordHint !== undefined) {
+          db.users[profile.id].security!.passwordHint = profile.passwordHint;
+        }
+      }
+    }
+  }
   saveOrelioDatabase(db);
 }
 
+export function setActiveUserId(userId: string): void {
+  const db = getOrelioDatabase();
+  db.activeUserId = userId;
+  saveOrelioDatabase(db);
+}
+
+export function hasAnyUsers(): boolean {
+  const db = getOrelioDatabase();
+  if (db.users && typeof db.users === 'object' && !Array.isArray(db.users)) {
+    return Object.keys(db.users).length > 0;
+  }
+  return Array.isArray(db.users) && (db.users as any).length > 0;
+}
+
+export async function createNewUser(params: {
+  name: string;
+  email: string;
+  dob?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  password: string;
+  passwordHint?: string;
+  avatar?: string;
+}): Promise<UserProfile> {
+  const db = getOrelioDatabase();
+
+  const hashedPassword = await hashPassword(params.password);
+  const newUserId = `usr-${Date.now()}`;
+
+  const newUser: UserProfile = {
+    id: newUserId,
+    name: params.name,
+    email: params.email,
+    dob: params.dob || '',
+    gender: params.gender || 'Other',
+    avatar: params.avatar || '',
+    currency: 'INR',
+    currencySymbol: '₹',
+    tier: 'STANDARD',
+    passwordHash: hashedPassword,
+    passwordHint: params.passwordHint || ''
+  };
+
+  const newSecurity: SecurityConfig = {
+    passwordHash: hashedPassword,
+    passwordHint: params.passwordHint || '',
+    lastChanged: Date.now()
+  };
+
+  const newVault = createEmptyVault(newUser);
+
+  if (!db.users || Array.isArray(db.users)) {
+    db.users = {};
+  }
+
+  db.users[newUserId] = {
+    profile: newUser,
+    security: newSecurity,
+    vault: newVault
+  };
+
+  db.activeUserId = newUserId;
+
+  saveOrelioDatabase(db);
+  return newUser;
+}
+
+export async function verifyUserPassword(userId: string, password: string): Promise<boolean> {
+  const db = getOrelioDatabase();
+  if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[userId]) {
+    const user = db.users[userId];
+    const hash = user.security?.passwordHash || user.profile?.passwordHash;
+    if (hash) {
+      return verifyPassword(password, hash);
+    }
+  }
+  const users = getAllUsers();
+  const target = users.find((u) => u.id === userId);
+  if (target && target.passwordHash) {
+    return verifyPassword(password, target.passwordHash);
+  }
+  return verifyMasterPassword(password);
+}
+
 export function getUserSettings(): UserSettings {
-  return getOrelioDatabase().settings || {
+  return getActiveVault().settings || {
     privacyModeDefault: false,
     currency: 'INR',
     currencySymbol: '₹',
@@ -232,23 +501,28 @@ export function getUserSettings(): UserSettings {
 }
 
 export function saveUserSettings(settings: UserSettings): void {
-  const db = { ...getOrelioDatabase(), settings };
-  saveOrelioDatabase(db);
+  updateActiveVault((vault) => ({ ...vault, settings }));
 }
 
 export function getSecurityConfig(): SecurityConfig {
   const db = getOrelioDatabase();
-  return (
-    db.security || {
-      passwordHash: '5f3961209d482acecd35a444647c9490:bd9c21fe015b23d078efb6a2f5cda220c400b3b59db5bd87216964ae8b17f43c',
-      passwordHint: 'Default: orelio123',
-      lastChanged: 1788776000000
-    }
-  );
+  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]?.security) {
+    return db.users[activeId].security!;
+  }
+  return {
+    passwordHash: '5f3961209d482acecd35a444647c9490:bd9c21fe015b23d078efb6a2f5cda220c400b3b59db5bd87216964ae8b17f43c',
+    passwordHint: 'Default: orelio123',
+    lastChanged: 1788776000000
+  };
 }
 
 export function saveSecurityConfig(security: SecurityConfig): void {
-  const db = { ...getOrelioDatabase(), security };
+  const db = getOrelioDatabase();
+  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]) {
+    db.users[activeId].security = security;
+  }
   saveOrelioDatabase(db);
 }
 
@@ -268,16 +542,15 @@ export async function updateMasterPassword(newPassword: string, hint?: string): 
 }
 
 export function getFamilyMembers(): FamilyMember[] {
-  return getOrelioDatabase().familyMembers || [];
+  return getActiveVault().familyMembers || [];
 }
 
 export function saveFamilyMembers(members: FamilyMember[]): void {
-  const db = { ...getOrelioDatabase(), familyMembers: members };
-  saveOrelioDatabase(db);
+  updateActiveVault((vault) => ({ ...vault, familyMembers: members }));
 }
 
 export function getBankAccounts(memberId?: string | 'all'): BankAccount[] {
-  const accounts = getOrelioDatabase().bankAccounts || [];
+  const accounts = getActiveVault().bankAccounts || [];
   return accounts
     .filter((acc) => matchesMember(acc.memberId, memberId))
     .map((acc) => {
@@ -294,15 +567,16 @@ export function getBankAccounts(memberId?: string | 'all'): BankAccount[] {
 }
 
 export function saveBankAccounts(accounts: BankAccount[], memberId?: string | 'all'): void {
-  const db = getOrelioDatabase();
-  let updatedAccounts: BankAccount[];
-  if (memberId && memberId !== 'all') {
-    const others = (db.bankAccounts || []).filter((a) => !matchesMember(a.memberId, memberId));
-    updatedAccounts = [...others, ...accounts];
-  } else {
-    updatedAccounts = accounts;
-  }
-  saveOrelioDatabase({ ...db, bankAccounts: updatedAccounts });
+  updateActiveVault((vault) => {
+    let updatedAccounts: BankAccount[];
+    if (memberId && memberId !== 'all') {
+      const others = (vault.bankAccounts || []).filter((a) => !matchesMember(a.memberId, memberId));
+      updatedAccounts = [...others, ...accounts];
+    } else {
+      updatedAccounts = accounts;
+    }
+    return { ...vault, bankAccounts: updatedAccounts };
+  });
 }
 
 function parseDepositDateToEpoch(val: unknown): number | undefined {
@@ -323,7 +597,7 @@ function parseDepositDateToEpoch(val: unknown): number | undefined {
 }
 
 export function getDeposits(memberId?: string | 'all'): Deposit[] {
-  const deps = getOrelioDatabase().deposits || [];
+  const deps = getActiveVault().deposits || [];
   const now = Date.now();
   let hasAutoMatured = false;
 
@@ -382,107 +656,110 @@ export function saveDeposits(deposits: Deposit[], memberId?: string | 'all'): vo
     };
   });
 
-  const db = getOrelioDatabase();
-  let updatedDeposits: Deposit[];
-  if (memberId && memberId !== 'all') {
-    const others = (db.deposits || []).filter((d: any) => !matchesMember(d.memberId, memberId));
-    updatedDeposits = [...others, ...cleanDeposits];
-  } else {
-    updatedDeposits = cleanDeposits;
-  }
-
-  saveOrelioDatabase({ ...db, deposits: updatedDeposits });
+  updateActiveVault((vault) => {
+    let updatedDeposits: Deposit[];
+    if (memberId && memberId !== 'all') {
+      const others = (vault.deposits || []).filter((d: any) => !matchesMember(d.memberId, memberId));
+      updatedDeposits = [...others, ...cleanDeposits];
+    } else {
+      updatedDeposits = cleanDeposits;
+    }
+    return { ...vault, deposits: updatedDeposits };
+  });
 }
 
 export function getStocks(memberId?: string | 'all'): StockHolding[] {
-  const allStocks = getOrelioDatabase().stocks || [];
+  const allStocks = getActiveVault().stocks || [];
   return allStocks.filter((s) => matchesMember(s.memberId, memberId));
 }
 
 export function saveStocks(stocks: StockHolding[], memberId?: string | 'all'): void {
-  const db = getOrelioDatabase();
-  let updatedStocks: StockHolding[];
-  if (memberId && memberId !== 'all') {
-    const others = (db.stocks || []).filter((s) => !matchesMember(s.memberId, memberId));
-    updatedStocks = [...others, ...stocks];
-  } else {
-    updatedStocks = stocks;
-  }
-  saveOrelioDatabase({ ...db, stocks: updatedStocks });
+  updateActiveVault((vault) => {
+    let updatedStocks: StockHolding[];
+    if (memberId && memberId !== 'all') {
+      const others = (vault.stocks || []).filter((s) => !matchesMember(s.memberId, memberId));
+      updatedStocks = [...others, ...stocks];
+    } else {
+      updatedStocks = stocks;
+    }
+    return { ...vault, stocks: updatedStocks };
+  });
 }
 
 export function getStockMetadata(memberId?: string | 'all'): StockCASMetadata | null {
-  const db = getOrelioDatabase() as any;
+  const vault = getActiveVault() as any;
   const primaryId = getPrimaryMemberId();
   if (memberId && memberId !== 'all') {
-    if (db.stockMetadatas && db.stockMetadatas[memberId]) {
-      return db.stockMetadatas[memberId];
+    if (vault.stockMetadatas && vault.stockMetadatas[memberId]) {
+      return vault.stockMetadatas[memberId];
     }
-    const meta = db.stockMetadata ?? null;
+    const meta = vault.stockMetadata ?? null;
     if (meta && (meta.memberId || primaryId) === memberId) {
       return meta;
     }
     return null;
   }
-  return db.stockMetadata ?? null;
+  return vault.stockMetadata ?? null;
 }
 
 export function saveStockMetadata(metadata: StockCASMetadata | null, memberId?: string | 'all'): void {
-  const db = getOrelioDatabase() as any;
   const primaryId = getPrimaryMemberId();
   const targetId = (!memberId || memberId === 'all') ? primaryId : memberId;
   const taggedMeta = metadata ? { ...metadata, memberId: targetId } : null;
 
-  if (!db.stockMetadatas) db.stockMetadatas = {};
-  if (taggedMeta) {
-    db.stockMetadatas[targetId] = taggedMeta;
-  } else {
-    delete db.stockMetadatas[targetId];
-  }
+  updateActiveVault((vault: any) => {
+    if (!vault.stockMetadatas) vault.stockMetadatas = {};
+    if (taggedMeta) {
+      vault.stockMetadatas[targetId] = taggedMeta;
+    } else {
+      delete vault.stockMetadatas[targetId];
+    }
 
-  if (targetId === primaryId || !memberId || memberId === 'all') {
-    db.stockMetadata = taggedMeta;
-  }
-
-  saveOrelioDatabase(db);
+    if (targetId === primaryId || !memberId || memberId === 'all') {
+      vault.stockMetadata = taggedMeta;
+    }
+    return vault;
+  });
 }
 
 export function getMutualFunds(memberId?: string | 'all'): MutualFundHolding[] {
-  const allFunds = getOrelioDatabase().mutualFunds || [];
+  const allFunds = getActiveVault().mutualFunds || [];
   return allFunds.filter((m) => matchesMember(m.memberId, memberId));
 }
 
 export function saveMutualFunds(mutualFunds: MutualFundHolding[], memberId?: string | 'all'): void {
-  const db = getOrelioDatabase();
-  let updatedFunds: MutualFundHolding[];
-  if (memberId && memberId !== 'all') {
-    const others = (db.mutualFunds || []).filter((m) => !matchesMember(m.memberId, memberId));
-    updatedFunds = [...others, ...mutualFunds];
-  } else {
-    updatedFunds = mutualFunds;
-  }
-  saveOrelioDatabase({ ...db, mutualFunds: updatedFunds });
+  updateActiveVault((vault) => {
+    let updatedFunds: MutualFundHolding[];
+    if (memberId && memberId !== 'all') {
+      const others = (vault.mutualFunds || []).filter((m) => !matchesMember(m.memberId, memberId));
+      updatedFunds = [...others, ...mutualFunds];
+    } else {
+      updatedFunds = mutualFunds;
+    }
+    return { ...vault, mutualFunds: updatedFunds };
+  });
 }
 
 export function getDebtHoldings(memberId?: string | 'all'): DebtHolding[] {
-  const allDebts = getOrelioDatabase().debtHoldings || [];
+  const allDebts = getActiveVault().debtHoldings || [];
   return allDebts.filter((d) => matchesMember(d.memberId, memberId));
 }
 
 export function saveDebtHoldings(debts: DebtHolding[], memberId?: string | 'all'): void {
-  const db = getOrelioDatabase();
-  let updatedDebts: DebtHolding[];
-  if (memberId && memberId !== 'all') {
-    const others = (db.debtHoldings || []).filter((d) => !matchesMember(d.memberId, memberId));
-    updatedDebts = [...others, ...debts];
-  } else {
-    updatedDebts = debts;
-  }
-  saveOrelioDatabase({ ...db, debtHoldings: updatedDebts });
+  updateActiveVault((vault) => {
+    let updatedDebts: DebtHolding[];
+    if (memberId && memberId !== 'all') {
+      const others = (vault.debtHoldings || []).filter((d) => !matchesMember(d.memberId, memberId));
+      updatedDebts = [...others, ...debts];
+    } else {
+      updatedDebts = debts;
+    }
+    return { ...vault, debtHoldings: updatedDebts };
+  });
 }
 
 export function getLoans(memberId?: string | 'all'): LoanItem[] {
-  const allLoans = getOrelioDatabase().loans || [];
+  const allLoans = getActiveVault().loans || [];
   return allLoans
     .filter((loan) => matchesMember(loan.memberId, memberId))
     .map((loan) => ({
@@ -497,19 +774,20 @@ export function getLoans(memberId?: string | 'all'): LoanItem[] {
 }
 
 export function saveLoans(loans: LoanItem[], memberId?: string | 'all'): void {
-  const db = getOrelioDatabase();
-  let updatedLoans: LoanItem[];
-  if (memberId && memberId !== 'all') {
-    const others = (db.loans || []).filter((l) => !matchesMember(l.memberId, memberId));
-    updatedLoans = [...others, ...loans];
-  } else {
-    updatedLoans = loans;
-  }
-  saveOrelioDatabase({ ...db, loans: updatedLoans });
+  updateActiveVault((vault) => {
+    let updatedLoans: LoanItem[];
+    if (memberId && memberId !== 'all') {
+      const others = (vault.loans || []).filter((l) => !matchesMember(l.memberId, memberId));
+      updatedLoans = [...others, ...loans];
+    } else {
+      updatedLoans = loans;
+    }
+    return { ...vault, loans: updatedLoans };
+  });
 }
 
 export function getPolicies(memberId?: string | 'all'): Policy[] {
-  const policies = getOrelioDatabase().policies || [];
+  const policies = getActiveVault().policies || [];
   return policies
     .filter((p: any) => matchesMember(p.memberId, memberId))
     .map((p: any) => ({
@@ -519,32 +797,34 @@ export function getPolicies(memberId?: string | 'all'): Policy[] {
 }
 
 export function savePolicies(policies: Policy[], memberId?: string | 'all'): void {
-  const db = getOrelioDatabase();
-  let updatedPolicies: Policy[];
-  if (memberId && memberId !== 'all') {
-    const others = (db.policies || []).filter((p: any) => !matchesMember(p.memberId, memberId));
-    updatedPolicies = [...others, ...policies];
-  } else {
-    updatedPolicies = policies;
-  }
-  saveOrelioDatabase({ ...db, policies: updatedPolicies });
+  updateActiveVault((vault) => {
+    let updatedPolicies: Policy[];
+    if (memberId && memberId !== 'all') {
+      const others = (vault.policies || []).filter((p: any) => !matchesMember(p.memberId, memberId));
+      updatedPolicies = [...others, ...policies];
+    } else {
+      updatedPolicies = policies;
+    }
+    return { ...vault, policies: updatedPolicies };
+  });
 }
 
 export function getNotes(memberId?: string | 'all'): Note[] {
-  const allNotes = getOrelioDatabase().notes || [];
+  const allNotes = getActiveVault().notes || [];
   return allNotes.filter((n) => matchesMember(n.memberId, memberId));
 }
 
 export function saveNotes(notes: Note[], memberId?: string | 'all'): void {
-  const db = getOrelioDatabase();
-  let updatedNotes: Note[];
-  if (memberId && memberId !== 'all') {
-    const others = (db.notes || []).filter((n) => !matchesMember(n.memberId, memberId));
-    updatedNotes = [...others, ...notes];
-  } else {
-    updatedNotes = notes;
-  }
-  saveOrelioDatabase({ ...db, notes: updatedNotes });
+  updateActiveVault((vault) => {
+    let updatedNotes: Note[];
+    if (memberId && memberId !== 'all') {
+      const others = (vault.notes || []).filter((n) => !matchesMember(n.memberId, memberId));
+      updatedNotes = [...others, ...notes];
+    } else {
+      updatedNotes = notes;
+    }
+    return { ...vault, notes: updatedNotes };
+  });
 }
 
 function formatIndianCurrencyCompact(num: number): string {
@@ -584,10 +864,10 @@ export function getOverviewMetrics(memberId?: string | 'all'): OverviewMetrics {
 
   const netWorthDisplay = formatIndianCurrencyCompact(netWorth);
 
-  let yearGrowthAmount = '+₹ 18.2 L';
-  let yearGrowthPercent = 14.2;
+  let yearGrowthAmount = '+₹ 0';
+  let yearGrowthPercent = 0.0;
 
-  if (memberId && memberId !== 'all') {
+  if (netWorth > 0) {
     const growthEst = Math.round(netWorth * 0.12);
     yearGrowthAmount = `+${formatIndianCurrencyCompact(growthEst)}`;
     yearGrowthPercent = 12.0;

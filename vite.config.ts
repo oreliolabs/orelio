@@ -32,6 +32,41 @@ function jsonDatabaseSyncPlugin(): Plugin {
                   return rest;
                 });
               }
+              if (data && data.users && typeof data.users === 'object') {
+                for (const user of Object.values(data.users)) {
+                  const u = user as any;
+                  const v = u?.vault || u;
+                  if (v && Array.isArray(v.familyMembers)) {
+                    v.familyMembers = v.familyMembers.map((m: any) => {
+                      const { age, ...rest } = m;
+                      return rest;
+                    });
+                  }
+                  if (v && Array.isArray(v.notes)) {
+                    v.notes = v.notes.map((n: any) => {
+                      const { accentColor, ...rest } = n;
+                      return rest;
+                    });
+                  }
+                }
+              }
+              if (data && data.userVaults && typeof data.userVaults === 'object') {
+                for (const vault of Object.values(data.userVaults)) {
+                  const v = vault as any;
+                  if (v && Array.isArray(v.familyMembers)) {
+                    v.familyMembers = v.familyMembers.map((m: any) => {
+                      const { age, ...rest } = m;
+                      return rest;
+                    });
+                  }
+                  if (v && Array.isArray(v.notes)) {
+                    v.notes = v.notes.map((n: any) => {
+                      const { accentColor, ...rest } = n;
+                      return rest;
+                    });
+                  }
+                }
+              }
               const targetPath = path.resolve(__dirname, 'src/data/orelio_database.json')
               fs.writeFileSync(targetPath, JSON.stringify(data, null, 2) + '\n', 'utf-8')
               res.statusCode = 200

@@ -24,6 +24,12 @@ export interface UserProfile {
   email: string;
   currency: string;
   currencySymbol: string;
+  avatar?: string;
+  tier?: string;
+  dob?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  passwordHash?: string;
+  passwordHint?: string;
 }
 
 export interface UserSettings {
@@ -124,10 +130,7 @@ export interface SecurityConfig {
   lastChanged?: number;
 }
 
-export interface OrelioDatabase {
-  userProfile: UserProfile;
-  settings: UserSettings;
-  security?: SecurityConfig;
+export interface UserVaultData {
   familyMembers: FamilyMember[];
   bankAccounts: BankAccount[];
   deposits: Deposit[];
@@ -135,10 +138,20 @@ export interface OrelioDatabase {
   mutualFunds?: MutualFundHolding[];
   debtHoldings?: DebtHolding[];
   stockMetadata?: StockCASMetadata | null;
+  stockMetadatas?: Record<string, any>;
   loans: LoanItem[];
   policies: Policy[];
   notes: Note[];
-  assetAllocation: ChartDataItem[];
-  liabilityAllocation: ChartDataItem[];
-  overviewMetrics: OverviewMetrics;
+  settings?: UserSettings;
+}
+
+export interface UserRecord {
+  profile: UserProfile;
+  security?: SecurityConfig;
+  vault: UserVaultData;
+}
+
+export interface OrelioDatabase {
+  activeUserId: string;
+  users: Record<string, UserRecord>;
 }

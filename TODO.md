@@ -3,29 +3,15 @@ Issues like - 4. Check responsiveness across different sizes - P0 - more effort 
     today
     1. dashboard
     2. onboarding screens
-    3. website
     4. all the types to be in specific folders and not here and there
 
-name, dob, gender, password,
-
-next prompts
-
-1. website
-   Can you create a website landing page for orelio? I have given you the design references in the /reference folder. Add all the code related files in the website folder.
-   Some interesting features of orelio are listed below -
-1. it is a wealth ledger to manage your personal finances.
-2. free and open source - every line of code is open to inspect
-3. 100% private, no servers, no tracking for maximum privacy, even no data tracking
-
-features that will launch in later releases -
-
-1. Cross-Platform Sync. using google drive - Work seamlessly across desktop, web, and mobile.
-2. No Vendor Lock-in - Export your data anytime in JSON or CSV. Your productivity data belongs to you.
-3. New asset support - support for bonds, real estate coming soon
+name, dob, gender, password
 
 
 next prompt
-can you help me to create an onboarding flow for orelio 
+can you help me to create an onboarding flow for orelio. task is to create the first user for orelio. We need the following data - name, dob, gender, password. Let's break into multiple steps and not show the data on the same screen. Also create a welcome message after the user is created. 
 
-coming soon
-lala
+
+Final TODO:
+1. Check responsiveness across mobile phone also
+2. 
