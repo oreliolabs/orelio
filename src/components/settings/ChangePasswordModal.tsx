@@ -54,12 +54,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     setSuccessMessage(null);
 
     if (!currentPassword) {
-      setErrorMessage('Please enter your current master password.');
+      setErrorMessage('Please enter your current password.');
       return;
     }
 
     if (!newPassword) {
-      setErrorMessage('Please enter a new master password.');
+      setErrorMessage('Please enter a new password.');
       return;
     }
 
@@ -85,7 +85,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
       await updateMasterPassword(newPassword);
       setIsSaving(false);
-      setSuccessMessage('Master password updated and encrypted successfully.');
+      setSuccessMessage('Password updated and encrypted successfully.');
 
       setTimeout(() => {
         onSuccess?.();
@@ -116,7 +116,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               </span>
             </div>
             <div>
-              <h3 className="text-base font-bold text-[#00162A]">Update Master Password</h3>
+              <h3 className="text-base font-bold text-[#00162A]">Update Password</h3>
             </div>
           </div>
           <button
@@ -148,7 +148,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           {/* Current Password */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-[#00162A]">
-              Current Master Password
+              Current Password
             </label>
             <div className="relative flex items-center">
               <span
@@ -185,7 +185,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           {/* New Password */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-[#00162A]">
-              New Master Password
+              New Password
             </label>
             <div className="relative flex items-center">
               <span

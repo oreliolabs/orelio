@@ -100,7 +100,7 @@ export const UploadStockCASModal: React.FC<UploadStockCASModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/40 transition-opacity"
         onClick={onClose}
       />
 

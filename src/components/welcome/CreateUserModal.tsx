@@ -70,17 +70,17 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     }
 
     if (!password) {
-      setErrorMessage('Please enter a master password.');
+      setErrorMessage('Please enter a password.');
       return;
     }
 
     if (password.length < 4) {
-      setErrorMessage('Master password must be at least 4 characters long.');
+      setErrorMessage('Password must be at least 4 characters long.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('Master passwords do not match. Please re-enter.');
+      setErrorMessage('Passwords do not match. Please re-enter.');
       return;
     }
 
@@ -109,17 +109,20 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 bg-black/40 transition-opacity duration-200"
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 text-left z-10 animate-in fade-in zoom-in-95 duration-200 border border-[#C3C6CE]/30 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-7 sm:p-8 space-y-6 text-left z-10 animate-in fade-in zoom-in-95 duration-200 border border-[#C3C6CE]/30 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
-              <span className="material-symbols-outlined select-none text-2xl">
+              <span
+                className="material-symbols-outlined select-none flex items-center justify-center"
+                style={{ fontSize: '20px' }}
+              >
                 person_add
               </span>
             </div>
@@ -136,7 +139,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             className="w-8 h-8 rounded-full flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
             title="Close"
           >
-            <span className="material-symbols-outlined select-none text-lg">close</span>
+            <span className="material-symbols-outlined select-none" style={{ fontSize: '16px' }}>close</span>
           </button>
         </div>
 
@@ -239,10 +242,10 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
           {/* Password Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-            {/* Master Password */}
+            {/* Password */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-[#00162A]" htmlFor="new-user-password">
-                Master Password <span className="text-[#BA1A1A]">*</span>
+                Password <span className="text-[#BA1A1A]">*</span>
               </label>
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-[18px] pointer-events-none">

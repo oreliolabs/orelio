@@ -141,7 +141,7 @@ function App() {
 
               <div className="p-6 flex items-center justify-between">
                 <div className="space-y-1 pr-4">
-                  <span className="block font-bold text-orelio-navy text-sm">Update Master Password</span>
+                  <span className="block font-bold text-orelio-navy text-sm">Update Password</span>
                   <span className="block text-xs text-orelio-gray font-medium">Password required to unlock your ledger after logout.</span>
                 </div>
                 <button

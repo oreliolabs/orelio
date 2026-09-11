@@ -1,5 +1,5 @@
 /**
- * Cryptographic utilities for Orelio Master Password hashing and verification
+ * Cryptographic utilities for Orelio Password hashing and verification
  * using the browser native Web Cryptography API (PBKDF2-HMAC-SHA256).
  */
 

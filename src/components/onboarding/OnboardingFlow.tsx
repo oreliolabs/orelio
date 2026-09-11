@@ -95,17 +95,17 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     setErrorMessage(null);
 
     if (!password) {
-      setErrorMessage('Please enter a master password.');
+      setErrorMessage('Please enter a password.');
       return;
     }
 
     if (password.length < 4) {
-      setErrorMessage('Master password must be at least 4 characters long.');
+      setErrorMessage('Password must be at least 4 characters long.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('Master passwords do not match. Please verify and try again.');
+      setErrorMessage('Passwords do not match. Please verify and try again.');
       return;
     }
 
@@ -423,7 +423,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         )}
 
         {/* ---------------------------------------------------- */}
-        {/* STEP 4: Master Password                              */}
+        {/* STEP 4: Password                              */}
         {/* ---------------------------------------------------- */}
         {step === 4 && (
           <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left animate-in fade-in slide-in-from-right-4 duration-300">
@@ -438,19 +438,19 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 Secure your vault
               </h2>
               <p className="text-xs sm:text-sm text-[#707975] leading-relaxed">
-                Create a master password to encrypt your wealth ledger. All records remain offline and private to you.
+                Create a password to encrypt your wealth ledger. All records remain offline and private to you.
               </p>
             </div>
 
             {/* Form */}
             <form onSubmit={handleCreateVault} className="space-y-4">
-              {/* Master Password */}
+              {/* Password */}
               <div className="space-y-1.5">
                 <label
                   htmlFor="onboard-password"
                   className="block text-xs font-bold text-[#00162A] uppercase tracking-wider"
                 >
-                  Master Password <span className="text-[#BA1A1A]">*</span>
+                  Password <span className="text-[#BA1A1A]">*</span>
                 </label>
                 <div className="relative flex items-center">
                   <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-xl pointer-events-none">

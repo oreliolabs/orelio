@@ -47,7 +47,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
   const handleUnlockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password.trim()) {
-      setErrorMessage('Please enter your master password.');
+      setErrorMessage('Please enter your password.');
       return;
     }
 
@@ -58,7 +58,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
       const isValid = await verifyUserPassword(currentUser.id, password);
       if (!isValid) {
         setIsLoading(false);
-        setErrorMessage('Incorrect master password. Please verify and try again.');
+        setErrorMessage('Incorrect password. Please verify and try again.');
         return;
       }
 
@@ -122,9 +122,9 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
       </header>
 
       {/* Main Sign In Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-10 max-w-4xl mx-auto w-full relative z-10 text-center">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-4 pb-20 sm:pb-28 max-w-4xl mx-auto w-full relative z-10 text-center">
         {/* Sign In / Unlock Card */}
-        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-5 text-left">
+        <div className="w-full max-w-md bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-7 text-left">
           {/* Active User Persona Banner */}
           <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/25">
             {currentUser.avatar ? (
@@ -150,7 +150,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
           </div>
 
           {/* Password Form */}
-          <form onSubmit={handleUnlockSubmit} className="space-y-4">
+          <form onSubmit={handleUnlockSubmit} className="space-y-6">
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-[#00162A]" htmlFor="master-password">
                 Password
@@ -189,6 +189,16 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
                   </span>
                 </button>
               </div>
+
+              {/* Password Hint during beta/development */}
+              {activeHint && !errorMessage && (
+                <div className="flex items-center text-[11px] text-[#707975] px-0.5 pt-0.5">
+                  <span className="flex items-center gap-1 text-[#006A65] font-medium">
+                    <span className="material-symbols-outlined select-none text-[13px]">key</span>
+                    <span>{activeHint}</span>
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Error Message */}
@@ -196,16 +206,6 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
               <div className="p-3 rounded-xl bg-[#FFF8F7] border border-[#BA1A1A]/20 flex items-center gap-2 text-xs text-[#BA1A1A] animate-in fade-in duration-200">
                 <span className="material-symbols-outlined select-none text-base shrink-0">error</span>
                 <span>{errorMessage}</span>
-              </div>
-            )}
-
-            {/* Password Hint during beta/development */}
-            {activeHint && !errorMessage && (
-              <div className="flex items-center text-[11px] text-[#707975] px-0.5">
-                <span className="flex items-center gap-1 text-[#006A65] font-medium">
-                  <span className="material-symbols-outlined select-none text-[13px]">key</span>
-                  <span>{activeHint}</span>
-                </span>
               </div>
             )}
 
