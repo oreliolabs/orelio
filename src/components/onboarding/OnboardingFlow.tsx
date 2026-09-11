@@ -131,18 +131,28 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     }
   };
 
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleCancelClick = () => {
+    if (!onCancel) return;
+    setIsExiting(true);
+    setTimeout(() => {
+      onCancel();
+    }, 200);
+  };
+
   const calculatedAge = calculateAge(dob);
   const firstName = name.trim().split(' ')[0] || 'there';
 
   return (
-    <div className="min-h-screen bg-[#FBFCFD] text-[#00162A] flex flex-col justify-between selection:bg-[#E6F4F1] selection:text-[#004D40] font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#00162A] flex flex-col justify-between selection:bg-[#E6F4F1] selection:text-[#004D40] font-sans relative overflow-hidden">
       {/* Background Decorative Glows */}
       <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-b from-[#006A65]/10 via-[#006A65]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -right-32 w-96 h-96 bg-[#E6F4F1]/50 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#006A65]/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Header */}
-      <header className="w-full max-w-4xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
+      <header className="w-full px-4 sm:px-12 py-5 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-black rounded-[14px] flex items-center justify-center p-2 flex-shrink-0 shadow-sm">
             <img src="/logo.svg" alt="Orelio Logo" className="w-full h-full object-contain" />
@@ -155,30 +165,28 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           </div>
         </div>
 
-        {/* Cancel button if not first user */}
+        {/* Close button if not first user */}
         {onCancel && !isFirstUser && step < 5 && (
           <button
             type="button"
-            onClick={onCancel}
-            className="text-xs font-semibold text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+            onClick={handleCancelClick}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
+            title="Close"
           >
-            Cancel
+            <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
           </button>
         )}
       </header>
 
+      {/* Animated Body Wrapper */}
+      <div className={`flex-1 flex flex-col justify-between ${isExiting ? 'page-exit-backward pointer-events-none' : 'page-enter-forward'}`}>
+
       {/* Progress Bar (Steps 1 to 4) */}
       {step <= 4 && (
         <div className="w-full max-w-md mx-auto px-6 relative z-10">
-          <div className="flex items-center justify-between text-xs font-bold text-[#707975] mb-2">
+          <div className="flex items-center text-xs font-bold text-[#707975] mb-2">
             <span className="uppercase tracking-wider text-[11px] text-[#006A65]">
               Step {step} of 4
-            </span>
-            <span className="text-[11px] text-[#707975]">
-              {step === 1 && 'Personal Name'}
-              {step === 2 && 'Date of Birth'}
-              {step === 3 && 'Gender'}
-              {step === 4 && 'Vault Security'}
             </span>
           </div>
           <div className="w-full h-1.5 bg-[#C3C6CE]/25 rounded-full overflow-hidden">
@@ -204,7 +212,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 1: Name                                          */}
         {/* ---------------------------------------------------- */}
         {step === 1 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left step-card-enter">
             {/* Step Icon */}
             <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
               <span className="material-symbols-outlined select-none text-2xl">badge</span>
@@ -262,7 +270,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 2: Date of Birth                                */}
         {/* ---------------------------------------------------- */}
         {step === 2 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left step-card-enter">
             {/* Step Icon */}
             <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
               <span className="material-symbols-outlined select-none text-2xl">cake</span>
@@ -343,7 +351,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 3: Gender                                       */}
         {/* ---------------------------------------------------- */}
         {step === 3 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left step-card-enter">
             {/* Step Icon */}
             <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
               <span className="material-symbols-outlined select-none text-2xl">diversity_3</span>
@@ -426,7 +434,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 4: Password                              */}
         {/* ---------------------------------------------------- */}
         {step === 4 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left step-card-enter">
             {/* Step Icon */}
             <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
               <span className="material-symbols-outlined select-none text-2xl">shield_lock</span>
@@ -583,7 +591,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {/* STEP 5: Welcome Message & Celebration Screen         */}
         {/* ---------------------------------------------------- */}
         {step === 5 && (
-          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_16px_50px_rgba(0,0,0,0.08)] border border-[#C3C6CE]/30 space-y-6 text-center animate-in fade-in zoom-in-95 duration-400">
+          <div className="w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_16px_50px_rgba(0,0,0,0.08)] border border-[#C3C6CE]/30 space-y-6 text-center step-card-enter">
             {/* Celebration Icon with Halo */}
             <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full bg-[#006A65]/10 animate-ping duration-1000" />
@@ -669,10 +677,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         )}
       </main>
 
-      {/* Subtle Footer */}
-      <footer className="w-full max-w-4xl mx-auto px-6 py-6 text-center text-xs text-[#A0A5AA] relative z-10">
-        Orelio Private Wealth Ledger • 100% Offline-First Encrypted Architecture
-      </footer>
+      </div>
     </div>
   );
 };

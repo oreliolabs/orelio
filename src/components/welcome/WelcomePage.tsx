@@ -27,6 +27,23 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
   const [isSwitchUserOpen, setIsSwitchUserOpen] = useState(false);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isOnboarding, setIsOnboarding] = useState(false);
+  const [transitionState, setTransitionState] = useState<'idle' | 'leaving-to-onboard' | 'entering-from-onboard'>('idle');
+
+  const handleStartOnboarding = () => {
+    setTransitionState('leaving-to-onboard');
+    setTimeout(() => {
+      setIsOnboarding(true);
+      setTransitionState('idle');
+    }, 220);
+  };
+
+  const handleCancelOnboarding = () => {
+    setIsOnboarding(false);
+    setTransitionState('entering-from-onboard');
+    setTimeout(() => {
+      setTransitionState('idle');
+    }, 350);
+  };
 
   const security = getSecurityConfig();
 
@@ -95,7 +112,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
           setCurrentUser(user);
           onSignIn();
         }}
-        onCancel={() => setIsOnboarding(false)}
+        onCancel={handleCancelOnboarding}
         isFirstUser={allUsers.length === 0}
       />
     );
@@ -125,7 +142,15 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
       {/* Main Sign In Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 pt-4 pb-20 sm:pb-28 max-w-4xl mx-auto w-full relative z-10 text-center">
         {/* Sign In / Unlock Card */}
-        <div className="w-full max-w-md bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-7 text-left">
+        <div
+          className={`w-full max-w-md bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-7 text-left ${
+            transitionState === 'leaving-to-onboard'
+              ? 'page-exit-forward pointer-events-none'
+              : transitionState === 'entering-from-onboard'
+              ? 'page-enter-backward'
+              : ''
+          }`}
+        >
           {/* Active User Persona Banner */}
           <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/25">
             {currentUser.avatar ? (
@@ -195,7 +220,12 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
               {activeHint && !errorMessage && (
                 <div className="flex items-center text-[11px] text-[#707975] px-0.5 pt-0.5">
                   <span className="flex items-center gap-1 text-[#006A65] font-medium">
-                    <span className="material-symbols-outlined select-none text-[13px]">key</span>
+                    <span
+                      className="material-symbols-outlined select-none flex items-center justify-center"
+                      style={{ fontSize: '14px' }}
+                    >
+                      key
+                    </span>
                     <span>{activeHint}</span>
                   </span>
                 </div>
@@ -252,7 +282,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
 
             <button
               type="button"
-              onClick={() => setIsOnboarding(true)}
+              onClick={handleStartOnboarding}
               className="px-2.5 py-1 rounded-xl font-bold text-[#006A65] hover:bg-[#E6F4F1] transition-all cursor-pointer active:scale-98"
             >
               Create New User
@@ -270,7 +300,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
         onSelectUser={handleSelectUser}
         onOpenCreateUser={() => {
           setIsSwitchUserOpen(false);
-          setIsOnboarding(true);
+          handleStartOnboarding();
         }}
       />
 

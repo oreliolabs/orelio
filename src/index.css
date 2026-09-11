@@ -43,6 +43,82 @@ body {
   }
 }
 
+/* Page & Step Transitions */
+.page-enter-forward {
+  animation: pageEnterForward 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.page-exit-forward {
+  animation: pageExitForward 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.page-enter-backward {
+  animation: pageEnterBackward 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.page-exit-backward {
+  animation: pageExitBackward 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.step-card-enter {
+  animation: stepCardEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageEnterForward {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pageExitForward {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.98);
+  }
+}
+
+@keyframes pageEnterBackward {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pageExitBackward {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+}
+
+@keyframes stepCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* Scrollbar customizations */
 ::-webkit-scrollbar {
   width: 6px;
