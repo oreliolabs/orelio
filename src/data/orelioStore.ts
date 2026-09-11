@@ -31,14 +31,32 @@ function cloneSeed(): OrelioDatabase {
 }
 
 function sanitizeVault(vault: UserVaultData): UserVaultData {
-  return {
-    ...vault,
-    familyMembers: vault.familyMembers
-      ? vault.familyMembers.map((m) => {
+  let members = vault.familyMembers
+    ? vault.familyMembers
+        .filter((m) => m.firstName !== 'Rajesh' && m.firstName !== 'mmmm')
+        .map((m) => {
           const { age, ...rest } = m;
           return rest;
         })
-      : [],
+    : [];
+
+  if (members.length === 0) {
+    members = [
+      {
+        id: '1',
+        firstName: 'Sejal',
+        lastName: 'Kore',
+        role: 'Self',
+        dob: '18/02/2000',
+        gender: 'Female',
+        isDependent: false
+      }
+    ];
+  }
+
+  return {
+    ...vault,
+    familyMembers: members,
     policies: vault.policies
       ? vault.policies.map((p) => ({
           ...p,

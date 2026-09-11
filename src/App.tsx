@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { Overview } from './components/Overview';
@@ -34,7 +34,16 @@ function App() {
   const handleSignIn = () => {
     setIsAuthenticated(true);
     localStorage.setItem('orelio_authenticated', 'true');
+    setMembers(getFamilyMembers());
+    setSettings(getUserSettings());
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setMembers(getFamilyMembers());
+      setSettings(getUserSettings());
+    }
+  }, [isAuthenticated]);
   
   const [members, setMembers] = useState<FamilyMember[]>(() => getFamilyMembers());
   const [selectedMemberId, setSelectedMemberId] = useState<string | 'all'>(() => {

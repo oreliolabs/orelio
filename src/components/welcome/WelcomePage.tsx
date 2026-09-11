@@ -62,6 +62,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
         return;
       }
 
+      setActiveUserId(currentUser.id);
       setIsUnlocked(true);
       setTimeout(() => {
         onSignIn();

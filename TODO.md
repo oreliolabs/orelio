@@ -5,13 +5,7 @@ Issues like - 4. Check responsiveness across different sizes - P0 - more effort 
     2. onboarding screens
     4. all the types to be in specific folders and not here and there
 
-name, dob, gender, password
-
-
-next prompt
-can you help me to create an onboarding flow for orelio. task is to create the first user for orelio. We need the following data - name, dob, gender, password. Let's break into multiple steps and not show the data on the same screen. Also create a welcome message after the user is created. 
-
-
 Final TODO:
+
 1. Check responsiveness across mobile phone also
-2. 
+2. how are the commits going to github?
