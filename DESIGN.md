@@ -1,147 +1,268 @@
-# Orelio Design System & Architecture Guide
+# 💎 Orelio Design System & Architecture Guide
 
-Welcome to the **Orelio Wealth Ledger** design system documentation. This guide outlines the core design philosophy, color tokens, typography scale, component blueprints, micro-animations, and UI layout patterns used across the application.
+Welcome to the **Orelio Wealth Ledger** master design system documentation. This guide outlines the core design philosophy, color tokens, typography scale, component blueprints, micro-animations, and UI layout patterns used across the entire application.
 
 ---
 
 ## 1. Design Philosophy
 
-Orelio is designed as a premium, state-of-the-art personal wealth management platform. The design balances visual elegance with functional clarity through:
+Orelio is crafted as a premium, state-of-the-art personal wealth ledger. The design balances visual elegance with functional clarity through:
 
-- **Rich Aesthetics & Tactile Feedback**: Polished glassmorphism cards, micro-animations on hover, soft green glow shadows, and curated color palettes.
-- **Visual Hierarchy & Typography**: Strong typographic contrast using *Hanken Grotesk*, distinct weight scaling, and uppercase tracking for category headers.
-- **Privacy & User Control**: Built-in privacy masking toggles for financial values (`isPrivate`) and clear, non-intrusive action controls.
-- **Material Symbol Standardization**: Crisp, recognizable iconography powered by Google Material Symbols Outlined.
+- **Tactile Feedback & Depth**: Polished card surfaces, subtle elevation lifts on hover (`hover:-translate-y-1`), soft green glow shadows (`#006A65`), and smooth state transitions.
+- **Typographic Hierarchy**: Strong typographic contrast powered by *Hanken Grotesk*, distinct font weights (SemiBold, Bold, ExtraBold), and uppercase letter-spacing for category tags.
+- **Privacy-First Experience**: Built-in privacy masking toggle (`isPrivate`) to obscure sensitive net worth figures and account balances with `••••••`.
+- **Consistent Component Blueprints**: Strict standardization across button suites (`PrimaryButton`, `SaveButton`, `CancelButton`), modal dialogs, and section dividers.
+- **Material Symbol Standardization**: Crisp, recognizable iconography powered by Google Material Symbols Outlined (`material-symbols-outlined select-none`).
 
 ---
 
 ## 2. Color System & Design Tokens
 
 ### Core Brand Palette
-| Token | Hex / Value | Description | Usage |
+| Token | Hex / Value | Description | Primary Usage |
 | :--- | :--- | :--- | :--- |
-| `--color-orelio-bg` | `#FBFCFD` | Background Canvas | Main page background |
-| `--color-orelio-navy` | `#00162A` | Primary Dark Navy | Main headings, primary monetary text |
-| `--color-orelio-darkgreen` | `#006A65` | Primary Teal Green | Active hover borders, progress bars, highlights |
-| `--color-forest-800` | `#004D40` | Forest Dark Green | Active Deposits stats card background |
-| `--color-forest-900` | `#00342B` | Deep Forest Green | Dark card gradient start |
-| `--color-orelio-lightgreen` | `#AFEFDD` / `#E6F4F1` | Mint Tint | Active icon badge hover background |
-| `--color-orelio-text` | `#43474D` | Body Text | Standard paragraph text, section titles |
-| `--color-orelio-gray` | `#74777F` | Muted Subtext | Category titles, account numbers, labels |
-| `--color-orelio-light-gray` | `#F2F4F5` | Light Neutral Fill | Card backgrounds, badge fills |
-| `--color-orelio-border` | `rgba(195, 198, 206, 0.3)` | Card Border Neutral | Standard card borders |
-| Custom Matured Border | `rgba(191, 201, 196, 0.1)` | Matured Border (`#BFC9C4` 10%) | Matured deposit card border |
-| Destructive Red | `#BA1A1A` | Destructive Action Text | Delete options, delete confirmation buttons |
-| Destructive Light Fill | `#FFF8F7` / `#FFEDEA` | Destructive Hover | Delete item hover background |
+| **Canvas Background** | `#FBFCFD` / `#F8F9FA` | Light Clean Neutral | Main application background and subtle container fills |
+| **Primary Navy** | `#00162A` | Deep Charcoal Navy | Main headings, primary monetary numbers, active navigation text |
+| **Teal Green (Brand)** | `#006A65` | Primary Accent | Active states, primary action buttons, progress bars, hover borders |
+| **Deep Forest Green** | `#004D40` | Secondary Brand Green | Button hover states (`hover:bg-[#00524E]`), active stat cards |
+| **Abyssal Forest** | `#00342B` | Dark Gradient Start | Dark theme card gradient headers |
+| **Mint Tint** | `#E6F4F1` | Soft Green Accent Fill | Active icon badges, status pills, selected tab highlights |
+| **Body Text** | `#43474D` | Dark Neutral | Standard body copy, section titles, card labels |
+| **Muted Gray** | `#74777F` / `#707975` | Mid Neutral | Subtitles, account numbers, secondary metadata, inactive icons |
+| **Light Neutral Fill** | `#F2F4F5` | Neutral Surface Fill | Matured card backgrounds, hover fills, badge containers |
+| **Card Border** | `rgba(195, 198, 206, 0.3)` | `#C3C6CE` at 30% | Default card and container borders |
+| **Matured Card Border** | `rgba(191, 201, 196, 0.1)` | `#BFC9C4` at 10% | Matured deposit and archived item card borders |
+| **Destructive Red** | `#BA1A1A` | Alert / Danger Red | Delete buttons, destructive actions, negative P&L text |
+| **Destructive Light Fill** | `#FFF8F7` / `#FFEDEA` | Warning Surface | Delete hover fill, "Not Set" alert pills, error banners |
 
 ---
 
 ## 3. Typography & Hierarchy
 
-**Font Family**: `'Hanken Grotesk', system-ui, -apple-system, sans-serif`
+**Primary Font Family**: `'Hanken Grotesk', system-ui, -apple-system, sans-serif`
 
-| Element | Class Name / Size | Weight | Tracking | Usage |
+| Hierarchy Role | Tailwind Classes | Size / Weight | Tracking | Usage |
 | :--- | :--- | :--- | :--- | :--- |
-| **Page Title** | `text-2xl` (24px) | `font-extrabold` | `tracking-tight` | Main page view heading |
-| **Section Title** | `text-xl` (20px) | `font-semibold` | `tracking-tight` | Section headings ("Active Deposits", "Matured Deposits") |
-| **Card Primary Value** | `text-base` (16px) | `font-extrabold` | Normal | Financial totals, interest rates, nicknames |
-| **Category Header** | `text-[10px]` | `font-extrabold` | `tracking-widest` | Uppercase field headers (`FD NICKNAME`, `INTEREST RATE`) |
-| **Subtext & Labels** | `text-xs` (12px) | `font-medium` | Normal | Account numbers (`Account No.: **** 8829`), dates |
-| **Pill Badge Label** | `text-[11px]` | `font-extrabold` | `tracking-wider` | Item count badges (`5 ITEMS`) |
+| **Display Heading** | `text-3xl font-extrabold` | 30px / 800 | `tracking-tight` | Welcome page hero titles |
+| **Page Title** | `text-2xl font-extrabold` | 24px / 800 | `tracking-tight` | Main page view heading (Overview, Deposits, Stocks) |
+| **Section Heading** | `text-xl font-bold` | 20px / 700 | `tracking-tight` | Section headers ("Active Deposits", "All Accounts") |
+| **Card Primary Title** | `text-base font-bold` | 16px / 700 | Normal | Bank account name, stock symbol, policy title |
+| **Monetary Value (KPI)**| `text-2xl sm:text-3xl font-extrabold` | 24–30px / 800 | `tracking-tight` | Net worth numbers, total liquidity, total assets |
+| **Card Value / Rate** | `text-base font-extrabold` | 16px / 800 | Normal | Interest rates, deposit amounts, sum assured |
+| **Category Header** | `text-[10px] font-extrabold` | 10px / 800 | `tracking-widest` | Uppercase field headers (`FD NICKNAME`, `INTEREST RATE`) |
+| **Pill Badge Label** | `text-[11px] font-bold` | 11px / 700 | `tracking-wider` | Status badges (`ACCOUNT SUCCESSFULLY CREATED`, `5 ITEMS`) |
+| **Micro Badge Label**| `text-[10px] font-extrabold` | 10px / 800 | `tracking-wider` | Active pill (`ACTIVE`), role pills (`SELF`, `SPOUSE`) |
+| **Subtext / Helper** | `text-xs font-medium` | 12px / 500 | Normal | Account numbers (`Account No.: **** 8829`), date labels |
 
 ---
 
-## 4. Corner Radius & Border Radius System
+## 4. Corner Radius & Elevation System
 
-Orelio uses a tiered corner radius system to maintain soft, modern curves across all components:
-
-| Scale Token | Tailwind Class | Pixel Value | Usage / Component Target |
+### Corner Radius Tokens
+| Scale Token | Class | Radius | Component Target |
 | :--- | :--- | :--- | :--- |
-| **Extra Large (Card)** | `rounded-3xl` | `24px` (`1.5rem`) | Main list cards (Active & Matured Deposits), Modals, KPI Summary Cards |
-| **Large (Container)** | `rounded-2xl` | `16px` (`1rem`) | Popover menu box, Icon badges (`w-12 h-12`), Inner glass card containers |
-| **Medium (Control)** | `rounded-xl` | `12px` (`0.75rem`) | Pagination controls, Input form fields, Secondary action buttons |
-| **Full (Pill / Circle)** | `rounded-full` | `9999px` | Item count badges (`5 ITEMS`), Growth pill badges, More menu trigger button (`w-9 h-9`), Progress bars |
-| **Custom Flat-Bottom** | `borderRadius: '10px 10px 0px 0px'` | `10px 10px 0 0` | Net Value decorative bar graphic (flush `right-6 bottom-0`) |
+| **Extra Large** | `rounded-3xl` | 24px | Main list cards, modals, KPI summary containers, onboarding cards |
+| **Large** | `rounded-2xl` | 16px | Popover menus, icon badges (`w-12 h-12` or `w-14 h-14`), modal inner blocks |
+| **Medium** | `rounded-xl` | 12px | Action buttons (`PrimaryButton`, `SaveButton`), form inputs, chips |
+| **Small** | `rounded-lg` | 8px | Action icon buttons, table row actions, quick toggles |
+| **Full / Pill** | `rounded-full` | 9999px | Category badges, growth pills, user profile avatars, progress bars |
+
+### Elevation & Shadow Tokens
+- **Base Card**: `shadow-[0_12px_40px_rgba(0,0,0,0.06)]` or `border border-[#C3C6CE]/30`.
+- **Card Hover Elevation**: `hover:-translate-y-1 hover:shadow-[0_12px_28px_-2px_rgba(0,106,101,0.05)] hover:border-2 hover:border-[#006A65]`.
+- **Brand Action Shadow**: `shadow-md shadow-[#006A65]/20 hover:shadow-lg hover:shadow-[#006A65]/25`.
+- **Modal Overlay**: `shadow-2xl` with backdrop `bg-black/40 backdrop-blur-xs`.
 
 ---
 
-## 5. Iconography
+## 5. Z-Index Layering Scale
 
-All icons use **Google Material Symbols Outlined** (`material-symbols-outlined`) with consistent sizing:
-- **Deposit Type Icons**:
-  - `savings`: Fixed Deposit (FD) piggy bank icon.
-  - `refresh`: Recurring Deposit (RD) recurring arrow icon.
-- **Action & Navigation Icons**:
-  - `add`: Primary action button trigger ("New Deposit").
-  - `more_vert`: Card context menu trigger.
-  - `visibility` / `visibility_off`: Privacy mask toggle.
-  - `check`: Matured deposit completion indicator.
-  - `close`: Modal close trigger.
+Strict z-index stacking prevents popover and modal overlay conflicts:
 
----
-
-## 6. Component Guidelines
-
-### A. Summary KPI Cards
-1. **Net Current Value Card**:
-   - White glassmorphism container with `#C3C6CE` border at 10% opacity (`border-[#C3C6CE]/10`) and drop shadow `shadow-[0_4px_20px_0_rgba(0,0,0,0.02)]`.
-   - Privacy mode support (`isPrivate` state displaying `••••••`).
-   - Integrated growth pill (`+4.2% this year`).
-   - Flat-bottomed bar graphic (`borderRadius: '10px 10px 0px 0px'`) flush at `right-6 bottom-0`.
-
-2. **Active Deposits Stats Card**:
-   - Dark forest green background (`bg-[#004D40]`).
-   - Active deposit count display with vertical padding (`pb-3 md:pb-4`) above the horizontal divider.
-   - FD vs RD amount breakdown rows.
+| Layer | Z-Index | Elements |
+| :--- | :--- | :--- |
+| **Canvas** | `z-0` | Default page background, subtle decorative blurs |
+| **Content** | `z-10` | Main list cards, table rows, section headers |
+| **Sticky Navigation**| `z-30` | Top header bar (`Topbar`), mobile sticky navigation |
+| **Sidebar Drawer** | `z-40` | Desktop sidebar drawer, mobile drawer overlay |
+| **Context Popover** | `z-50` | Card context menu (`more_vert`), elevated card tile when menu is open |
+| **Modal / Dialog** | `z-[9999]` | Dialog backdrops (`createPortal`), Edit/Add modals, confirmation dialogs |
 
 ---
 
-### B. Section Headers with Inline Divider
-Section headers use a 3-part flex layout:
+## 6. Iconography Standards
+
+All icons strictly use **Google Material Symbols Outlined** (`material-symbols-outlined select-none`):
+
+### Module Icons
+- **Overview**: `dashboard`
+- **Bank Accounts**: `account_balance`
+- **Deposits (FD / RD)**: `savings` (Fixed Deposit), `refresh` (Recurring Deposit)
+- **Stocks & Mutual Funds**: `trending_up` / `show_chart`
+- **Insurance**: `verified_user` / `shield`
+- **Loans & Credit**: `credit_card` / `request_quote`
+- **Secure Locker**: `lock` / `description`
+- **Manage Family**: `group` / `diversity_3`
+- **Settings**: `settings`
+
+### Interactive Action Icons
+- **Add / Create**: `add`
+- **Save / Confirm**: `check` / `check_circle`
+- **Delete / Remove**: `delete` / `close`
+- **Privacy Mask**: `visibility` / `visibility_off`
+- **More Context Menu**: `more_vert`
+- **Forward Arrow**: `arrow_forward`
+- **Back Arrow**: `arrow_back`
+- **Logout**: `logout`
+
+---
+
+## 7. Standard Component Blueprints
+
+### A. Common Button Suite (`src/components/common/`)
+
+#### 1. `PrimaryButton`
+- **Role**: Main header action triggers (e.g., "New Bank Account", "Add New Policy", "New Deposit").
+- **Styling**: Pre-styled `#006A65` brand teal, hover scale elevation (`hover:scale-103`), optically balanced left/right padding (`pl-3.5 pr-5`), Material Symbol icon support.
+```tsx
+import { PrimaryButton } from '../common/PrimaryButton';
+
+<PrimaryButton icon="add" onClick={handleOpenAdd}>
+  New Deposit
+</PrimaryButton>
+```
+
+#### 2. `SaveButton`
+- **Role**: Primary form submission inside modals.
+- **Styling**: `rounded-xl`, `#006A65` with dark hover `#00524E`, built-in loading spinner state (`isSaving`), checkmark icon.
+```tsx
+import { SaveButton } from '../common/SaveButton';
+
+<SaveButton type="submit" isSaving={isSaving}>
+  Save Policy
+</SaveButton>
+```
+
+#### 3. `CancelButton`
+- **Role**: Secondary dismissal button next to primary actions.
+- **Styling**: `rounded-xl`, neutral `#43474D` text, hover fill `#F2F4F5`, active micro-press (`active:scale-98`).
+```tsx
+import { CancelButton } from '../common/CancelButton';
+
+<CancelButton onClick={onClose} />
+```
+
+---
+
+### B. Confirmation & Destructive Modals
+
+#### `DeleteConfirmationModal`
+- **Role**: Universal modal for deleting accounts, deposits, policies, or loans.
+- **Pattern**: Red warning icon badge (`#FFF8F7` bg, `#BA1A1A` icon), clear title and descriptive consequences, paired `CancelButton` and destructive confirm button (`bg-[#BA1A1A] hover:bg-[#931515]`).
+```tsx
+import { DeleteConfirmationModal } from '../common/DeleteConfirmationModal';
+
+<DeleteConfirmationModal
+  isOpen={isOpen}
+  onClose={onClose}
+  onConfirm={handleDelete}
+  title="Delete Bank Account?"
+  subtitle="Are you sure you want to remove this account? This action cannot be undone."
+  confirmText="Delete Account"
+/>
+```
+
+#### `LogoutConfirmationModal`
+- **Role**: Confirms user session logout from the sidebar.
+- **Features**: Displays the current user's name dynamically and warns about offline vault locking.
+
+---
+
+### C. Section Headers with Inline Divider
+
+Section headers use a unified 3-part layout across all views:
 ```tsx
 <div className="flex items-center gap-4 w-full">
-  <h2 className="text-xl font-semibold text-[#43474D] tracking-tight whitespace-nowrap">
+  <h2 className="text-xl font-bold text-[#00162A] tracking-tight whitespace-nowrap">
     Active Deposits
   </h2>
   <div className="flex-1 h-[1px] bg-[#C3C6CE]/30" />
   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-[#74777F] bg-[#F2F4F5] uppercase tracking-wider whitespace-nowrap">
-    5 ITEMS
+    {items.length} ITEMS
   </span>
 </div>
 ```
-- **Spacing**: 24px vertical gap (`space-y-6`) between section header and cards list below.
+- **Vertical Spacing**: Always apply a 24px vertical gap (`space-y-6`) between section headers and the card list below.
 
 ---
 
-### C. Active Deposits Cards
-- **Card Container**: `rounded-3xl`, white background, `border-[#C3C6CE]/30`, 20px vertical list spacing (`space-y-5`).
+### D. List Card Patterns
+
+#### 1. Active Financial Cards
+- **Container**: `rounded-3xl bg-white border border-[#C3C6CE]/30 p-5 sm:p-6 transition-all duration-300`.
 - **Hover Micro-Animations**:
-  - Upward tile lift (`hover:-translate-y-1`).
-  - 2px teal green border highlight (`hover:border-2 hover:border-[#006A65]`).
-  - Soft green glow shadow (`hover:shadow-[0_12px_28px_-2px_rgba(0,106,101,0.05)]`).
-  - Icon badge transforms to solid teal green with white icon (`group-hover:bg-[#006A65] group-hover:text-white group-hover:scale-105`).
-  - Icon symbol micro-animation: `savings` tilts `-rotate-12`, `refresh` smoothly rotates `rotate-180`.
-  - Category titles transition to teal green (`group-hover:text-[#006A65]`).
+  - Upward tile lift: `hover:-translate-y-1`.
+  - 2px Teal green border: `hover:border-2 hover:border-[#006A65]`.
+  - Soft green glow shadow: `hover:shadow-[0_12px_28px_-2px_rgba(0,106,101,0.05)]`.
+  - Icon badge transformation: `group-hover:bg-[#006A65] group-hover:text-white group-hover:scale-105`.
+  - Title highlight: `group-hover:text-[#006A65]`.
 
----
-
-### D. Matured Deposits Cards
-- **Card Container**: `rounded-3xl`, neutral fill background (`bg-[#F2F4F5]`), `#BFC9C4` border at 10% opacity (`border border-[#BFC9C4]/10`).
-- **Structure**: Flat design without drop shadow or green hover border. Features checkmark icon badge, final rate, maturity value, matured on date, and an interactive **REINVEST** button.
+#### 2. Matured / Inactive Cards
+- **Container**: `rounded-3xl bg-[#F2F4F5] border border-[#BFC9C4]/10 p-5 sm:p-6`.
+- **Structure**: Flat design without hover border lift, subdued neutral styling, checkmark completion icon, and explicit action buttons (e.g. `REINVEST`).
 
 ---
 
 ### E. Contextual Popover Menu (`more_vert`)
-- **Trigger**: Circular hover background (`w-9 h-9 rounded-full hover:bg-[#F2F4F5]`).
-- **Layering**: Elevates active card stacking context to `z-50` when open so the popover menu renders cleanly on top of subsequent card tiles.
-- **Menu Items**:
-  - Text-only options: **Edit FD / Edit RD** (`text-[#3F4945]`) and **Delete FD / Delete RD** (`text-[#BA1A1A]`).
-  - Edge-to-edge horizontal divider line (`border-t border-[#C3C6CE]/20`) with no padding gaps.
+
+When implementing a dropdown menu inside list cards:
+1. **Card Stacking**: Elevate the parent card tile to `z-50` when open (`isMenuOpen ? 'z-50' : 'z-0'`).
+2. **Trigger**: Circular icon button with subtle hover background (`w-9 h-9 rounded-full hover:bg-[#F2F4F5]`).
+3. **Menu Container**: `rounded-2xl bg-white border border-[#C3C6CE]/30 shadow-xl py-1 overflow-hidden min-w-[140px]`.
+4. **Options**: Clean, text-only items with edge-to-edge border dividers (`border-t border-[#C3C6CE]/20`), `#3F4945` for edit actions, `#BA1A1A` for delete actions.
 
 ---
 
-## 7. Accessibility & Interactivity Rules
+### F. Form Fields & Modals
 
-- **Interactive Elements**: All clickable buttons and triggers have clear hover states (`transition-colors duration-200` or `transition-all duration-300`).
-- **Focus & Selection**: Material Symbols use `select-none` to prevent unwanted text selection during rapid interactions.
-- **Labels**: Spelled out labels (e.g., `Account No.:`) ensure screen reader clarity and visual alignment across all screens.
+- **Modal Backdrop**: `fixed inset-0 z-[9999] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4`.
+- **Modal Window**: `w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#C3C6CE]/30 space-y-6`.
+- **Inputs**:
+  ```tsx
+  <div className="relative flex items-center">
+    <span className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none text-lg pointer-events-none">
+      account_balance
+    </span>
+    <input
+      type="text"
+      className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm text-[#00162A] placeholder:text-[#A0A5AA] focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
+    />
+  </div>
+  ```
+
+---
+
+### G. User Avatars & Profile Badges
+
+- **Initials Token**: Circular avatar with brand teal background:
+  ```tsx
+  <div className="w-10 h-10 rounded-full bg-[#006A65] text-white flex items-center justify-center font-bold text-base select-none shrink-0 shadow-xs">
+    {userName.trim().charAt(0).toUpperCase() || 'U'}
+  </div>
+  ```
+- **Active Status Badge**:
+  ```tsx
+  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold text-[#006A65] bg-[#E6F4F1] uppercase flex items-center gap-1">
+    <span className="w-1.5 h-1.5 rounded-full bg-[#006A65]" />
+    Active
+  </span>
+  ```
+
+---
+
+## 8. Accessibility & Quality Rules
+
+1. **Interactive Feedback**: All buttons, links, and triggers must provide instant visual feedback on hover (`transition-colors duration-200` or `transition-all duration-300`) and active clicks (`active:scale-[0.99]` or `active:scale-98`).
+2. **Text Selection**: Material Symbols must include `select-none` to prevent accidental icon highlighting during rapid clicks.
+3. **Screen Reader Clarification**: Use explicit labels (e.g. `Account No.:`, `Maturity Date:`) instead of ambiguous abbreviations.
+4. **Verification**: Always verify all component modifications with `bun run build` to ensure type correctness and styling integrity before finalizing changes.

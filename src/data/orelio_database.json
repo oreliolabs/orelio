@@ -1,5 +1,5 @@
 {
-  "activeUserId": "usr-1789198329052",
+  "activeUserId": "usr-alexander-bloom",
   "users": {
     "usr-alexander-bloom": {
       "profile": {
@@ -1007,6 +1007,55 @@
             "role": "Self",
             "dob": "12/12/2000",
             "gender": "Male",
+            "isDependent": false
+          }
+        ],
+        "bankAccounts": [],
+        "deposits": [],
+        "stocks": [],
+        "mutualFunds": [],
+        "debtHoldings": [],
+        "stockMetadata": null,
+        "stockMetadatas": {},
+        "loans": [],
+        "policies": [],
+        "notes": [],
+        "settings": {
+          "privacyModeDefault": false,
+          "currency": "INR",
+          "currencySymbol": "₹",
+          "theme": "light"
+        }
+      }
+    },
+    "usr-1789200846395": {
+      "profile": {
+        "id": "usr-1789200846395",
+        "name": "fd",
+        "email": "fd@orelio.vault",
+        "dob": "2000-12-12",
+        "gender": "Female",
+        "avatar": "",
+        "currency": "INR",
+        "currencySymbol": "₹",
+        "tier": "STANDARD",
+        "passwordHash": "",
+        "passwordHint": ""
+      },
+      "security": {
+        "passwordHash": "",
+        "passwordHint": "",
+        "lastChanged": 1789200846395
+      },
+      "vault": {
+        "familyMembers": [
+          {
+            "id": "1",
+            "firstName": "fd",
+            "lastName": "",
+            "role": "Self",
+            "dob": "12/12/2000",
+            "gender": "Female",
             "isDependent": false
           }
         ],
