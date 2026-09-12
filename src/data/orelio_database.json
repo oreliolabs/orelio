@@ -1,5 +1,5 @@
 {
-  "activeUserId": "usr-alexander-bloom",
+  "activeUserId": "usr-1789208724591",
   "users": {
     "usr-alexander-bloom": {
       "profile": {
@@ -1056,6 +1056,104 @@
             "role": "Self",
             "dob": "12/12/2000",
             "gender": "Female",
+            "isDependent": false
+          }
+        ],
+        "bankAccounts": [],
+        "deposits": [],
+        "stocks": [],
+        "mutualFunds": [],
+        "debtHoldings": [],
+        "stockMetadata": null,
+        "stockMetadatas": {},
+        "loans": [],
+        "policies": [],
+        "notes": [],
+        "settings": {
+          "privacyModeDefault": false,
+          "currency": "INR",
+          "currencySymbol": "₹",
+          "theme": "light"
+        }
+      }
+    },
+    "usr-1789208593506": {
+      "profile": {
+        "id": "usr-1789208593506",
+        "name": "jkl",
+        "email": "jkl@orelio.vault",
+        "dob": "2000-12-12",
+        "gender": "Male",
+        "avatar": "",
+        "currency": "INR",
+        "currencySymbol": "₹",
+        "tier": "STANDARD",
+        "passwordHash": "",
+        "passwordHint": ""
+      },
+      "security": {
+        "passwordHash": "",
+        "passwordHint": "",
+        "lastChanged": 1789208593506
+      },
+      "vault": {
+        "familyMembers": [
+          {
+            "id": "1",
+            "firstName": "jkl",
+            "lastName": "",
+            "role": "Self",
+            "dob": "12/12/2000",
+            "gender": "Male",
+            "isDependent": false
+          }
+        ],
+        "bankAccounts": [],
+        "deposits": [],
+        "stocks": [],
+        "mutualFunds": [],
+        "debtHoldings": [],
+        "stockMetadata": null,
+        "stockMetadatas": {},
+        "loans": [],
+        "policies": [],
+        "notes": [],
+        "settings": {
+          "privacyModeDefault": false,
+          "currency": "INR",
+          "currencySymbol": "₹",
+          "theme": "light"
+        }
+      }
+    },
+    "usr-1789208724591": {
+      "profile": {
+        "id": "usr-1789208724591",
+        "name": "fdasf",
+        "email": "fdasf@orelio.vault",
+        "dob": "2000-12-12",
+        "gender": "Male",
+        "avatar": "",
+        "currency": "INR",
+        "currencySymbol": "₹",
+        "tier": "STANDARD",
+        "passwordHash": "",
+        "passwordHint": ""
+      },
+      "security": {
+        "passwordHash": "",
+        "passwordHint": "",
+        "lastChanged": 1789208724591
+      },
+      "vault": {
+        "familyMembers": [
+          {
+            "id": "1",
+            "firstName": "fdasf",
+            "lastName": "",
+            "role": "Self",
+            "dob": "12/12/2000",
+            "gender": "Male",
             "isDependent": false
           }
         ],

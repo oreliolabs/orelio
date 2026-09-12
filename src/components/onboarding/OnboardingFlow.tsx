@@ -209,7 +209,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       <div className={`flex-1 flex flex-col justify-center ${isExiting ? 'page-exit-backward pointer-events-none' : 'page-enter-forward'}`}>
 
       {/* Main Container */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-4 pb-16 sm:pb-20 max-w-xl mx-auto w-full relative z-10">
+      <main className={`flex-1 flex flex-col items-center justify-center px-6 pt-4 pb-16 sm:pb-20 ${step === 4 ? 'max-w-xl' : 'max-w-lg'} mx-auto w-full relative z-10 transition-all duration-300`}>
         {/* Error Notification */}
         {errorMessage && (
           <div className="w-full mb-4 p-3 rounded-2xl bg-[#FFF8F7] border border-[#BA1A1A]/20 flex items-center gap-2.5 text-xs text-[#BA1A1A] animate-in fade-in duration-200">
