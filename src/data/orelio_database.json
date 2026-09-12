@@ -1,5 +1,5 @@
 {
-  "activeUserId": "usr-1789111649565",
+  "activeUserId": "usr-1789198329052",
   "users": {
     "usr-alexander-bloom": {
       "profile": {
@@ -928,6 +928,104 @@
         "loans": [],
         "policies": [],
         "notes": []
+      }
+    },
+    "usr-1789197732104": {
+      "profile": {
+        "id": "usr-1789197732104",
+        "name": "bhumik",
+        "email": "bhumik@orelio.vault",
+        "dob": "2000-12-12",
+        "gender": "Male",
+        "avatar": "",
+        "currency": "INR",
+        "currencySymbol": "₹",
+        "tier": "STANDARD",
+        "passwordHash": "9a8823a3267b99a084977b14a609bfa1:59390875247af74b95898a1320860de6d82c6484eff782bd6cd35d64ec7642aa",
+        "passwordHint": "abc"
+      },
+      "security": {
+        "passwordHash": "9a8823a3267b99a084977b14a609bfa1:59390875247af74b95898a1320860de6d82c6484eff782bd6cd35d64ec7642aa",
+        "passwordHint": "abc",
+        "lastChanged": 1789198288365
+      },
+      "vault": {
+        "familyMembers": [
+          {
+            "id": "1",
+            "firstName": "bhumik",
+            "lastName": "",
+            "role": "Self",
+            "dob": "12/12/2000",
+            "gender": "Male",
+            "isDependent": false
+          }
+        ],
+        "bankAccounts": [],
+        "deposits": [],
+        "stocks": [],
+        "mutualFunds": [],
+        "debtHoldings": [],
+        "stockMetadata": null,
+        "stockMetadatas": {},
+        "loans": [],
+        "policies": [],
+        "notes": [],
+        "settings": {
+          "privacyModeDefault": false,
+          "currency": "INR",
+          "currencySymbol": "₹",
+          "theme": "light"
+        }
+      }
+    },
+    "usr-1789198329052": {
+      "profile": {
+        "id": "usr-1789198329052",
+        "name": "abc",
+        "email": "abc@orelio.vault",
+        "dob": "2000-12-12",
+        "gender": "Male",
+        "avatar": "",
+        "currency": "INR",
+        "currencySymbol": "₹",
+        "tier": "STANDARD",
+        "passwordHash": "",
+        "passwordHint": ""
+      },
+      "security": {
+        "passwordHash": "",
+        "passwordHint": "",
+        "lastChanged": 1789198329052
+      },
+      "vault": {
+        "familyMembers": [
+          {
+            "id": "1",
+            "firstName": "abc",
+            "lastName": "",
+            "role": "Self",
+            "dob": "12/12/2000",
+            "gender": "Male",
+            "isDependent": false
+          }
+        ],
+        "bankAccounts": [],
+        "deposits": [],
+        "stocks": [],
+        "mutualFunds": [],
+        "debtHoldings": [],
+        "stockMetadata": null,
+        "stockMetadatas": {},
+        "loans": [],
+        "policies": [],
+        "notes": [],
+        "settings": {
+          "privacyModeDefault": false,
+          "currency": "INR",
+          "currencySymbol": "₹",
+          "theme": "light"
+        }
       }
     }
   }

@@ -4,7 +4,8 @@ import {
   getAllUsers,
   setActiveUserId,
   verifyUserPassword,
-  getSecurityConfig
+  getSecurityConfig,
+  isPasswordSet
 } from '../../data/orelioStore';
 import type { UserProfile } from '../../data/types';
 import { SwitchUserModal } from './SwitchUserModal';
@@ -61,9 +62,11 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
     setErrorMessage(null);
   };
 
+  const userHasPassword = isPasswordSet(currentUser.id);
+
   const handleUnlockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password.trim()) {
+    if (userHasPassword && !password.trim()) {
       setErrorMessage('Please enter your password.');
       return;
     }
@@ -72,11 +75,13 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
     setErrorMessage(null);
 
     try {
-      const isValid = await verifyUserPassword(currentUser.id, password);
-      if (!isValid) {
-        setIsLoading(false);
-        setErrorMessage('Incorrect password. Please verify and try again.');
-        return;
+      if (userHasPassword) {
+        const isValid = await verifyUserPassword(currentUser.id, password);
+        if (!isValid) {
+          setIsLoading(false);
+          setErrorMessage('Incorrect password. Please verify and try again.');
+          return;
+        }
       }
 
       setActiveUserId(currentUser.id);
@@ -95,13 +100,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
       ? currentUser.passwordHint
       : security.passwordHint;
 
-  const initials =
-    currentUser.name
-      .split(' ')
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase() || 'U';
+  const initial = currentUser.name.trim().charAt(0).toUpperCase() || 'U';
 
   if (isOnboarding) {
     return (
@@ -153,17 +152,9 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
         >
           {/* Active User Persona Banner */}
           <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/25">
-            {currentUser.avatar ? (
-              <img
-                src={currentUser.avatar}
-                alt={currentUser.name}
-                className="w-12 h-12 rounded-full object-cover flex-shrink-0 shadow-xs ring-2 ring-white"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#006A65] to-[#004D40] text-white flex items-center justify-center font-bold text-base shadow-xs ring-2 ring-white select-none shrink-0">
-                {initials}
-              </div>
-            )}
+            <div className="w-12 h-12 rounded-full bg-[#006A65] text-white flex items-center justify-center font-bold text-lg shadow-xs ring-2 ring-white select-none shrink-0">
+              {initial}
+            </div>
             <div className="flex-1 min-w-0">
               <span className="block text-sm font-bold text-[#00162A] truncate">
                 {currentUser.name}
@@ -177,60 +168,69 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
 
           {/* Password Form */}
           <form onSubmit={handleUnlockSubmit} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-[#00162A]" htmlFor="master-password">
-                Password
-              </label>
-              <div className="relative flex items-center">
-                <span
-                  className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
-                  style={{ fontSize: '17px' }}
-                >
-                  lock
+            {!userHasPassword ? (
+              <div className="p-3.5 rounded-2xl bg-[#E6F4F1]/60 border border-[#006A65]/20 text-center">
+                <span className="text-xs text-[#006A65] font-semibold flex items-center justify-center gap-1.5">
+                  <span className="material-symbols-outlined select-none text-base">lock_open</span>
+                  <span>No password protection configured for this ledger.</span>
                 </span>
-                <input
-                  id="master-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (errorMessage) setErrorMessage(null);
-                  }}
-                  placeholder="Enter password"
-                  autoFocus
-                  disabled={isLoading || isUnlocked}
-                  className="w-full h-11 pl-10 pr-11 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm text-[#00162A] placeholder:text-[#A0A5AA] focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 w-8 h-8 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                >
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-[#00162A]" htmlFor="master-password">
+                  Password
+                </label>
+                <div className="relative flex items-center">
                   <span
-                    className="material-symbols-outlined select-none flex items-center justify-center"
+                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
                     style={{ fontSize: '17px' }}
                   >
-                    {showPassword ? 'visibility_off' : 'visibility'}
+                    lock
                   </span>
-                </button>
-              </div>
-
-              {/* Password Hint during beta/development */}
-              {activeHint && !errorMessage && (
-                <div className="flex items-center text-[11px] text-[#707975] px-0.5 pt-0.5">
-                  <span className="flex items-center gap-1 text-[#006A65] font-medium">
+                  <input
+                    id="master-password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errorMessage) setErrorMessage(null);
+                    }}
+                    placeholder="Enter password"
+                    autoFocus
+                    disabled={isLoading || isUnlocked}
+                    className="w-full h-11 pl-10 pr-11 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm text-[#00162A] placeholder:text-[#A0A5AA] focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 w-8 h-8 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
                     <span
                       className="material-symbols-outlined select-none flex items-center justify-center"
-                      style={{ fontSize: '14px' }}
+                      style={{ fontSize: '17px' }}
                     >
-                      key
+                      {showPassword ? 'visibility_off' : 'visibility'}
                     </span>
-                    <span>{activeHint}</span>
-                  </span>
+                  </button>
                 </div>
-              )}
-            </div>
+
+                {/* Password Hint during beta/development */}
+                {activeHint && !errorMessage && (
+                  <div className="flex items-center text-[11px] text-[#707975] px-0.5 pt-0.5">
+                    <span className="flex items-center gap-1 text-[#006A65] font-medium">
+                      <span
+                        className="material-symbols-outlined select-none flex items-center justify-center"
+                        style={{ fontSize: '14px' }}
+                      >
+                        key
+                      </span>
+                      <span>{activeHint}</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Error Message */}
             {errorMessage && (

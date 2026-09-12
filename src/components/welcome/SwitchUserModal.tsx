@@ -62,12 +62,7 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
         <div className="space-y-3.5 max-h-72 overflow-y-auto pr-1">
           {users.map((user) => {
             const isActive = user.id === activeUserId;
-            const initials = user.name
-              .split(' ')
-              .map((n) => n[0])
-              .slice(0, 2)
-              .join('')
-              .toUpperCase() || 'U';
+            const initial = user.name.trim().charAt(0).toUpperCase() || 'U';
 
             return (
               <button
@@ -84,17 +79,9 @@ export const SwitchUserModal: React.FC<SwitchUserModalProps> = ({
                 }`}
               >
                 {/* Avatar */}
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-11 h-11 rounded-full object-cover flex-shrink-0 shadow-xs ring-2 ring-white"
-                  />
-                ) : (
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#006A65] to-[#004D40] text-white flex items-center justify-center font-bold text-sm shadow-xs ring-2 ring-white select-none shrink-0">
-                    {initials}
-                  </div>
-                )}
+                <div className="w-11 h-11 rounded-full bg-[#006A65] text-white flex items-center justify-center font-bold text-base shadow-xs ring-2 ring-white select-none shrink-0">
+                  {initial}
+                </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">

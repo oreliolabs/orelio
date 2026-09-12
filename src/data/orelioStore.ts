@@ -369,9 +369,9 @@ export function getAllUsers(): UserProfile[] {
     return db.users as any;
   }
   const defaultUser: UserProfile = {
-    id: 'usr-alexander-bloom',
-    name: 'Alexander Bloom',
-    email: 'alexander.bloom@example.com',
+    id: 'usr-default',
+    name: 'User',
+    email: 'user@orelio.vault',
     currency: 'INR',
     currencySymbol: '₹',
     tier: 'STANDARD'
@@ -445,13 +445,13 @@ export async function createNewUser(params: {
   email: string;
   dob?: string;
   gender?: 'Male' | 'Female' | 'Other';
-  password: string;
+  password?: string;
   passwordHint?: string;
   avatar?: string;
 }): Promise<UserProfile> {
   const db = getOrelioDatabase();
 
-  const hashedPassword = await hashPassword(params.password);
+  const hashedPassword = params.password ? await hashPassword(params.password) : '';
   const newUserId = `usr-${Date.now()}`;
 
   const newUser: UserProfile = {
@@ -492,19 +492,35 @@ export async function createNewUser(params: {
   return newUser;
 }
 
+export function isPasswordSet(userId?: string): boolean {
+  const db = getOrelioDatabase();
+  const targetId = userId || db.activeUserId || Object.keys(db.users || {})[0];
+  if (targetId && db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[targetId]) {
+    const user = db.users[targetId];
+    const hash = user.security?.passwordHash ?? user.profile?.passwordHash;
+    return typeof hash === 'string' && hash.trim().length > 0;
+  }
+  const sec = getSecurityConfig();
+  return typeof sec.passwordHash === 'string' && sec.passwordHash.trim().length > 0;
+}
+
 export async function verifyUserPassword(userId: string, password: string): Promise<boolean> {
   const db = getOrelioDatabase();
   if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[userId]) {
     const user = db.users[userId];
     const hash = user.security?.passwordHash || user.profile?.passwordHash;
-    if (hash) {
+    if (hash && hash.trim().length > 0) {
       return verifyPassword(password, hash);
     }
+    return true; // No password configured for this user
   }
   const users = getAllUsers();
   const target = users.find((u) => u.id === userId);
-  if (target && target.passwordHash) {
+  if (target && target.passwordHash && target.passwordHash.trim().length > 0) {
     return verifyPassword(password, target.passwordHash);
+  }
+  if (!isPasswordSet()) {
+    return true;
   }
   return verifyMasterPassword(password);
 }
@@ -540,12 +556,19 @@ export function saveSecurityConfig(security: SecurityConfig): void {
   const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
   if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]) {
     db.users[activeId].security = security;
+    if (db.users[activeId].profile) {
+      db.users[activeId].profile.passwordHash = security.passwordHash;
+      db.users[activeId].profile.passwordHint = security.passwordHint;
+    }
   }
   saveOrelioDatabase(db);
 }
 
 export async function verifyMasterPassword(password: string): Promise<boolean> {
   const security = getSecurityConfig();
+  if (!security.passwordHash || security.passwordHash.trim() === '') {
+    return true;
+  }
   return verifyPassword(password, security.passwordHash);
 }
 

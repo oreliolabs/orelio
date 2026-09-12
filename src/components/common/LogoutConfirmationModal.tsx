@@ -13,7 +13,7 @@ export const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = (
   isOpen,
   onClose,
   onConfirm,
-  userName = 'Alexander Bloom'
+  userName = 'User'
 }) => {
   useEffect(() => {
     if (isOpen) {

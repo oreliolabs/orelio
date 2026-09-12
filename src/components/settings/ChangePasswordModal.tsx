@@ -2,22 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { CancelButton } from '../common/CancelButton';
 import { SaveButton } from '../common/SaveButton';
-import { verifyMasterPassword, updateMasterPassword } from '../../data/orelioStore';
+import { verifyMasterPassword, updateMasterPassword, isPasswordSet, getSecurityConfig } from '../../data/orelioStore';
 
 export interface ChangePasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  mode?: 'set' | 'update';
 }
 
 export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
+  mode
 }) => {
+  const effectiveMode = mode || (isPasswordSet() ? 'update' : 'set');
+  const isSetMode = effectiveMode === 'set';
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordHint, setPasswordHint] = useState('');
 
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -33,6 +39,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      const sec = getSecurityConfig();
+      setPasswordHint(sec.passwordHint || '');
       setErrorMessage(null);
       setSuccessMessage(null);
       setShowCurrent(false);
@@ -53,47 +61,59 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (!currentPassword) {
-      setErrorMessage('Please enter your current password.');
-      return;
+    if (!isSetMode) {
+      if (!currentPassword) {
+        setErrorMessage('Please enter your current password.');
+        return;
+      }
     }
 
     if (!newPassword) {
-      setErrorMessage('Please enter a new password.');
+      setErrorMessage('Please enter a password.');
       return;
     }
 
-    if (newPassword.length < 6) {
-      setErrorMessage('New password must be at least 6 characters long.');
+    if (newPassword.length < 4) {
+      setErrorMessage('Password must be at least 4 characters long.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage('New password and confirmation do not match.');
+      setErrorMessage('Passwords do not match. Please verify and try again.');
       return;
     }
 
     setIsSaving(true);
 
     try {
-      const isCurrentValid = await verifyMasterPassword(currentPassword);
-      if (!isCurrentValid) {
-        setIsSaving(false);
-        setErrorMessage('Current password is incorrect. Please verify and try again.');
-        return;
+      if (!isSetMode) {
+        const isCurrentValid = await verifyMasterPassword(currentPassword);
+        if (!isCurrentValid) {
+          setIsSaving(false);
+          setErrorMessage('Current password is incorrect. Please verify and try again.');
+          return;
+        }
       }
 
-      await updateMasterPassword(newPassword);
+      await updateMasterPassword(newPassword, passwordHint.trim() || undefined);
       setIsSaving(false);
-      setSuccessMessage('Password updated and encrypted successfully.');
+      setSuccessMessage(
+        isSetMode
+          ? 'Password created and encrypted successfully.'
+          : 'Password updated and encrypted successfully.'
+      );
 
       setTimeout(() => {
         onSuccess?.();
         onClose();
-      }, 1000);
+      }, 900);
     } catch (err) {
       setIsSaving(false);
-      setErrorMessage('Failed to update password. Please try again.');
+      setErrorMessage(
+        isSetMode
+          ? 'Failed to set password. Please try again.'
+          : 'Failed to update password. Please try again.'
+      );
     }
   };
 
@@ -110,13 +130,20 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b border-[#C3C6CE]/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center">
-              <span className="material-symbols-outlined select-none text-xl">
+            <div className="w-10 h-10 rounded-xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
+              <span className="material-symbols-outlined select-none text-xl" style={{ fontSize: '20px' }}>
                 key
               </span>
             </div>
             <div>
-              <h3 className="text-base font-bold text-[#00162A]">Update Password</h3>
+              <h3 className="text-base font-bold text-[#00162A]">
+                {isSetMode ? 'Set Password' : 'Update Password'}
+              </h3>
+              <p className="text-xs text-[#74777F]">
+                {isSetMode
+                  ? 'Create a password to protect your wealth ledger.'
+                  : 'Change password used to unlock your ledger.'}
+              </p>
             </div>
           </div>
           <button
@@ -145,54 +172,56 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
         {/* Password Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Current Password */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-[#00162A]">
-              Current Password
-            </label>
-            <div className="relative flex items-center">
-              <span
-                className="absolute left-3 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
-                style={{ fontSize: '15px' }}
-              >
-                lock
-              </span>
-              <input
-                type={showCurrent ? 'text' : 'password'}
-                value={currentPassword}
-                onChange={(e) => {
-                  setCurrentPassword(e.target.value);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                placeholder="Enter existing password"
-                disabled={isSaving || !!successMessage}
-                autoFocus
-                className="w-full h-10 pl-9 pr-9 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/50 text-xs text-[#00162A] placeholder:text-[#A0A5AA] focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrent(!showCurrent)}
-                className="absolute right-2.5 text-[#707975] hover:text-[#00162A] p-1 rounded transition-colors cursor-pointer flex items-center justify-center"
-                title={showCurrent ? 'Hide' : 'Show'}
-              >
-                <span className="material-symbols-outlined select-none" style={{ fontSize: '15px' }}>
-                  {showCurrent ? 'visibility_off' : 'visibility'}
+          {/* Current Password (Only in Update mode) */}
+          {!isSetMode && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#00162A]">
+                Current Password <span className="text-[#BA1A1A]">*</span>
+              </label>
+              <div className="relative flex items-center">
+                <span
+                  className="absolute left-3 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
+                  style={{ fontSize: '15px' }}
+                >
+                  lock
                 </span>
-              </button>
+                <input
+                  type={showCurrent ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  placeholder="Enter existing password"
+                  disabled={isSaving || !!successMessage}
+                  autoFocus
+                  className="w-full h-10 pl-9 pr-9 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/50 text-xs text-[#00162A] placeholder:text-[#A0A5AA] focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  className="absolute right-2.5 text-[#707975] hover:text-[#00162A] p-1 rounded transition-colors cursor-pointer flex items-center justify-center"
+                  title={showCurrent ? 'Hide' : 'Show'}
+                >
+                  <span className="material-symbols-outlined select-none" style={{ fontSize: '15px' }}>
+                    {showCurrent ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* New Password */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-[#00162A]">
-              New Password
+              {isSetMode ? 'Password' : 'New Password'} <span className="text-[#BA1A1A]">*</span>
             </label>
             <div className="relative flex items-center">
               <span
                 className="absolute left-3 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
                 style={{ fontSize: '15px' }}
               >
-                lock_reset
+                {isSetMode ? 'lock' : 'lock_reset'}
               </span>
               <input
                 type={showNew ? 'text' : 'password'}
@@ -201,8 +230,9 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   setNewPassword(e.target.value);
                   if (errorMessage) setErrorMessage(null);
                 }}
-                placeholder="Minimum 6 characters"
+                placeholder="At least 4 characters"
                 disabled={isSaving || !!successMessage}
+                autoFocus={isSetMode}
                 className="w-full h-10 pl-9 pr-9 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/50 text-xs text-[#00162A] placeholder:text-[#A0A5AA] focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] transition-all"
               />
               <button
@@ -221,7 +251,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           {/* Confirm Password */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-[#00162A]">
-              Confirm New Password
+              Confirm {isSetMode ? 'Password' : 'New Password'} <span className="text-[#BA1A1A]">*</span>
             </label>
             <div className="relative flex items-center">
               <span
@@ -237,7 +267,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
                   setConfirmPassword(e.target.value);
                   if (errorMessage) setErrorMessage(null);
                 }}
-                placeholder="Re-enter new password"
+                placeholder={isSetMode ? 'Re-enter password' : 'Re-enter new password'}
                 disabled={isSaving || !!successMessage}
                 className="w-full h-10 pl-9 pr-9 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/50 text-xs text-[#00162A] placeholder:text-[#A0A5AA] focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] transition-all"
               />
@@ -254,11 +284,37 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
             </div>
           </div>
 
+          {/* Optional Reminder Hint */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-[#00162A]">
+                Reminder Hint
+              </label>
+              <span className="text-[10px] text-[#707975]">Optional</span>
+            </div>
+            <div className="relative flex items-center">
+              <span
+                className="absolute left-3 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
+                style={{ fontSize: '15px' }}
+              >
+                lightbulb
+              </span>
+              <input
+                type="text"
+                value={passwordHint}
+                onChange={(e) => setPasswordHint(e.target.value)}
+                placeholder="e.g. Favorite childhood pet"
+                disabled={isSaving || !!successMessage}
+                className="w-full h-10 pl-9 pr-4 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/50 text-xs text-[#00162A] placeholder:text-[#A0A5AA] focus:outline-none focus:border-[#006A65] focus:ring-1 focus:ring-[#006A65] transition-all"
+              />
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C3C6CE]/20">
             <CancelButton onClick={onClose} disabled={isSaving} />
             <SaveButton type="submit" isSaving={isSaving} disabled={!!successMessage}>
-              Save Password
+              {isSetMode ? 'Set Password' : 'Update Password'}
             </SaveButton>
           </div>
         </form>
@@ -267,3 +323,4 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     document.body
   );
 };
+export default ChangePasswordModal;

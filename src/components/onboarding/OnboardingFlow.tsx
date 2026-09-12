@@ -8,7 +8,7 @@ export interface OnboardingFlowProps {
   isFirstUser?: boolean;
 }
 
-type OnboardingStep = 1 | 2 | 3 | 4 | 5;
+type OnboardingStep = 1 | 2 | 3 | 4;
 
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   onComplete,
@@ -56,17 +56,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const [name, setName] = useState('');
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Female');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordHint, setPasswordHint] = useState('');
-
-  // UI State
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Completed user state for Step 5
+  // Completed user state for final step
   const [createdUser, setCreatedUser] = useState<UserProfile | null>(null);
 
   // Calculate age from DOB
@@ -118,32 +111,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     goToStep(3, 'forward');
   };
 
-  // Step 3 -> Step 4
-  const handleNextFromGender = () => {
+  // Step 3 -> Create User -> Step 4 (Celebration)
+  const handleNextFromGender = async () => {
     setErrorMessage(null);
-    goToStep(4, 'forward');
-  };
-
-  // Step 4 -> Create User -> Step 5
-  const handleCreateVault = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-
-    if (!password) {
-      setErrorMessage('Please enter a password.');
-      return;
-    }
-
-    if (password.length < 4) {
-      setErrorMessage('Password must be at least 4 characters long.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setErrorMessage('Passwords do not match. Please verify and try again.');
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -152,14 +122,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         name: name.trim(),
         email,
         dob,
-        gender,
-        password,
-        passwordHint: passwordHint.trim() || undefined
+        gender
       });
 
       setCreatedUser(newUser);
       setIsSubmitting(false);
-      goToStep(5, 'forward'); // Move to celebratory Welcome screen
+      goToStep(4, 'forward'); // Move to celebratory Welcome screen
     } catch (err) {
       setIsSubmitting(false);
       setErrorMessage('Failed to create vault profile. Please try again.');
@@ -202,13 +170,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         </div>
 
         {/* Center: Step Progress Indicator & Segmented Pills */}
-        {step <= 4 && (
+        {step <= 3 && (
           <div className="flex flex-col items-center gap-1.5">
             <span key={step} className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-[#006A65] animate-in fade-in duration-200">
-              Step {step} of 4
+              Step {step} of 3
             </span>
             <div className="flex items-center gap-1.5">
-              {[1, 2, 3, 4].map((s) => (
+              {[1, 2, 3].map((s) => (
                 <div
                   key={s}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -222,7 +190,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
         {/* Right: Close button or balanced spacer */}
         <div className="flex items-center justify-end min-w-[120px]">
-          {onCancel && !isFirstUser && step < 5 ? (
+          {onCancel && !isFirstUser && step < 4 ? (
             <button
               type="button"
               onClick={handleCancelClick}
@@ -241,7 +209,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       <div className={`flex-1 flex flex-col justify-center ${isExiting ? 'page-exit-backward pointer-events-none' : 'page-enter-forward'}`}>
 
       {/* Main Container */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-4 pb-16 sm:pb-20 max-w-lg mx-auto w-full relative z-10">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-4 pb-16 sm:pb-20 max-w-xl mx-auto w-full relative z-10">
         {/* Error Notification */}
         {errorMessage && (
           <div className="w-full mb-4 p-3 rounded-2xl bg-[#FFF8F7] border border-[#BA1A1A]/20 flex items-center gap-2.5 text-xs text-[#BA1A1A] animate-in fade-in duration-200">
@@ -453,237 +421,74 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={() => {
                   setErrorMessage(null);
                   goToStep(2, 'backward');
                 }}
-                className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-sm sm:text-base font-bold text-[#43474D] flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-sm sm:text-base font-bold text-[#43474D] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
               >
                 <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_back</span>
                 <span>Back</span>
               </button>
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={handleNextFromGender}
-                className="flex-1 h-12 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-[#006A65]/20 transition-all duration-200 active:scale-[0.99] cursor-pointer"
+                className="flex-1 h-12 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-[#006A65]/20 transition-all duration-200 active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
-                <span>Continue</span>
-                <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_forward</span>
+                {isSubmitting ? (
+                  <>
+                    <span className="material-symbols-outlined select-none animate-spin text-lg">progress_activity</span>
+                    <span>Creating Vault...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continue</span>
+                    <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_forward</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
         )}
 
         {/* ---------------------------------------------------- */}
-        {/* STEP 4: Password                              */}
+        {/* STEP 4: Welcome Message & Celebration Screen         */}
         {/* ---------------------------------------------------- */}
         {step === 4 && (
-          <div className={`w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-[#C3C6CE]/30 space-y-6 text-left ${getStepAnimClass()}`}>
-            {/* Step Icon */}
-            <div className="w-10 h-10 rounded-2xl bg-[#E6F4F1] text-[#006A65] flex items-center justify-center shadow-xs">
-              <span className="material-symbols-outlined select-none text-[20px]" style={{ fontSize: '20px' }}>shield_lock</span>
-            </div>
-
-            {/* Heading */}
-            <div className="space-y-1.5">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#00162A] tracking-tight">
-                Secure your vault
-              </h2>
-              <p className="text-xs sm:text-sm text-[#707975] leading-relaxed">
-                Create a password to encrypt your wealth ledger. All records remain offline and private to you.
-              </p>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleCreateVault} className="space-y-4">
-              {/* Password */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="onboard-password"
-                  className="block text-[11px] font-bold text-[#00162A] uppercase tracking-wider"
-                >
-                  Password <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <div className="relative flex items-center">
-                  <span
-                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
-                    style={{ fontSize: '16px' }}
-                  >
-                    lock
-                  </span>
-                  <input
-                    id="onboard-password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (errorMessage) setErrorMessage(null);
-                    }}
-                    placeholder="At least 4 characters"
-                    autoFocus
-                    className="w-full h-11 pl-10 pr-10 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm font-semibold text-[#00162A] placeholder:text-[#A0A5AA] placeholder:font-normal focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 w-7 h-7 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
-                    title={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    <span className="material-symbols-outlined select-none text-[18px]">
-                      {showPassword ? 'visibility_off' : 'visibility'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="onboard-confirm-password"
-                  className="block text-[11px] font-bold text-[#00162A] uppercase tracking-wider"
-                >
-                  Confirm Password <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <div className="relative flex items-center">
-                  <span
-                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
-                    style={{ fontSize: '16px' }}
-                  >
-                    lock_reset
-                  </span>
-                  <input
-                    id="onboard-confirm-password"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      if (errorMessage) setErrorMessage(null);
-                    }}
-                    placeholder="Re-enter password"
-                    className="w-full h-11 pl-10 pr-10 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm font-semibold text-[#00162A] placeholder:text-[#A0A5AA] placeholder:font-normal focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-2.5 w-7 h-7 rounded-lg flex items-center justify-center text-[#707975] hover:text-[#00162A] hover:bg-[#F2F4F5] transition-colors cursor-pointer"
-                    title={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  >
-                    <span className="material-symbols-outlined select-none text-[18px]">
-                      {showConfirmPassword ? 'visibility_off' : 'visibility'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Optional Reminder Hint */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="onboard-hint"
-                    className="block text-[11px] font-bold text-[#00162A] uppercase tracking-wider"
-                  >
-                    Reminder Hint
-                  </label>
-                  <span className="text-[11px] text-[#707975]">Optional</span>
-                </div>
-                <div className="relative flex items-center">
-                  <span
-                    className="absolute left-3.5 text-[#707975] material-symbols-outlined select-none pointer-events-none flex items-center justify-center"
-                    style={{ fontSize: '16px' }}
-                  >
-                    key
-                  </span>
-                  <input
-                    id="onboard-hint"
-                    type="text"
-                    value={passwordHint}
-                    onChange={(e) => setPasswordHint(e.target.value)}
-                    placeholder="e.g. Favorite childhood pet"
-                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#FBFCFD] border border-[#C3C6CE]/35 text-sm text-[#00162A] placeholder:text-[#A0A5AA] focus:bg-white focus:border-[#006A65] focus:ring-3 focus:ring-[#006A65]/10 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Navigation Buttons */}
-              <div className="flex items-center gap-3 pt-4">
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => {
-                    setErrorMessage(null);
-                    goToStep(3, 'backward');
-                  }}
-                  className="h-12 px-5 rounded-2xl border border-[#C3C6CE]/40 hover:bg-[#F2F4F5] text-sm sm:text-base font-bold text-[#43474D] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_back</span>
-                  <span>Back</span>
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !password}
-                  className="flex-1 h-12 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-md shadow-[#006A65]/20 transition-all duration-200 active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span className="material-symbols-outlined select-none animate-spin text-lg">progress_activity</span>
-                      <span>Encrypting Vault...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="material-symbols-outlined select-none text-lg">check_circle</span>
-                      <span>Create My Vault</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* ---------------------------------------------------- */}
-        {/* STEP 5: Welcome Message & Celebration Screen         */}
-        {/* ---------------------------------------------------- */}
-        {step === 5 && (
           <div className={`w-full bg-white rounded-3xl p-7 sm:p-9 shadow-[0_16px_50px_rgba(0,0,0,0.08)] border border-[#C3C6CE]/30 space-y-6 text-center ${getStepAnimClass()}`}>
             {/* Celebration Icon with Halo */}
-            <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+            <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full bg-[#006A65]/10 animate-ping duration-1000" />
-              <div className="relative w-18 h-18 rounded-3xl bg-gradient-to-tr from-[#006A65] to-[#00897B] text-white flex items-center justify-center shadow-lg shadow-[#006A65]/25">
-                <span className="material-symbols-outlined select-none text-4xl">celebration</span>
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#006A65] to-[#00897B] text-white flex items-center justify-center shadow-md shadow-[#006A65]/20">
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '26px' }}>celebration</span>
               </div>
             </div>
 
             {/* Congratulatory Header */}
             <div className="space-y-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-[#006A65] bg-[#E6F4F1] uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-[#006A65] bg-[#E6F4F1] uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#006A65]" />
-                Vault Successfully Created
+                Account Successfully Created
               </span>
               <h2 className="text-xl sm:text-2xl font-bold text-[#00162A] tracking-tight">
                 Welcome to Orelio, {firstName}!
               </h2>
-              <p className="text-xs sm:text-sm text-[#707975] max-w-sm mx-auto leading-relaxed">
-                Your private wealth vault is now active. All your equities, deposits, accounts, and policies will be securely organized in one place.
+              <p className="text-xs sm:text-sm text-[#707975] max-w-md mx-auto leading-relaxed">
+                Let's organize all your financial data in one place.
               </p>
             </div>
 
             {/* Profile Summary Badge */}
             <div className="p-4 rounded-2xl bg-[#FBFCFD] border border-[#C3C6CE]/30 text-left space-y-3">
-              <div className="flex items-center gap-3.5 pb-3 border-b border-[#C3C6CE]/20">
-                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#006A65] to-[#004D40] text-white flex items-center justify-center font-bold text-sm shadow-xs ring-2 ring-white select-none shrink-0">
-                  {name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase() || 'U'}
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-full bg-[#006A65] text-white flex items-center justify-center font-bold text-base shadow-xs ring-2 ring-white select-none shrink-0">
+                  {name.trim().charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="block text-sm font-bold text-[#00162A] truncate">
                     {name}
-                  </span>
-                  <span className="block text-xs text-[#74777F] truncate">
-                    {createdUser?.email || `${firstName.toLowerCase()}@orelio.vault`}
                   </span>
                 </div>
                 <span className="px-2 py-0.5 rounded text-[10px] font-extrabold text-[#006A65] bg-[#E6F4F1] uppercase flex items-center gap-1">
@@ -722,7 +527,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 }}
                 className="w-full h-13 rounded-2xl bg-[#006A65] hover:bg-[#00524E] text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-[#006A65]/25 transition-all duration-200 active:scale-[0.99] cursor-pointer"
               >
-                <span>Enter Your Wealth Ledger</span>
+                <span>Go to dashboard</span>
                 <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>arrow_forward</span>
               </button>
             </div>

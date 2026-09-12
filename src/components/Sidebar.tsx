@@ -218,11 +218,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* User Footer Profile */}
         <div className="p-5 border-t border-[#C3C6CE]/20 bg-white">
           <div className="flex items-center gap-3">
-            <img
-              src="/alexander_bloom_avatar.png"
-              alt={getUserProfile().name}
-              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-            />
+            <div className="w-10 h-10 rounded-full bg-[#006A65] text-white flex items-center justify-center font-bold text-base select-none shrink-0 shadow-xs">
+              {getUserProfile().name.trim().charAt(0).toUpperCase() || 'U'}
+            </div>
             <div className="flex-1 min-w-0">
               <span className="block text-sm font-bold text-black truncate leading-tight">{getUserProfile().name}</span>
               <button
@@ -244,6 +242,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <LogoutConfirmationModal
           isOpen={isLogoutModalOpen}
           onClose={() => setIsLogoutModalOpen(false)}
+          userName={getUserProfile().name}
           onConfirm={() => {
             setIsLogoutModalOpen(false);
             onLogout?.();

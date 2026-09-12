@@ -14,7 +14,7 @@ import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { ChangePasswordModal } from './components/settings/ChangePasswordModal';
 import { Briefcase } from 'lucide-react';
 
-import { getAllUsers, getFamilyMembers, saveFamilyMembers, getUserSettings, saveUserSettings } from './data/orelioStore';
+import { getAllUsers, getFamilyMembers, saveFamilyMembers, getUserSettings, saveUserSettings, isPasswordSet } from './data/orelioStore';
 import type { FamilyMember, UserSettings } from './data/types';
 
 function App() {
@@ -25,6 +25,7 @@ function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [settings, setSettings] = useState<UserSettings>(() => getUserSettings());
   const [isPrivate, setIsPrivate] = useState<boolean>(() => getUserSettings().privacyModeDefault);
+  const [passwordConfigured, setPasswordConfigured] = useState<boolean>(() => isPasswordSet());
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -36,12 +37,14 @@ function App() {
     localStorage.setItem('orelio_authenticated', 'true');
     setMembers(getFamilyMembers());
     setSettings(getUserSettings());
+    setPasswordConfigured(isPasswordSet());
   };
 
   useEffect(() => {
     if (isAuthenticated) {
       setMembers(getFamilyMembers());
       setSettings(getUserSettings());
+      setPasswordConfigured(isPasswordSet());
     }
   }, [isAuthenticated]);
   
@@ -150,16 +153,33 @@ function App() {
 
               <div className="p-6 flex items-center justify-between">
                 <div className="space-y-1 pr-4">
-                  <span className="block font-bold text-orelio-navy text-sm">Update Password</span>
-                  <span className="block text-xs text-orelio-gray font-medium">Password required to unlock your ledger after logout.</span>
+                  <div className="flex items-center gap-2">
+                    <span className="block font-bold text-orelio-navy text-sm">
+                      {passwordConfigured ? 'Update Password' : 'Set Password'}
+                    </span>
+                    {!passwordConfigured && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#BA1A1A] bg-[#FFF8F7] border border-[#BA1A1A]/20">
+                        Not Set
+                      </span>
+                    )}
+                  </div>
+                  <span className="block text-xs text-orelio-gray font-medium">
+                    {passwordConfigured
+                      ? 'Password required to unlock your ledger after logout.'
+                      : 'Create a password to protect and encrypt your ledger when logging in.'}
+                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsChangePasswordModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#C3C6CE]/35 bg-white text-orelio-navy hover:bg-[#F2F4F5] text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-98"
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-98 ${
+                    passwordConfigured
+                      ? 'border-[#C3C6CE]/35 bg-white text-orelio-navy hover:bg-[#F2F4F5]'
+                      : 'border-[#006A65]/30 bg-[#E6F4F1] text-[#006A65] hover:bg-[#d5ede8]'
+                  }`}
                 >
                   <span className="material-symbols-outlined select-none text-[15px] text-[#006A65]">key</span>
-                  <span>Update Password</span>
+                  <span>{passwordConfigured ? 'Update Password' : 'Set Password'}</span>
                 </button>
               </div>
 
@@ -283,6 +303,10 @@ function App() {
       <ChangePasswordModal
         isOpen={isChangePasswordModalOpen}
         onClose={() => setIsChangePasswordModalOpen(false)}
+        mode={passwordConfigured ? 'update' : 'set'}
+        onSuccess={() => {
+          setPasswordConfigured(isPasswordSet());
+        }}
       />
 
     </div>
