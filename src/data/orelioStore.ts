@@ -22,6 +22,7 @@ import type {
 import { hashPassword, verifyPassword } from '../utils/crypto';
 
 const STORAGE_KEY = 'orelio_database_v2';
+const DEFAULT_USER_ID = 'usr-default';
 
 // In-memory cache ensures fast lookups and support for non-browser/test runtimes
 let memoryDatabase: OrelioDatabase | null = null;
@@ -30,25 +31,32 @@ function cloneSeed(): OrelioDatabase {
   return JSON.parse(JSON.stringify(orelioDatabaseSeed)) as OrelioDatabase;
 }
 
-function sanitizeVault(vault: UserVaultData): UserVaultData {
+function getActiveUserId(db: { activeUserId?: string; users?: Record<string, any> }): string {
+  if (db.activeUserId && db.users && db.users[db.activeUserId]) {
+    return db.activeUserId;
+  }
+  const firstId = db.users ? Object.keys(db.users)[0] : undefined;
+  return firstId || db.activeUserId || DEFAULT_USER_ID;
+}
+
+function sanitizeVault(vault: UserVaultData, userProfile?: UserProfile): UserVaultData {
   let members = vault.familyMembers
-    ? vault.familyMembers
-        .filter((m) => m.firstName !== 'Rajesh' && m.firstName !== 'mmmm')
-        .map((m) => {
-          const { age, ...rest } = m;
-          return rest;
-        })
+    ? vault.familyMembers.map((m) => {
+        const { age, ...rest } = m;
+        return rest;
+      })
     : [];
 
-  if (members.length === 0) {
+  if (members.length === 0 && userProfile) {
+    const nameParts = (userProfile.name || 'User').trim().split(' ');
     members = [
       {
         id: '1',
-        firstName: 'Sejal',
-        lastName: 'Kore',
+        firstName: nameParts[0] || 'User',
+        lastName: nameParts.slice(1).join(' ') || '',
         role: 'Self',
-        dob: '18/02/2000',
-        gender: 'Female',
+        dob: userProfile.dob || '',
+        gender: userProfile.gender || 'Other',
         isDependent: false
       }
     ];
@@ -112,7 +120,7 @@ function sanitizeDatabase(db: OrelioDatabase): OrelioDatabase {
           passwordHint: '',
           lastChanged: Date.now()
         },
-        vault: sanitizeVault(userRecord.vault || createEmptyVault(userRecord.profile))
+        vault: sanitizeVault(userRecord.vault || createEmptyVault(userRecord.profile), userRecord.profile)
       };
     }
   } else if (Array.isArray(db.users)) {
@@ -126,12 +134,12 @@ function sanitizeDatabase(db: OrelioDatabase): OrelioDatabase {
           passwordHint: user.passwordHint || legacyDb.security?.passwordHint || '',
           lastChanged: Date.now()
         },
-        vault: sanitizeVault(vault)
+        vault: sanitizeVault(vault, user)
       };
     }
   }
 
-  const activeId = db.activeUserId || Object.keys(sanitizedUsers)[0] || 'usr-alexander-bloom';
+  const activeId = getActiveUserId({ activeUserId: db.activeUserId, users: sanitizedUsers });
 
   return {
     activeUserId: activeId,
@@ -225,7 +233,7 @@ export function createEmptyVault(user?: UserProfile): UserVaultData {
 
 export function getActiveUser(dbInput?: OrelioDatabase): UserRecord {
   const db = dbInput || getOrelioDatabase();
-  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  const activeId = getActiveUserId(db);
 
   if (db.users && db.users[activeId]) {
     return db.users[activeId];
@@ -265,7 +273,7 @@ export function getActiveVault(dbInput?: OrelioDatabase): UserVaultData {
 
 export function updateActiveVault(updater: (vault: UserVaultData) => UserVaultData): void {
   const db = getOrelioDatabase();
-  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  const activeId = getActiveUserId(db);
   if (!db.users || Array.isArray(db.users)) {
     db.users = {};
   }
@@ -381,7 +389,7 @@ export function getAllUsers(): UserProfile[] {
 
 export function getUserProfile(): UserProfile {
   const db = getOrelioDatabase();
-  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  const activeId = getActiveUserId(db);
   if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]) {
     return db.users[activeId].profile;
   }
@@ -540,7 +548,7 @@ export function saveUserSettings(settings: UserSettings): void {
 
 export function getSecurityConfig(): SecurityConfig {
   const db = getOrelioDatabase();
-  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  const activeId = getActiveUserId(db);
   if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]?.security) {
     return db.users[activeId].security!;
   }
@@ -553,7 +561,7 @@ export function getSecurityConfig(): SecurityConfig {
 
 export function saveSecurityConfig(security: SecurityConfig): void {
   const db = getOrelioDatabase();
-  const activeId = db.activeUserId || Object.keys(db.users || {})[0] || 'usr-alexander-bloom';
+  const activeId = getActiveUserId(db);
   if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]) {
     db.users[activeId].security = security;
     if (db.users[activeId].profile) {

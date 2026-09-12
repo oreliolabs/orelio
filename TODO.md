@@ -2,7 +2,7 @@ Issues like - 4. Check responsiveness across different sizes - P0 - more effort 
 
     today
     1. dashboard
-    2. onboarding screens
+    2. readme for the project
     4. all the types to be in specific folders and not here and there
 
 Final TODO:

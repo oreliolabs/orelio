@@ -27,27 +27,6 @@ function App() {
   const [isPrivate, setIsPrivate] = useState<boolean>(() => getUserSettings().privacyModeDefault);
   const [passwordConfigured, setPasswordConfigured] = useState<boolean>(() => isPasswordSet());
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.setItem('orelio_authenticated', 'false');
-  };
-
-  const handleSignIn = () => {
-    setIsAuthenticated(true);
-    localStorage.setItem('orelio_authenticated', 'true');
-    setMembers(getFamilyMembers());
-    setSettings(getUserSettings());
-    setPasswordConfigured(isPasswordSet());
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      setMembers(getFamilyMembers());
-      setSettings(getUserSettings());
-      setPasswordConfigured(isPasswordSet());
-    }
-  }, [isAuthenticated]);
-  
   const [members, setMembers] = useState<FamilyMember[]>(() => getFamilyMembers());
   const [selectedMemberId, setSelectedMemberId] = useState<string | 'all'>(() => {
     return (typeof localStorage !== 'undefined' && localStorage.getItem('orelio_selected_member_id')) || 'all';
@@ -59,6 +38,34 @@ function App() {
       localStorage.setItem('orelio_selected_member_id', id);
     }
   };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.setItem('orelio_authenticated', 'false');
+    setActiveTab('overview');
+    handleSelectMemberId('all');
+    setMobileSidebarOpen(false);
+  };
+
+  const handleSignIn = () => {
+    setIsAuthenticated(true);
+    localStorage.setItem('orelio_authenticated', 'true');
+    setActiveTab('overview');
+    handleSelectMemberId('all');
+    setMobileSidebarOpen(false);
+    setMembers(getFamilyMembers());
+    setSettings(getUserSettings());
+    setPasswordConfigured(isPasswordSet());
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setActiveTab('overview');
+      setMembers(getFamilyMembers());
+      setSettings(getUserSettings());
+      setPasswordConfigured(isPasswordSet());
+    }
+  }, [isAuthenticated]);
 
   // Modal states lifted to App.tsx
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

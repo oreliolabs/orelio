@@ -172,7 +172,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
               <div className="p-3.5 rounded-2xl bg-[#E6F4F1]/60 border border-[#006A65]/20 text-center">
                 <span className="text-xs text-[#006A65] font-semibold flex items-center justify-center gap-1.5">
                   <span className="material-symbols-outlined select-none text-base">lock_open</span>
-                  <span>No password protection configured for this ledger.</span>
+                  <span>No password configured for this ledger.</span>
                 </span>
               </div>
             ) : (
