@@ -1,43 +1,54 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
-import { getAssetAllocation, getLiabilityAllocation } from '../data/orelioStore';
+import { getAssetAllocation, getLiabilityAllocation, getLoans } from '../data/orelioStore';
 
 export const AssetAllocationChart: React.FC<{ selectedMemberId?: string | 'all' }> = ({ selectedMemberId = 'all' }) => {
   const assetData = getAssetAllocation(selectedMemberId);
   return (
-    <div className="w-full h-full flex flex-col md:flex-row items-center justify-between gap-6">
+    <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
       
-      {/* Semi-Donut Graphic */}
-      <div className="relative w-48 h-28 xs:w-56 xs:h-32 flex justify-center items-end overflow-hidden">
-        <ResponsiveContainer width="100%" height="200%">
-          <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-            <Pie
-              data={assetData}
-              cx="50%"
-              cy="90%"
-              startAngle={180}
-              endAngle={0}
-              innerRadius="65%"
-              outerRadius="90%"
-              paddingAngle={2}
-              dataKey="value"
-            >
-              {assetData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip 
-              contentStyle={{ background: '#00162A', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }}
-              itemStyle={{ color: '#fff' }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        
-        {/* Centered Total Stats */}
-        <div className="absolute bottom-1 text-center">
+      {/* Full Donut Graphic */}
+      <div className="relative w-40 h-40 flex items-center justify-center">
+        {/* Centered Total Stats (z-0 behind tooltip) */}
+        <div className="absolute text-center pointer-events-none z-0 select-none">
           <span className="block text-2xl font-extrabold text-orelio-navy leading-none">100%</span>
-          <span className="block text-[10px] text-orelio-gray font-bold tracking-wider uppercase mt-1">Allocated</span>
+          <span className="block text-[9px] text-orelio-gray font-bold tracking-wider uppercase mt-1">Allocated</span>
+        </div>
+
+        <div className="w-full h-full relative z-10">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={assetData}
+                cx="50%"
+                cy="50%"
+                innerRadius="65%"
+                outerRadius="90%"
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {assetData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                wrapperStyle={{ zIndex: 50, pointerEvents: 'none' }}
+                contentStyle={{ 
+                  backgroundColor: '#00162A', 
+                  borderRadius: '10px', 
+                  border: '1px solid rgba(255, 255, 255, 0.15)', 
+                  color: '#FFFFFF', 
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  padding: '5px 10px',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)'
+                }}
+                itemStyle={{ color: '#FFFFFF' }}
+                formatter={(value: any, name: any) => [`${value}%`, name]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -61,39 +72,67 @@ export const AssetAllocationChart: React.FC<{ selectedMemberId?: string | 'all' 
   );
 };
 
-export const LiabilityChart: React.FC<{ selectedMemberId?: string | 'all' }> = ({ selectedMemberId = 'all' }) => {
+export const LiabilityChart: React.FC<{ selectedMemberId?: string | 'all'; isPrivate?: boolean }> = ({ 
+  selectedMemberId = 'all',
+  isPrivate = false
+}) => {
   const liabilityData = getLiabilityAllocation(selectedMemberId);
+  const loans = getLoans(selectedMemberId);
+  const totalLiabilities = loans.reduce((acc, l) => acc + (l.outstandingBalance || 0), 0);
+
+  const formatCompactDebt = (num: number) => {
+    if (num >= 10000000) return `₹ ${(num / 10000000).toFixed(2).replace(/\.?0+$/, '')} Cr`;
+    if (num >= 100000) return `₹ ${(num / 100000).toFixed(1).replace(/\.?0+$/, '')} L`;
+    if (num >= 1000) return `₹ ${(num / 1000).toFixed(1)}k`;
+    return `₹ ${num.toLocaleString('en-IN')}`;
+  };
+
   return (
-    <div className="w-full h-full flex flex-col md:flex-row items-center justify-between gap-6">
+    <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
       
       {/* Full Donut Graphic */}
       <div className="relative w-40 h-40 flex items-center justify-center">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={liabilityData}
-              cx="50%"
-              cy="50%"
-              innerRadius="65%"
-              outerRadius="90%"
-              paddingAngle={3}
-              dataKey="value"
-            >
-              {liabilityData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip 
-              contentStyle={{ background: '#00162A', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }}
-              itemStyle={{ color: '#fff' }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        
-        {/* Centered Total Stats */}
-        <div className="absolute text-center">
-          <span className="block text-2xl font-extrabold text-orelio-navy leading-none">97%</span>
-          <span className="block text-[9px] text-orelio-gray font-bold tracking-wider uppercase mt-1">Utilization</span>
+        {/* Centered Total Stats (z-0 behind tooltip) */}
+        <div className="absolute text-center pointer-events-none z-0 select-none">
+          <span className="block text-xl font-extrabold text-orelio-navy leading-none">
+            {isPrivate ? '••••' : (totalLiabilities > 0 ? formatCompactDebt(totalLiabilities) : '₹ 0')}
+          </span>
+          <span className="block text-[9px] text-orelio-gray font-bold tracking-wider uppercase mt-1">Total Debt</span>
+        </div>
+
+        <div className="w-full h-full relative z-10">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={liabilityData}
+                cx="50%"
+                cy="50%"
+                innerRadius="65%"
+                outerRadius="90%"
+                paddingAngle={3}
+                dataKey="value"
+              >
+                {liabilityData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                wrapperStyle={{ zIndex: 50, pointerEvents: 'none' }}
+                contentStyle={{ 
+                  backgroundColor: '#00162A', 
+                  borderRadius: '10px', 
+                  border: '1px solid rgba(255, 255, 255, 0.15)', 
+                  color: '#FFFFFF', 
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  padding: '5px 10px',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)'
+                }}
+                itemStyle={{ color: '#FFFFFF' }}
+                formatter={(value: any, name: any) => [`${value}%`, name]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

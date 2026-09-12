@@ -66,18 +66,27 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
     ? (loans.reduce((sum, item) => sum + item.interestRate, 0) / loans.length).toFixed(2)
     : '0.00';
 
-  // Debt utilization = how much of the original loan total is still outstanding (lower = more repaid)
+  // Debt payoff = percentage of original principal repaid (higher = closer to debt free)
   const totalLoanAmount = loans.reduce((sum, item) => sum + item.totalAmount, 0);
-  const debtUtilization = totalLoanAmount > 0
-    ? Math.round((totalOutstanding / totalLoanAmount) * 100)
-    : 0;
+  const totalRepaidAmount = Math.max(0, totalLoanAmount - totalOutstanding);
+  const debtPayoffPercent = totalLoanAmount > 0
+    ? Math.min(100, Math.max(0, Math.round((totalRepaidAmount / totalLoanAmount) * 100)))
+    : 100;
 
-  const debtUtilizationStatus = (() => {
-    if (debtUtilization <= 20) return { label: 'EXCELLENT', message: 'Almost fully repaid!' };
-    if (debtUtilization <= 40) return { label: 'GREAT',     message: 'Strong repayment progress' };
-    if (debtUtilization <= 60) return { label: 'HEALTHY',   message: 'Repayment timeline is on track' };
-    if (debtUtilization <= 80) return { label: 'MODERATE',  message: 'Steady progress being made' };
-    return                            { label: 'HIGH',      message: 'Early repayment stage' };
+  const debtPayoffStatus = (() => {
+    if (loans.length === 0 || totalOutstanding === 0) {
+      return { label: 'DEBT FREE', message: 'All loans completely paid off!' };
+    }
+    if (debtPayoffPercent >= 80) {
+      return { label: 'EXCELLENT', message: 'Almost fully debt-free!' };
+    }
+    if (debtPayoffPercent >= 50) {
+      return { label: 'HALFWAY', message: 'Over halfway through payoff' };
+    }
+    if (debtPayoffPercent >= 20) {
+      return { label: 'STEADY', message: 'Steady repayment progress' };
+    }
+    return { label: 'STARTING', message: 'Early repayment stage' };
   })();
 
   // Helper for loan category icon
@@ -261,14 +270,14 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
               </div>
             </div>
 
-            {/* Card 2: Debt Utilization (Right Card - Forest Green) */}
-            <div className="bg-[#004D40] rounded-3xl p-6 text-white shadow-lg flex flex-col justify-between relative overflow-hidden">
+            {/* Card 2: Debt Payoff (Right Card - Forest Green) */}
+            <div className="bg-[#004D40] rounded-3xl p-6 text-white shadow-lg flex flex-col justify-between relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-950/30">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-extrabold tracking-widest text-[#AFEFDD] uppercase">
-                  DEBT UTILIZATION
+                  DEBT PAYOFF
                 </span>
                 <span className="material-symbols-outlined select-none text-[#AFEFDD]/70">
-                  pie_chart
+                  trending_up
                 </span>
               </div>
 
@@ -284,7 +293,7 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
                     />
                     <path
                       className="text-[#AFEFDD]"
-                      strokeDasharray={`${debtUtilization}, 100`}
+                      strokeDasharray={`${debtPayoffPercent}, 100`}
                       strokeWidth="3.5"
                       strokeLinecap="round"
                       stroke="currentColor"
@@ -293,15 +302,15 @@ export const LoansAndCredit: React.FC<LoansAndCreditProps> = ({ isPrivate = fals
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center justify-center">
-                    <span className="text-2xl font-extrabold text-white">{debtUtilization}%</span>
-                    <span className="text-[9px] font-bold text-[#AFEFDD] uppercase tracking-wider">{debtUtilizationStatus.label}</span>
+                    <span className="text-2xl font-extrabold text-white">{debtPayoffPercent}%</span>
+                    <span className="text-[9px] font-bold text-[#AFEFDD] uppercase tracking-wider">{debtPayoffStatus.label}</span>
                   </div>
                 </div>
               </div>
 
               <div className="text-left pt-2">
                 <p className="text-xs text-[#AFEFDD]/90 font-medium">
-                  {debtUtilizationStatus.message}
+                  {debtPayoffStatus.message}
                 </p>
               </div>
             </div>

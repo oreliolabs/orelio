@@ -990,16 +990,29 @@ export function getLiabilityAllocation(memberId?: string | 'all'): ChartDataItem
   });
 
   const colors: Record<string, string> = {
-    'Home Loan': '#DC2626',
+    'Mortgage': '#6366F1',
+    'Home Loan': '#4F46E5',
+    'Personal Loan': '#EC4899',
+    'Auto Loan': '#F59E0B',
     'Car Loan': '#F59E0B',
-    'Personal Loan': '#4F46E5',
     'Education Loan': '#0D9488',
+    'Credit Card': '#8B5CF6',
     'Other': '#9CA3AF'
   };
 
-  return Object.entries(groupTotals).map(([name, val]) => ({
+  const entries = Object.entries(groupTotals);
+  const items = entries.map(([name, val]) => ({
     name,
     value: Math.round((val / totalLiabilities) * 100),
     color: colors[name] || '#6366F1'
   }));
+
+  const sum = items.reduce((acc, i) => acc + i.value, 0);
+  if (sum !== 100 && items.length > 0) {
+    const diff = 100 - sum;
+    const largest = items.reduce((prev, curr) => (curr.value > prev.value ? curr : prev), items[0]);
+    largest.value += diff;
+  }
+
+  return items;
 }
