@@ -1,7 +1,7 @@
 import React from 'react';
 import { AssetAllocationChart, LiabilityChart } from './Charts';
 import { 
-  AlertCircle, 
+  /* AlertCircle, */
   TrendingUp, 
   Wallet, 
   ShieldCheck, 
@@ -64,12 +64,14 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate, selectedMemberId 
     return `₹\u00A0${num.toLocaleString('en-IN')}`;
   };
 
+  /*
   const upcomingDeposit = deposits
     .filter((d) => d.status === 'active' && d.maturityDate)
     .sort((a, b) => (a.maturityDate || 0) - (b.maturityDate || 0))[0];
 
   const upcomingDepositDate = upcomingDeposit ? new Date(upcomingDeposit.maturityDate).toLocaleDateString('en-GB') : '';
   const upcomingDepositAmount = upcomingDeposit ? formatCompact(upcomingDeposit.currentValue || upcomingDeposit.principalOrMonthly) : '';
+  */
 
   // Helper to mask values in private mode
   const f = (val: string) => (isPrivate ? '••••' : val);
@@ -80,8 +82,8 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate, selectedMemberId 
       {/* ROW 1: Net Worth Card & Heads Up Alert Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Net Worth Card (2/3 width) */}
-        <div className="lg:col-span-2 glass-card p-6 md:p-8 flex flex-col justify-between relative overflow-hidden group transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-[#006A65]/5 hover:border-[#006A65]/35 cursor-default">
+        {/* Net Worth Card (Full width while Heads Up card is hidden) */}
+        <div className="col-span-full glass-card p-6 md:p-8 flex flex-col justify-between relative overflow-hidden group transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-[#006A65]/5 hover:border-[#006A65]/35 cursor-default">
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
               <span className="block text-xs font-bold tracking-widest text-orelio-darkgreen uppercase">Current Net Worth</span>
@@ -123,7 +125,8 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate, selectedMemberId 
           </div>
         </div>
 
-        {/* Heads Up! FD Maturing Card (1/3 width) */}
+        {/* Heads Up! FD Maturing Card (1/3 width) - Temporarily hidden */}
+        {/*
         <div className="glass-card-dark p-6 md:p-8 flex flex-col justify-between text-white relative overflow-hidden group transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-950/40 hover:border-emerald-500/35 cursor-default">
           <div className="absolute -right-6 -bottom-6 text-emerald-800/10 opacity-30 transform -rotate-12 group-hover:scale-115 group-hover:rotate-0 transition-transform duration-500 ease-out pointer-events-none">
             <AlertCircle size={180} />
@@ -153,6 +156,7 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate, selectedMemberId 
             Manage Asset
           </button>
         </div>
+        */}
 
       </div>
 
