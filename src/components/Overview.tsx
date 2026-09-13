@@ -52,16 +52,16 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate, selectedMemberId 
   const formatCompact = (num: number) => {
     if (num >= 10000000) {
       const val = (num / 10000000).toFixed(2).replace(/\.?0+$/, '');
-      return `₹ ${val} Cr`;
+      return `₹\u00A0${val} Cr`;
     }
     if (num >= 100000) {
       const val = (num / 100000).toFixed(1).replace(/\.?0+$/, '');
-      return `₹ ${val} L`;
+      return `₹\u00A0${val} L`;
     }
     if (num >= 1000) {
-      return `₹ ${Math.round(num / 1000)}k`;
+      return `₹\u00A0${Math.round(num / 1000)}k`;
     }
-    return `₹ ${num.toLocaleString('en-IN')}`;
+    return `₹\u00A0${num.toLocaleString('en-IN')}`;
   };
 
   const upcomingDeposit = deposits
@@ -204,57 +204,57 @@ export const Overview: React.FC<OverviewProps> = ({ isPrivate, selectedMemberId 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Liquidity Breakdown (2/3 width) */}
-        <div className="lg:col-span-2 glass-card p-6 md:p-8 flex flex-col justify-between gap-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-[#006A65]/5 hover:border-[#006A65]/35 cursor-default">
+        <div className="lg:col-span-2 glass-card p-5 sm:p-6 md:p-8 flex flex-col justify-between gap-5 sm:gap-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-[#006A65]/5 hover:border-[#006A65]/35 cursor-default">
           <div>
             <h3 className="text-xl font-bold text-orelio-navy">Liquidity Breakdown</h3>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Liquidity Item 1 */}
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-orelio-light-gray/25 border border-[#C3C6CE]/10 hover:bg-orelio-light-gray/45 hover:translate-x-1 transition-all duration-200 group cursor-default">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <span className="p-2.5 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+            <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-orelio-light-gray/25 border border-[#C3C6CE]/10 hover:bg-orelio-light-gray/45 hover:translate-x-1 transition-all duration-200 group cursor-default">
+              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 pr-3">
+                <span className="p-2 sm:p-2.5 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                   <Activity size={18} />
                 </span>
                 <div className="min-w-0">
                   <span className="block text-sm font-semibold text-orelio-navy truncate">Market Linked Assets</span>
-                  <span className="block text-xs text-orelio-gray mt-0.5">Stocks, Mutual Funds (Medium Liquidity)</span>
+                  <span className="block text-xs text-orelio-gray mt-0.5 truncate">Stocks, Mutual Funds (Medium Liquidity)</span>
                 </div>
               </div>
-              <div className="text-right pl-3">
-                <span className="block text-sm font-bold text-orelio-navy">{f(formatCompact(marketLinked))}</span>
+              <div className="text-right shrink-0">
+                <span className="block text-sm sm:text-base font-bold text-orelio-navy whitespace-nowrap">{f(formatCompact(marketLinked))}</span>
               </div>
             </div>
 
             {/* Liquidity Item 2 */}
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-orelio-light-gray/25 border border-[#C3C6CE]/10 hover:bg-orelio-light-gray/45 hover:translate-x-1 transition-all duration-200 group cursor-default">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <span className="p-2.5 rounded-xl bg-teal-50 text-teal-600 border border-teal-100 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+            <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-orelio-light-gray/25 border border-[#C3C6CE]/10 hover:bg-orelio-light-gray/45 hover:translate-x-1 transition-all duration-200 group cursor-default">
+              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 pr-3">
+                <span className="p-2 sm:p-2.5 rounded-xl bg-teal-50 text-teal-600 border border-teal-100 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                   <TrendingUp size={18} />
                 </span>
                 <div className="min-w-0">
                   <span className="block text-sm font-semibold text-orelio-navy truncate">Fixed Income Assets</span>
-                  <span className="block text-xs text-orelio-gray mt-0.5">FDs, Bonds (Fixed Lock-in)</span>
+                  <span className="block text-xs text-orelio-gray mt-0.5 truncate">FDs, Bonds (Fixed Lock-in)</span>
                 </div>
               </div>
-              <div className="text-right pl-3">
-                <span className="block text-sm font-bold text-orelio-navy">{f(formatCompact(fixedIncome))}</span>
+              <div className="text-right shrink-0">
+                <span className="block text-sm sm:text-base font-bold text-orelio-navy whitespace-nowrap">{f(formatCompact(fixedIncome))}</span>
               </div>
             </div>
 
             {/* Liquidity Item 3 */}
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-orelio-light-gray/25 border border-[#C3C6CE]/10 hover:bg-orelio-light-gray/45 hover:translate-x-1 transition-all duration-200 group cursor-default">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <span className="p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+            <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-orelio-light-gray/25 border border-[#C3C6CE]/10 hover:bg-orelio-light-gray/45 hover:translate-x-1 transition-all duration-200 group cursor-default">
+              <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 pr-3">
+                <span className="p-2 sm:p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                   <Wallet size={18} />
                 </span>
                 <div className="min-w-0">
                   <span className="block text-sm font-semibold text-orelio-navy truncate">Cash & Savings</span>
-                  <span className="block text-xs text-orelio-gray mt-0.5">Bank Accounts (Instant Liquidity)</span>
+                  <span className="block text-xs text-orelio-gray mt-0.5 truncate">Bank Accounts (Instant Liquidity)</span>
                 </div>
               </div>
-              <div className="text-right pl-3">
-                <span className="block text-sm font-bold text-orelio-navy">{f(formatCompact(cash))}</span>
+              <div className="text-right shrink-0">
+                <span className="block text-sm sm:text-base font-bold text-orelio-navy whitespace-nowrap">{f(formatCompact(cash))}</span>
               </div>
             </div>
 

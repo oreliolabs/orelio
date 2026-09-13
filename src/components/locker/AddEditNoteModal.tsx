@@ -32,6 +32,22 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
     }
   }, [selectedNote, isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,21 +59,20 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
       <form
         onSubmit={handleSubmit}
-        className="relative flex flex-col bg-white rounded-3xl shadow-2xl p-6 z-10 animate-in fade-in zoom-in-95 duration-200"
-        style={{ width: '40vw', height: '40vw', minWidth: '350px', minHeight: '350px' }}
+        className="relative flex flex-col w-full max-w-[360px] sm:max-w-lg h-[80vh] max-h-[540px] bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 z-10 animate-in fade-in zoom-in-95 duration-200 border border-[#C3C6CE]/30"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-[#C3C6CE]/15 pb-3 flex-shrink-0">
-          <h3 className="text-lg font-bold text-orelio-navy">
+        <div className="flex items-center justify-between border-b border-[#C3C6CE]/15 pb-3 shrink-0">
+          <h3 className="text-base sm:text-lg font-bold text-orelio-navy">
             {selectedNote ? 'Edit Note' : (isFirstNote ? 'Add Your First Note' : 'Add Note')}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] hover:text-black transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] hover:text-black transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>
               close
@@ -67,7 +82,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
         {/* Inputs */}
         <div className="flex-1 flex flex-col space-y-4 py-4 min-h-0">
-          <div className="space-y-1.5 flex-shrink-0">
+          <div className="space-y-1.5 shrink-0">
             <label className="block text-[11px] font-bold text-[#3F4945] tracking-wider uppercase">
               Title
             </label>
@@ -96,9 +111,9 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
         </div>
 
         {/* Footer Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C3C6CE]/15 flex-shrink-0">
-          <CancelButton onClick={onClose} />
-          <SaveButton type="submit" disabled={!formTitle.trim() || !formContent.trim()}>
+        <div className="grid grid-cols-2 gap-2.5 sm:flex sm:items-center sm:justify-end sm:gap-3 pt-3 border-t border-[#C3C6CE]/15 shrink-0">
+          <CancelButton onClick={onClose} className="w-full sm:w-auto" />
+          <SaveButton type="submit" disabled={!formTitle.trim() || !formContent.trim()} className="w-full sm:w-auto">
             Save
           </SaveButton>
         </div>

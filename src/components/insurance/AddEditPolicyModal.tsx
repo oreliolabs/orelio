@@ -51,69 +51,97 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
   const [sumInsured, setSumInsured] = useState('');
   const [startDate, setStartDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
+  // Close on Escape key
   useEffect(() => {
-    if (editingPolicy) {
-      setPolicyType(editingPolicy.policyType);
-      setProvider(editingPolicy.provider || '');
-      setPolicyName(editingPolicy.policyName);
-      setPolicyNumber(editingPolicy.policyNumber || '');
-      setPremiumAmount(((editingPolicy.premiumAmount ?? (editingPolicy as any).annualPremium) ?? '').toString());
-      setPremiumFrequency(editingPolicy.premiumFrequency);
-      setSumInsured(editingPolicy.sumInsured.toString());
-      setStartDate(toInputDate(editingPolicy.startDate));
-      setExpiryDate(toInputDate(editingPolicy.expiryDate));
-    } else {
-      setPolicyType('Life Insurance');
-      setProvider('');
-      setPolicyName('');
-      setPolicyNumber('');
-      setPremiumAmount('');
-      setPremiumFrequency('Annual');
-      setSumInsured('');
-      setStartDate('');
-      setExpiryDate('');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
     }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      if (editingPolicy) {
+        setPolicyType(editingPolicy.policyType);
+        setProvider(editingPolicy.provider || '');
+        setPolicyName(editingPolicy.policyName);
+        setPolicyNumber(editingPolicy.policyNumber || '');
+        setPremiumAmount(((editingPolicy.premiumAmount ?? (editingPolicy as any).annualPremium) ?? '').toString());
+        setPremiumFrequency(editingPolicy.premiumFrequency);
+        setSumInsured(editingPolicy.sumInsured.toString());
+        setStartDate(toInputDate(editingPolicy.startDate));
+        setExpiryDate(toInputDate(editingPolicy.expiryDate));
+      } else {
+        setPolicyType('Life Insurance');
+        setProvider('');
+        setPolicyName('');
+        setPolicyNumber('');
+        setPremiumAmount('');
+        setPremiumFrequency('Annual');
+        setSumInsured('');
+        setStartDate('');
+        setExpiryDate('');
+      }
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [editingPolicy, isOpen]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      policyType,
-      provider,
-      policyName,
-      policyNumber,
-      premiumAmount,
-      premiumFrequency,
-      sumInsured,
-      startDate,
-      expiryDate
-    });
-    onClose();
+    setIsSaving(true);
+    setTimeout(() => {
+      onSave({
+        policyType,
+        provider,
+        policyName,
+        policyNumber,
+        premiumAmount,
+        premiumFrequency,
+        sumInsured,
+        startDate,
+        expiryDate
+      });
+      setIsSaving(false);
+      onClose();
+    }, 200);
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       {/* Full screen backdrop overlay: 000000 at 40% opacity */}
       <div className="fixed inset-0 bg-[#000000]/40 transition-opacity duration-200" onClick={onClose} />
 
-      <div className="relative bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-[#C3C6CE]/30 my-auto max-h-[85vh] flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-2xl sm:rounded-3xl max-w-[360px] sm:max-w-xl md:max-w-2xl w-full shadow-2xl border border-[#C3C6CE]/30 my-auto max-h-[90vh] flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Fixed Modal Header */}
-        <div className="p-6 sm:px-8 sm:pt-6 sm:pb-4 border-b border-[#C3C6CE]/20 flex-shrink-0 flex items-center justify-between">
+        <div className="px-4 sm:px-8 pt-4 pb-3 sm:pt-5 sm:pb-4 border-b border-[#C3C6CE]/20 shrink-0 flex items-center justify-between bg-white">
           <div>
-            <h3 className="text-2xl font-extrabold text-[#00162A] tracking-tight">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-[#00162A] tracking-tight">
               {editingPolicy ? 'Edit Policy' : (isFirstPolicy ? 'Add Your First Policy' : 'Add New Policy')}
             </h3>
-            <p className="text-xs font-medium text-[#707975] mt-0.5">
+            <p className="text-[11px] sm:text-xs font-medium text-[#707975] mt-0.5">
               Enter your policy coverage details below.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-[#F2F4F5] flex items-center justify-center text-[#707975] transition-colors"
+            className="w-9 h-9 rounded-full hover:bg-[#F2F4F5] flex items-center justify-center text-[#707975] transition-colors cursor-pointer"
+            aria-label="Close modal"
           >
             <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
           </button>
@@ -122,7 +150,7 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
         {/* Form Container */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Scrollable Form Body */}
-          <div className="p-6 sm:p-8 space-y-5 overflow-y-auto flex-1 no-scrollbar">
+          <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-5 overflow-y-auto flex-1 no-scrollbar">
             {/* Row 1: Policy Type & Insurance Provider */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -299,10 +327,10 @@ export const AddEditPolicyModal: React.FC<AddEditPolicyModalProps> = ({
           </div>
 
           {/* Fixed Modal Footer Actions */}
-          <div className="p-6 sm:px-8 sm:py-4 border-t border-[#C3C6CE]/20 bg-white flex-shrink-0 flex items-center justify-end gap-3">
-            <CancelButton onClick={onClose} />
-            <SaveButton type="submit">
-              Save Policy
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:justify-end px-4 sm:px-8 py-3.5 sm:py-4 border-t border-[#C3C6CE]/20 bg-white rounded-b-2xl sm:rounded-b-3xl shrink-0">
+            <CancelButton onClick={onClose} className="w-full sm:w-auto" />
+            <SaveButton type="submit" isSaving={isSaving} className="w-full sm:w-auto">
+              {editingPolicy ? 'Save Changes' : 'Save Policy'}
             </SaveButton>
           </div>
         </form>

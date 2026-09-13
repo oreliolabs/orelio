@@ -64,17 +64,22 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
     }
   }, [isOpen, selectedMember]);
 
-  // Lock background scroll when modal is open
+  // Lock background scroll and handle escape key when modal is open
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       document.body.style.overflow = '';
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,22 +120,22 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-[#C3C6CE]/25 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-[360px] sm:max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-[#C3C6CE]/25 z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#C3C6CE]/15">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-b border-[#C3C6CE]/15">
           <h3 className="text-base font-bold text-orelio-navy">
             {isEditing ? 'Edit Member' : 'Add Family Member'}
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-orelio-gray hover:bg-orelio-light-gray hover:text-orelio-navy transition-colors"
+            className="p-1.5 rounded-lg text-orelio-gray hover:bg-orelio-light-gray hover:text-orelio-navy transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 sm:space-y-5">
 
           {/* Name fields */}
           <div className="grid grid-cols-2 gap-4">
@@ -265,11 +270,12 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C3C6CE]/15 mt-4">
-            <CancelButton onClick={onClose} />
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:items-center sm:justify-end sm:gap-3 pt-3 border-t border-[#C3C6CE]/15 mt-4">
+            <CancelButton onClick={onClose} className="w-full sm:w-auto" />
             <SaveButton
               type="submit"
               isSaving={isSaving}
+              className="w-full sm:w-auto"
             >
               Save Profile
             </SaveButton>

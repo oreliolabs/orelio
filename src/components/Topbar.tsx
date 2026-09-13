@@ -64,13 +64,13 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between w-full h-[64px] px-6 md:px-8 bg-white/80 backdrop-blur-md border-b border-[#C3C6CE]/20">
+    <header className="sticky top-0 z-30 flex items-center justify-between w-full h-[64px] px-4 sm:px-6 md:px-8 bg-white/80 backdrop-blur-md border-b border-[#C3C6CE]/20 min-w-0">
       
       {/* Left: Mobile Menu Toggle & Search Bar */}
-      <div className="flex items-center flex-1 max-w-md gap-4">
+      <div className="flex items-center flex-1 max-w-md gap-4 min-w-0">
         <button 
           onClick={onMenuClick}
-          className="p-2 -ml-2 rounded-xl text-orelio-text hover:bg-orelio-light-gray hover:text-orelio-navy lg:hidden"
+          className="p-2 -ml-2 rounded-xl text-orelio-text hover:bg-orelio-light-gray hover:text-orelio-navy lg:hidden shrink-0"
         >
           <Menu size={20} />
         </button>
@@ -90,12 +90,12 @@ export const Topbar: React.FC<TopbarProps> = ({
       </div>
 
       {/* Right: Quick Action Controls */}
-      <div className="flex items-center gap-2 md:gap-4 pl-4">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 pl-2 sm:pl-4 shrink-0">
         
         {/* Privacy eye toggle with tooltip */}
         <button 
           onClick={() => setIsPrivate(!isPrivate)}
-          className="p-2.5 rounded-xl border border-[#C3C6CE]/20 bg-white text-orelio-navy hover:bg-orelio-light-gray transition-all duration-200 cursor-pointer"
+          className="p-2 sm:p-2.5 rounded-xl border border-[#C3C6CE]/20 bg-white text-orelio-navy hover:bg-orelio-light-gray transition-all duration-200 cursor-pointer shrink-0"
           title={isPrivate ? "Show financial figures" : "Hide financial figures (Privacy Mode)"}
         >
           {isPrivate ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -114,14 +114,14 @@ export const Topbar: React.FC<TopbarProps> = ({
         <div className="hidden sm:block h-6 w-px bg-[#C3C6CE]/35" />
 
         {/* Interactive Family Selector Dropdown */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button 
             onClick={() => setFamilyDropdownOpen(!familyDropdownOpen)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#C3C6CE]/25 bg-white text-orelio-navy text-sm font-semibold hover:bg-orelio-light-gray/40 active:scale-98 transition-all"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-[#C3C6CE]/25 bg-white text-orelio-navy text-xs sm:text-sm font-semibold hover:bg-orelio-light-gray/40 active:scale-98 transition-all shrink-0 cursor-pointer"
           >
-            <Users size={16} className="text-orelio-darkgreen" />
-            <span className="max-w-[120px] truncate">{selectedLabel}</span>
-            <ChevronDown size={14} className="text-orelio-gray" />
+            <Users size={16} className="text-orelio-darkgreen shrink-0" />
+            <span className="whitespace-nowrap">{selectedLabel}</span>
+            <ChevronDown size={14} className="text-orelio-gray shrink-0" />
           </button>
 
           {familyDropdownOpen && (

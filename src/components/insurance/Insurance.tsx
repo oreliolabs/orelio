@@ -24,16 +24,25 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberI
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingPolicy, setDeletingPolicy] = useState<Policy | null>(null);
 
-  // Close More menu on click outside
-  React.useEffect(() => {
+  // Close More menu on click outside or Escape key
+  useEffect(() => {
     const handleDocumentClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest('.policy-menu-container')) {
         setActiveMenuPolicyId(null);
       }
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveMenuPolicyId(null);
+      }
+    };
     document.addEventListener('click', handleDocumentClick);
-    return () => document.removeEventListener('click', handleDocumentClick);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // Formatting helpers
@@ -153,24 +162,25 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberI
   };
 
   return (
-    <div className="space-y-8 fade-in pb-12">
+    <div className="space-y-6 sm:space-y-8 fade-in pb-4 sm:pb-6">
       {/* Page Header */}
       {policies.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-[#00162A] tracking-tight">Insurance Portfolio</h1>
-            <p className="text-sm font-medium text-[#707975] mt-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#00162A] tracking-tight">Insurance Portfolio</h1>
+            <p className="text-xs sm:text-sm font-medium text-[#707975] mt-1">
               Manage your risk coverage and active policies.
             </p>
           </div>
 
-          <div>
+          <div className="w-full sm:w-auto">
             <PrimaryButton
               onClick={() => {
                 setEditingPolicy(null);
                 setIsAddModalOpen(true);
               }}
               icon="add"
+              className="w-full sm:w-auto justify-center"
             >
               Add New Policy
             </PrimaryButton>
@@ -180,23 +190,24 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberI
 
       {/* Content Area: Empty State OR KPI Cards + Active Coverage */}
       {policies.length === 0 ? (
-        <div className="text-center py-20 px-6 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 rounded-2xl bg-[#006A65]/10 text-[#006A65] flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined select-none text-[36px]">
+        <div className="text-center py-12 sm:py-20 px-4 sm:px-6 flex flex-col items-center justify-center">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#006A65]/10 text-[#006A65] flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined select-none text-[32px] sm:text-[36px]">
               shield
             </span>
           </div>
-          <h3 className="text-xl font-bold text-[#00162A] tracking-tight">No Insurance Policies Yet</h3>
-          <p className="text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
+          <h3 className="text-lg sm:text-xl font-bold text-[#00162A] tracking-tight">No Insurance Policies Yet</h3>
+          <p className="text-xs sm:text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
             Track your life, health, vehicle, and property insurance coverage all in one secure place.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 w-full sm:w-auto">
             <PrimaryButton
               onClick={() => {
                 setEditingPolicy(null);
                 setIsAddModalOpen(true);
               }}
               icon="add"
+              className="w-full sm:w-auto justify-center"
             >
               Add Your First Policy
             </PrimaryButton>
@@ -208,74 +219,84 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberI
           <div className="w-full h-[1px] bg-[#C3C6CE]/30" />
 
           {/* Summary KPI Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* Active Policies Card */}
-            <div className="bg-white rounded-2xl p-6 border border-[#C3C6CE]/10 shadow-[0_4px_20px_0_rgba(0,0,0,0.02)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_0_rgba(0,0,0,0.04)] flex flex-col justify-between">
-              <span className="text-xs font-extrabold tracking-widest text-[#006A65] uppercase">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[#C3C6CE]/30 shadow-[0_4px_20px_0_rgba(0,0,0,0.02)] transition-all duration-300 hover:-translate-y-0.5 sm:hover:-translate-y-1 hover:shadow-[0_12px_28px_0_rgba(0,0,0,0.04)] flex flex-col justify-between">
+              <span className="text-[10px] sm:text-xs font-extrabold tracking-widest text-[#006A65] uppercase">
                 ACTIVE POLICIES
               </span>
-              <span className="text-3xl font-extrabold text-[#00162A] mt-3">
+              <span className="text-2xl sm:text-3xl font-extrabold text-[#00162A] mt-2 sm:mt-3">
                 {String(activeCount).padStart(2, '0')}
               </span>
             </div>
 
             {/* Estimated Premium Card */}
-            <div className="bg-white rounded-2xl p-6 border border-[#C3C6CE]/10 shadow-[0_4px_20px_0_rgba(0,0,0,0.02)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_28px_0_rgba(0,0,0,0.04)] flex flex-col justify-between">
-              <span className="text-xs font-extrabold tracking-widest text-[#006A65] uppercase">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[#C3C6CE]/30 shadow-[0_4px_20px_0_rgba(0,0,0,0.02)] transition-all duration-300 hover:-translate-y-0.5 sm:hover:-translate-y-1 hover:shadow-[0_12px_28px_0_rgba(0,0,0,0.04)] flex flex-col justify-between">
+              <span className="text-[10px] sm:text-xs font-extrabold tracking-widest text-[#006A65] uppercase">
                 ESTIMATED PREMIUM FOR THIS MONTH
               </span>
-              <span className="text-3xl font-extrabold text-[#00162A] mt-3">
+              <span className="text-2xl sm:text-3xl font-extrabold text-[#00162A] mt-2 sm:mt-3 break-words">
                 {isPrivate ? '••••••' : formatCurrency(Math.round(monthlyPremiumEstimate))}
               </span>
             </div>
           </div>
 
           {/* Active Coverage Section */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Section Header */}
-            <div className="flex items-center gap-4 w-full">
-              <h2 className="text-xl font-semibold text-[#00162A] tracking-tight whitespace-nowrap">
+            <div className="flex items-center gap-3 sm:gap-4 w-full pt-1 sm:pt-2">
+              <h2 className="text-lg sm:text-xl font-semibold text-[#00162A] tracking-tight whitespace-nowrap">
                 Active Coverage
               </h2>
               <div className="flex-1 h-[1px] bg-[#C3C6CE]/30" />
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-[#74777F] bg-[#F2F4F5] uppercase tracking-wider whitespace-nowrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold text-[#74777F] bg-[#F2F4F5] uppercase tracking-wider whitespace-nowrap">
                 {policies.length} {policies.length === 1 ? 'ITEM' : 'ITEMS'}
               </span>
             </div>
 
             {/* Policy Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {policies.map((policy) => {
                 const isMenuOpen = activeMenuPolicyId === policy.id;
+                const isExpired = policy.expiryDate ? policy.expiryDate < Date.now() : false;
 
                 return (
                   <div
                     key={policy.id}
                     className={`
-                      rounded-3xl bg-white border border-[#C3C6CE]/30 p-6 space-y-5 transition-all duration-300
-                      hover:-translate-y-1 hover:border-2 hover:border-[#006A65] hover:shadow-[0_12px_28px_-2px_rgba(0,106,101,0.05)]
+                      rounded-2xl sm:rounded-3xl bg-white border border-[#C3C6CE]/30 p-4 sm:p-6 space-y-3.5 sm:space-y-4 transition-all duration-300
+                      hover:-translate-y-0.5 sm:hover:-translate-y-1 hover:border-[#006A65]/40 hover:shadow-[0_12px_28px_-2px_rgba(0,106,101,0.05)]
                       group relative
                       ${isMenuOpen ? 'z-50' : 'z-0'}
                     `}
                   >
                     {/* Top Header Row */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-[#E6F4F1] group-hover:bg-[#006A65] text-[#006A65] group-hover:text-white flex items-center justify-center transition-all duration-300 flex-shrink-0">
-                          <span className="material-symbols-outlined select-none" style={{ fontSize: '24px' }}>
+                    <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#E6F4F1] group-hover:bg-[#006A65] text-[#006A65] group-hover:text-white flex items-center justify-center transition-all duration-300 shrink-0">
+                          <span className="material-symbols-outlined select-none text-[20px] sm:text-[24px]">
                             {getPolicyIcon(policy.policyType)}
                           </span>
                         </div>
 
-                        <div>
-                          <span className="block text-[10px] font-extrabold tracking-widest text-[#006A65] uppercase">
-                            {policy.policyType}
-                          </span>
-                          <h3 className="text-base font-bold text-[#00162A] group-hover:text-[#006A65] transition-colors leading-tight">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="block text-[9px] sm:text-[10px] font-extrabold tracking-widest text-[#006A65] uppercase truncate">
+                              {policy.policyType}
+                            </span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                isExpired ? 'bg-[#BA1A1A]/10 text-[#BA1A1A]' : 'bg-[#006A65]/10 text-[#006A65]'
+                              }`}
+                            >
+                              {isExpired ? 'Expired' : 'Active'}
+                            </span>
+                          </div>
+                          <h3 className="text-sm sm:text-base font-bold text-[#00162A] group-hover:text-[#006A65] transition-colors leading-tight truncate mt-0.5">
                             {policy.policyName}
                           </h3>
                           {policy.policyNumber && (
-                            <span className="block text-xs font-semibold text-[#707975] mt-0.5">
+                            <span className="block text-[11px] sm:text-xs font-semibold text-[#707975] mt-0.5 truncate">
                               {policy.policyNumber}
                             </span>
                           )}
@@ -283,18 +304,22 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberI
                       </div>
 
                       {/* Context Menu Trigger & Popover */}
-                      <div className="relative policy-menu-container">
+                      <div className="relative policy-menu-container shrink-0">
                         <button
                           type="button"
                           onClick={() => setActiveMenuPolicyId(isMenuOpen ? null : policy.id)}
-                          className="w-9 h-9 rounded-full hover:bg-[#F2F4F5] flex items-center justify-center text-[#707975] transition-colors"
+                          className="w-9 h-9 rounded-full hover:bg-[#F2F4F5] flex items-center justify-center text-[#707975] transition-colors cursor-pointer"
+                          aria-label="More options"
                         >
-                          <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>more_vert</span>
+                          <span className="material-symbols-outlined select-none text-[20px]">more_vert</span>
                         </button>
 
                         {/* Popover Menu */}
                         {isMenuOpen && (
-                          <div className="absolute right-0 top-10 w-44 bg-white rounded-2xl shadow-xl border border-[#C3C6CE]/30 py-1.5 z-50 overflow-hidden fade-in">
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute right-0 top-10 w-44 bg-white rounded-2xl shadow-xl border border-[#C3C6CE]/30 py-1.5 z-50 overflow-hidden animate-in fade-in duration-150"
+                          >
                             <button
                               type="button"
                               onClick={() => {
@@ -302,8 +327,9 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberI
                                 setEditingPolicy(policy);
                                 setIsAddModalOpen(true);
                               }}
-                              className="w-full text-left px-4 py-2.5 text-sm font-semibold text-[#3F4945] hover:bg-[#F2F4F5] transition-colors flex items-center justify-between"
+                              className="w-full text-left px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#3F4945] hover:bg-[#F2F4F5] transition-colors flex items-center gap-2 cursor-pointer"
                             >
+                              <span className="material-symbols-outlined select-none text-[18px]">edit</span>
                               <span>Edit Policy</span>
                             </button>
                             <div className="border-t border-[#C3C6CE]/20" />
@@ -314,8 +340,9 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberI
                                 setDeletingPolicy(policy);
                                 setIsDeleteModalOpen(true);
                               }}
-                              className="w-full text-left px-4 py-2.5 text-sm font-semibold text-[#BA1A1A] hover:bg-[#FFF8F7] transition-colors flex items-center justify-between"
+                              className="w-full text-left px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#BA1A1A] hover:bg-[#FFF8F7] transition-colors flex items-center gap-2 cursor-pointer"
                             >
+                              <span className="material-symbols-outlined select-none text-[18px]">delete</span>
                               <span>Delete Policy</span>
                             </button>
                           </div>
@@ -324,56 +351,58 @@ export const Insurance: React.FC<InsuranceProps> = ({ isPrivate, selectedMemberI
                     </div>
 
                     {/* Sum Insured / Assured Block */}
-                    <div className="pt-2 border-t border-[#C3C6CE]/20 flex items-center justify-between">
-                      <span className="text font-semibold text-[#707975]">Sum Insured</span>
-                      <span className="text-xl sm:text-2xl font-extrabold text-[#00162A]">
+                    <div className="pt-2 sm:pt-3 border-t border-[#C3C6CE]/20 flex items-center justify-between">
+                      <span className="text-xs sm:text-sm font-semibold text-[#707975]">Sum Insured</span>
+                      <span className="text-lg sm:text-2xl font-extrabold text-[#00162A] truncate">
                         {isPrivate ? '••••••' : formatCurrency(policy.sumInsured)}
                       </span>
                     </div>
 
                     {/* 2x2 Key-Value Data Grid */}
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-6 pt-1">
+                    <div className="grid grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-4 sm:gap-x-6 pt-1">
                       <div>
-                        <span className="block text-xs font-bold tracking-widest text-[#73777E] uppercase">
+                        <span className="block text-[10px] sm:text-xs font-bold tracking-widest text-[#73777E] uppercase">
                           PREMIUM AMOUNT
                         </span>
-                        <span className="block text-sm font-medium text-[#00162A] mt-0.5">
+                        <span className="block text-xs sm:text-sm font-medium text-[#00162A] mt-0.5 truncate">
                           {isPrivate ? '••••' : formatCurrency(policy.premiumAmount ?? (policy as any).annualPremium ?? 0)}
                         </span>
                       </div>
 
                       <div>
-                        <span className="block text-xs font-bold tracking-widest text-[#73777E] uppercase">
-                          PREMIUM FREQUENCY
+                        <span className="block text-[10px] sm:text-xs font-bold tracking-widest text-[#73777E] uppercase">
+                          FREQUENCY
                         </span>
-                        <span className="block text-sm font-medium text-[#00162A] mt-0.5">
+                        <span className="block text-xs sm:text-sm font-medium text-[#00162A] mt-0.5 truncate">
                           {policy.premiumFrequency}
                         </span>
                       </div>
 
                       <div>
-                        <span className="block text-xs font-bold tracking-widest text-[#73777E] uppercase">
+                        <span className="block text-[10px] sm:text-xs font-bold tracking-widest text-[#73777E] uppercase">
                           START DATE
                         </span>
-                        <span className="block text-sm font-medium text-[#00162A] mt-0.5">
+                        <span className="block text-xs sm:text-sm font-medium text-[#00162A] mt-0.5 truncate">
                           {formatDate(policy.startDate)}
                         </span>
                       </div>
 
                       <div>
-                        <span className="block text-xs font-bold tracking-widest text-[#73777E] uppercase">
+                        <span className="block text-[10px] sm:text-xs font-bold tracking-widest text-[#73777E] uppercase">
                           RENEWAL DATE
                         </span>
-                        <span className="block text-sm font-medium text-[#00162A] mt-0.5">
+                        <span className="block text-xs sm:text-sm font-medium text-[#00162A] mt-0.5 truncate">
                           {formatDate(policy.expiryDate)}
                         </span>
                       </div>
                     </div>
 
                     {/* Footer Provider */}
-                    <div className="pt-3 border-t border-[#C3C6CE]/15 text-xs">
-                      <span className="text-[#707975]">Provider: </span>
-                      <span className="font-bold text-[#00162A]">{policy.provider || 'N/A'}</span>
+                    <div className="pt-2.5 sm:pt-3 border-t border-[#C3C6CE]/15 text-xs flex items-center justify-between">
+                      <div className="min-w-0">
+                        <span className="text-[#707975]">Provider: </span>
+                        <span className="font-bold text-[#00162A] truncate">{policy.provider || 'N/A'}</span>
+                      </div>
                     </div>
                   </div>
                 );

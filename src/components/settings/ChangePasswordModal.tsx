@@ -126,7 +126,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 text-left z-10 animate-in fade-in zoom-in-95 duration-200 border border-[#C3C6CE]/30">
+      <div className="relative w-full max-w-[360px] sm:max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-7 space-y-4 sm:space-y-5 text-left z-10 animate-in fade-in zoom-in-95 duration-200 border border-[#C3C6CE]/30">
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b border-[#C3C6CE]/20">
           <div className="flex items-center gap-3">
@@ -311,9 +311,9 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C3C6CE]/20">
-            <CancelButton onClick={onClose} disabled={isSaving} />
-            <SaveButton type="submit" isSaving={isSaving} disabled={!!successMessage}>
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:items-center sm:justify-end sm:gap-3 pt-3 border-t border-[#C3C6CE]/20">
+            <CancelButton onClick={onClose} disabled={isSaving} className="w-full sm:w-auto" />
+            <SaveButton type="submit" isSaving={isSaving} disabled={!!successMessage} className="w-full sm:w-auto">
               {isSetMode ? 'Set Password' : 'Update Password'}
             </SaveButton>
           </div>

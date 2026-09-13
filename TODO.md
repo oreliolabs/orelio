@@ -6,8 +6,6 @@ Issues like - 4. Check responsiveness across different sizes - P0 - more effort 
     2. delete user
     3. remove password if added one
     4. Debt utilisation chart on loans and credit page
-    
-
 
 Final TODO:
 

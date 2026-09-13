@@ -208,7 +208,7 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
   }, []);
 
   return (
-    <div className="space-y-6 fade-in px-2 pb-2">
+    <div className="space-y-6 fade-in">
       {/* Header section */}
       {notes.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -219,14 +219,15 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
                 {notes.length}
               </span>
             </div>
-            <p className="text-sm text-orelio-gray mt-1 font-medium">
+            <p className="text-xs sm:text-sm text-orelio-gray mt-1 font-medium">
               Jot down your personal investment thoughts and important logs.
             </p>
           </div>
-          <div>
+          <div className="w-full sm:w-auto">
             <PrimaryButton
               onClick={handleAddClick}
               icon="add"
+              className="w-full sm:w-auto"
             >
               Add New Note
             </PrimaryButton>
@@ -235,20 +236,21 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
       )}
 
       {notes.length === 0 ? (
-        <div className="text-center py-20 px-6 flex flex-col items-center justify-center">
+        <div className="text-center py-16 sm:py-20 px-4 sm:px-6 flex flex-col items-center justify-center">
           <div className="w-16 h-16 rounded-2xl bg-[#006A65]/10 text-[#006A65] flex items-center justify-center mb-4">
             <span className="material-symbols-outlined select-none text-[36px]">
               edit_note
             </span>
           </div>
           <h3 className="text-xl font-bold text-[#00162A] tracking-tight">No Notes Yet</h3>
-          <p className="text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#707975] font-medium max-w-md mt-2 leading-relaxed">
             Jot down your personal investment ideas, financial strategies, and important reminders.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 w-full sm:w-auto flex justify-center">
             <PrimaryButton
               onClick={handleAddClick}
               icon="add"
+              className="w-full sm:w-auto"
             >
               Add Your First Note
             </PrimaryButton>
@@ -257,7 +259,7 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
       ) : (
         <>
           {/* Search & Sort Panel */}
-          <div className="flex flex-col sm:flex-row gap-3 my-8">
+          <div className="flex flex-col sm:flex-row gap-3 my-5 sm:my-8">
             <div className="relative flex-1">
               <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#73777E] select-none" style={{ fontSize: '18px' }}>
                 search
@@ -280,7 +282,7 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
                   setSortBy(e.target.value as any);
                   setCurrentPage(1);
                 }}
-                className="appearance-none pl-4 pr-10 py-2 rounded-xl bg-white border border-[#C3C6CE]/30 text-sm font-semibold text-[#3F4945] focus:outline-none  transition-all cursor-pointer w-full sm:w-auto"
+                className="appearance-none pl-4 pr-10 py-2 rounded-xl bg-white border border-[#C3C6CE]/30 text-sm font-semibold text-[#3F4945] focus:outline-none transition-all cursor-pointer w-full sm:w-auto"
               >
                 <option value="latest">Sort by Latest</option>
                 <option value="oldest">Sort by Oldest</option>
@@ -293,7 +295,7 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
           </div>
 
           {/* Notes List */}
-          <div className="space-y-4">
+          <div className="space-y-3.5 sm:space-y-4">
             {paginatedNotes.length > 0 ? (
               paginatedNotes.map((note) => {
                 const isHovered = hoveredNoteId === note.id;
@@ -306,39 +308,41 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
                     onClick={() => handleView(note)}
                     onMouseEnter={() => setHoveredNoteId(note.id)}
                     onMouseLeave={() => setHoveredNoteId(null)}
-                    className="p-5 rounded-2xl bg-white border border-[#C3C6CE]/25 hover:border-2 hover:border-[#006A65] shadow-xs hover:shadow-md transition-all cursor-pointer flex items-start justify-between gap-4 group"
+                    className={`p-4 sm:p-5 rounded-2xl bg-white border border-[#C3C6CE]/25 hover:border-[#006A65] shadow-xs hover:shadow-md transition-all cursor-pointer flex items-start justify-between gap-3 sm:gap-4 group relative ${isMenuOpen ? 'z-30' : 'z-0'}`}
                   >
-                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                       {/* Left icon badge */}
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white transition-colors duration-200"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 text-white transition-colors duration-200 mt-0.5 sm:mt-0"
                         style={{ backgroundColor: currentAccentColor }}
                       >
-                        <span className="material-symbols-outlined text-[20px] select-none">description</span>
+                        <span className="material-symbols-outlined text-[18px] sm:text-[20px] select-none">description</span>
                       </div>
                       {/* Title & snippet */}
                       <div className="flex-1 min-w-0 space-y-1">
                         <h3 className="text-base font-bold text-orelio-navy truncate transition-colors group-hover:text-black">
                           {note.title}
                         </h3>
-                        <p className="text-sm text-[#3F4945] line-clamp-2 leading-relaxed font-medium">
+                        <p className="text-xs sm:text-sm text-[#3F4945] line-clamp-2 leading-relaxed font-medium">
                           {note.content}
                         </p>
-                        <div className="flex items-center gap-1 text-[11px] text-[#73777E] font-bold uppercase tracking-wider pt-0.5">
+                        <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-[11px] text-[#73777E] font-bold uppercase tracking-wider pt-0.5 whitespace-nowrap">
                           <span className="material-symbols-outlined select-none" style={{ fontSize: '13px' }}>schedule</span>
-                          LAST UPDATED {formatNoteTime(note.lastUpdated)}
+                          <span>LAST UPDATED {formatNoteTime(note.lastUpdated)}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Three dot actions */}
                     <div
-                      className="relative"
+                      className="relative shrink-0"
                       onClick={(e) => e.stopPropagation()} // Stop triggering view note click
                     >
                       <button
+                        type="button"
                         onClick={() => setActiveMenuId(activeMenuId === note.id ? null : note.id)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] transition-colors"
+                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-[#73777E] transition-colors cursor-pointer"
+                        aria-label="Note options"
                       >
                         <span className="material-symbols-outlined select-none text-[20px]">more_vert</span>
                       </button>
@@ -347,16 +351,18 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
                       {isMenuOpen && (
                         <div className="absolute right-0 top-9 w-36 bg-white rounded-xl shadow-lg border border-[#C3C6CE]/20 py-1 z-30 animate-in fade-in zoom-in-95 duration-150">
                           <button
+                            type="button"
                             onClick={() => handleEdit(note)}
-                            className="w-full px-4 py-1.5 text-left text-sm font-medium text-[#3F4945] hover:bg-gray-50 flex items-center gap-2"
+                            className="w-full px-4 py-2 text-left text-sm font-medium text-[#3F4945] hover:bg-gray-50 flex items-center gap-2 cursor-pointer"
                           >
                             <span className="material-symbols-outlined select-none" style={{ fontSize: '15px' }}>edit</span>
                             Edit Note
                           </button>
-                          <hr className="border-[#C3C6CE]/10 my-1" />
+                          <hr className="border-[#C3C6CE]/10 my-0.5" />
                           <button
+                            type="button"
                             onClick={() => handleDeleteClick(note)}
-                            className="w-full px-4 py-1.5 text-left text-sm font-medium text-[#BA1A1A] hover:bg-red-50 flex items-center gap-2"
+                            className="w-full px-4 py-2 text-left text-sm font-medium text-[#BA1A1A] hover:bg-red-50 flex items-center gap-2 cursor-pointer"
                           >
                             <span className="material-symbols-outlined select-none" style={{ fontSize: '15px' }}>delete</span>
                             Delete Note
@@ -371,18 +377,19 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
               <div className="text-center py-12 px-6 flex flex-col items-center justify-center">
                 <span className="material-symbols-outlined text-[#73777E] select-none text-[40px] mb-2">search_off</span>
                 <p className="text-base font-bold text-orelio-navy">No matching notes found</p>
-                <p className="text-sm text-[#707975] mt-1">Try matching another keyword or clearing your search.</p>
+                <p className="text-xs sm:text-sm text-[#707975] mt-1">Try matching another keyword or clearing your search.</p>
               </div>
             )}
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-3 pt-6">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-6">
               <button
+                type="button"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="flex items-center gap-0.5 px-3 py-2 text-sm font-bold text-[#3F4945] hover:text-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="flex items-center gap-0.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold text-[#3F4945] hover:text-black disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined select-none" style={{ fontSize: '18px', verticalAlign: 'middle' }}>chevron_left</span>
                 Previous
@@ -394,8 +401,9 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
                 return (
                   <button
                     key={pageNum}
+                    type="button"
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`w-[38px] h-[38px] rounded-[12px] text-sm font-bold flex items-center justify-center transition-all ${isActive
+                    className={`w-8 h-8 sm:w-[38px] sm:h-[38px] rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center transition-all cursor-pointer ${isActive
                       ? 'bg-[#00162A] text-white shadow-sm'
                       : 'border border-[#E5E7EB] bg-white text-[#3F4945] hover:bg-gray-50 hover:border-gray-300'
                       }`}
@@ -406,9 +414,10 @@ export const Notes: React.FC<NotesProps> = ({ selectedMemberId = 'all' }) => {
               })}
 
               <button
+                type="button"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="flex items-center gap-0.5 px-3 py-2 text-sm font-bold text-[#3F4945] hover:text-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="flex items-center gap-0.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold text-[#3F4945] hover:text-black disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 Next
                 <span className="material-symbols-outlined select-none" style={{ fontSize: '18px', verticalAlign: 'middle' }}>chevron_right</span>

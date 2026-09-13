@@ -31,20 +31,27 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape' && !isDeleting) {
+          onClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       document.body.style.overflow = '';
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  }, [isOpen, onClose, isDeleting]);
 
   if (!isOpen) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/40 transition-opacity duration-200" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 space-y-3 text-center z-10 animate-in fade-in zoom-in-95 duration-200 border border-[#C3C6CE]/30">
+      <div className="relative w-full max-w-[340px] sm:max-w-sm bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 space-y-3 text-center z-10 animate-in fade-in zoom-in-95 duration-200 border border-[#C3C6CE]/30">
         {/* Warning Graphic */}
         <div className="mx-auto flex justify-center">
           <svg className="transition-all duration-300 hover:scale-110 hover:rotate-3 cursor-pointer origin-center" width="82" height="104" viewBox="0 0 82 104" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -55,20 +62,20 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
 
         {/* Content text */}
         <div className="space-y-2 mt-1">
-          <h3 className="text-lg font-bold text-[#00162A]">{title}</h3>
-          <div className="text-sm text-[#43474D] leading-relaxed font-medium">
+          <h3 className="text-base sm:text-lg font-bold text-[#00162A]">{title}</h3>
+          <div className="text-xs sm:text-sm text-[#43474D] leading-relaxed font-medium">
             {subtitle}
           </div>
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 mt-6">
-          <CancelButton onClick={onClose} variant="primary" className="flex-1" disabled={isDeleting} />
+        <div className="grid grid-cols-2 gap-3 mt-6">
+          <CancelButton onClick={onClose} variant="primary" className="w-full" disabled={isDeleting} />
           <button
             type="button"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex-1 inline-flex items-center justify-center h-9 px-4 text-sm font-bold text-white bg-[#BA1A1A] rounded-xl hover:bg-[#9E1414] transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+            className="w-full inline-flex items-center justify-center h-9 px-3 text-sm font-bold text-white bg-[#BA1A1A] rounded-xl hover:bg-[#9E1414] transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap active:scale-95"
           >
             <span className="leading-none">{isDeleting ? 'Deleting...' : confirmText}</span>
           </button>

@@ -123,18 +123,25 @@ function App() {
 
       case 'settings':
         return (
-          <div className="space-y-6 fade-in px-2 pb-2 w-full">
+          <div className="space-y-6 fade-in w-full">
             <div>
-              <h2 className="text-2xl font-extrabold text-orelio-navy">Settings</h2>
+              <h2 className="text-2xl font-extrabold text-orelio-navy tracking-tight">Settings</h2>
+              <p className="text-xs text-orelio-gray mt-1 font-medium">Manage preferences, security, and application defaults.</p>
             </div>
             
-            <div className="glass-card divide-y divide-[#C3C6CE]/15">
-              <div className="p-6 flex items-center justify-between">
-                <div className="space-y-1 pr-4">
+            <div className="glass-card divide-y divide-[#C3C6CE]/15 overflow-hidden">
+              {/* Privacy Mode Default */}
+              <div className="p-4.5 sm:p-6 flex items-center justify-between gap-4">
+                <div className="space-y-1 min-w-0 pr-2">
                   <span className="block font-bold text-orelio-navy text-sm">Privacy Mode Default</span>
-                  <span className="block text-xs text-orelio-gray font-medium">Hide financial numbers upon application startup.</span>
+                  <span className="block text-xs text-orelio-gray font-medium leading-relaxed">
+                    Hide financial figures automatically upon application startup.
+                  </span>
                 </div>
                 <button 
+                  type="button"
+                  role="switch"
+                  aria-checked={settings.privacyModeDefault}
                   onClick={() => {
                     const nextVal = !settings.privacyModeDefault;
                     const updated = { ...settings, privacyModeDefault: nextVal };
@@ -142,44 +149,57 @@ function App() {
                     saveUserSettings(updated);
                     setIsPrivate(nextVal);
                   }}
-                  className={`w-12 h-6 rounded-full transition-all duration-300 relative ${settings.privacyModeDefault ? 'bg-orelio-darkgreen' : 'bg-orelio-light-gray'}`}
+                  className={`w-12 h-6.5 rounded-full transition-all duration-300 relative shrink-0 cursor-pointer ${settings.privacyModeDefault ? 'bg-[#006A65]' : 'bg-[#E6E8E9]'}`}
                 >
-                  <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${settings.privacyModeDefault ? 'translate-x-6' : ''}`} />
+                  <span className={`absolute top-1 left-1 w-4.5 h-4.5 rounded-full bg-white shadow-xs transition-transform duration-300 ${settings.privacyModeDefault ? 'translate-x-5.5' : ''}`} />
                 </button>
               </div>
 
-              <div className="p-6 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="block font-bold text-orelio-navy text-sm">Currency Symbols (Coming soon)</span>
-                  <span className="block text-xs text-orelio-gray font-medium">Configure primary denomination. Currently fixed to Indian Rupees (INR) only.</span>
+              {/* Currency Symbols */}
+              <div className="p-4.5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="block font-bold text-orelio-navy text-sm">Currency Symbols</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#74777F] bg-[#F2F4F5] border border-[#C3C6CE]/30 whitespace-nowrap">
+                      Fixed
+                    </span>
+                  </div>
+                  <span className="block text-xs text-orelio-gray font-medium leading-relaxed">
+                    Configure primary denomination. Currently fixed to Indian Rupees (INR) only.
+                  </span>
                 </div>
-                <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg">
+                <span className="self-start sm:self-auto text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap">
                   {settings.currency} ({settings.currencySymbol})
                 </span>
               </div>
 
-              <div className="p-6 flex items-center justify-between">
-                <div className="space-y-1 pr-4">
+              {/* Master Password */}
+              <div className="p-4.5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
+                <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="block font-bold text-orelio-navy text-sm">
-                      {passwordConfigured ? 'Update Password' : 'Set Password'}
+                      {passwordConfigured ? 'Master Password' : 'Set Password'}
                     </span>
-                    {!passwordConfigured && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#BA1A1A] bg-[#FFF8F7] border border-[#BA1A1A]/20">
+                    {!passwordConfigured ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#BA1A1A] bg-[#FFF8F7] border border-[#BA1A1A]/20 whitespace-nowrap">
                         Not Set
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#006A65] bg-[#E6F4F1] border border-[#006A65]/20 whitespace-nowrap">
+                        Active
                       </span>
                     )}
                   </div>
-                  <span className="block text-xs text-orelio-gray font-medium">
+                  <span className="block text-xs text-orelio-gray font-medium leading-relaxed">
                     {passwordConfigured
-                      ? 'Password required to unlock your ledger after logout.'
+                      ? 'Password required to unlock your ledger after logging out.'
                       : 'Create a password to protect and encrypt your ledger when logging in.'}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsChangePasswordModalOpen(true)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-98 ${
+                  className={`w-full sm:w-auto self-start sm:self-auto inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-98 shrink-0 whitespace-nowrap ${
                     passwordConfigured
                       ? 'border-[#C3C6CE]/35 bg-white text-orelio-navy hover:bg-[#F2F4F5]'
                       : 'border-[#006A65]/30 bg-[#E6F4F1] text-[#006A65] hover:bg-[#d5ede8]'
@@ -190,12 +210,13 @@ function App() {
                 </button>
               </div>
 
-              <div className="p-6 flex items-center justify-between">
-                <div className="space-y-1">
+              {/* Application Version */}
+              <div className="p-4.5 sm:p-6 flex items-center justify-between gap-4">
+                <div className="space-y-1 min-w-0 pr-2">
                   <span className="block font-bold text-orelio-navy text-sm">Version</span>
-                  <span className="block text-xs text-orelio-gray font-medium">Current application release build and status.</span>
+                  <span className="block text-xs text-orelio-gray font-medium leading-relaxed">Current application release build and status.</span>
                 </div>
-                <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg">
+                <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap">
                   v0.1.0 <span className="text-[#006A65] font-extrabold ml-1">(Beta)</span>
                 </span>
               </div>
@@ -240,7 +261,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex bg-orelio-bg font-sans antialiased">
+    <div className="min-h-screen flex bg-orelio-bg font-sans antialiased overflow-x-hidden">
       
       {/* Sidebar Navigation */}
       <Sidebar 
@@ -252,7 +273,7 @@ function App() {
       />
 
       {/* Main Layout Area */}
-      <div className="flex-1 flex flex-col lg:pl-[260px]">
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-[260px] overflow-x-hidden">
         
         {/* Top Header Bar */}
         <Topbar 
@@ -265,7 +286,7 @@ function App() {
         />
 
         {/* Dynamic Inner Page Content */}
-        <main key={selectedMemberId} className="flex-1 px-6 md:px-8 pt-4 md:pt-5 max-w-7xl w-full mx-auto pb-16">
+        <main key={selectedMemberId} className="flex-1 px-4 sm:px-6 md:px-8 pt-4 md:pt-5 max-w-7xl w-full mx-auto pb-16 min-w-0">
           {renderContent()}
         </main>
       </div>

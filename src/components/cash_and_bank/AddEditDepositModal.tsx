@@ -167,6 +167,25 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
     }
   }, [editingDeposit, isOpen]);
 
+  // Body scroll lock and Escape key handler
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isOpen, onClose]);
+
   const formatDateInput = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 8);
     if (digits.length <= 2) {
@@ -267,16 +286,17 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
       <div className="fixed inset-0 bg-black/40 transition-opacity animate-in fade-in duration-200" onClick={onClose} />
 
       {/* Modal card */}
-      <div className="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-[#C3C6CE]/30 max-h-[90vh] flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-2xl sm:rounded-3xl max-w-[360px] sm:max-w-xl w-full shadow-2xl border border-[#C3C6CE]/30 max-h-[90vh] flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Fixed Modal Header with Divider */}
-        <div className="p-6 md:px-8 md:pt-6 md:pb-4 border-b border-[#C3C6CE]/30 flex-shrink-0 flex items-center justify-between">
-          <h2 className="text-[18px] font-bold text-[#00162A] tracking-tight">
+        <div className="p-4 sm:p-6 md:px-8 md:pt-6 md:pb-4 border-b border-[#C3C6CE]/30 flex-shrink-0 flex items-center justify-between">
+          <h2 className="text-base sm:text-lg font-bold text-[#00162A] tracking-tight">
             {editingDeposit ? 'Edit Deposit' : isFirstDeposit ? 'Add Your First Deposit' : 'Add New Deposit'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="w-8 h-8 rounded-full text-[#74777F] hover:bg-[#F2F4F5] hover:text-[#00162A] flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Close modal"
           >
             <span className="material-symbols-outlined select-none" style={{ fontSize: '20px' }}>close</span>
           </button>
@@ -284,7 +304,7 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           {/* Scrollable Form Content */}
-          <div className="p-6 md:p-8 overflow-y-auto space-y-5 flex-1 max-h-[calc(90vh-140px)]">
+          <div className="p-4 sm:p-6 md:p-8 overflow-y-auto space-y-4 sm:space-y-5 flex-1 min-h-0">
 
             {/* Deposit Type Switcher (FD / RD) */}
             <div className="space-y-1.5">
@@ -565,9 +585,9 @@ export const AddEditDepositModal: React.FC<AddEditDepositModalProps> = ({
           </div>
 
           {/* Modal Footer with Actions */}
-          <div className="flex items-center justify-end gap-3 p-4 md:px-8 md:py-4 border-t border-[#C3C6CE]/20 flex-shrink-0 bg-white">
-            <CancelButton onClick={onClose} />
-            <SaveButton type="submit">
+          <div className="grid grid-cols-2 gap-3 p-4 sm:px-6 md:px-8 md:py-4 border-t border-[#C3C6CE]/20 flex-shrink-0 bg-white sm:flex sm:items-center sm:justify-end">
+            <CancelButton onClick={onClose} className="w-full sm:w-auto justify-center" />
+            <SaveButton type="submit" className="w-full sm:w-auto justify-center">
               Save Deposit
             </SaveButton>
           </div>
