@@ -107,6 +107,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ onSignIn }) => {
       <OnboardingFlow
         onComplete={(user) => {
           setIsOnboarding(false);
+          setActiveUserId(user.id);
           setAllUsers(getAllUsers());
           setCurrentUser(user);
           onSignIn();

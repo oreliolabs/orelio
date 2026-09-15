@@ -12,13 +12,28 @@ import { Stocks } from './components/stocks/Stocks';
 import { WelcomePage } from './components/welcome/WelcomePage';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { ChangePasswordModal } from './components/settings/ChangePasswordModal';
+import { DeleteConfirmationModal } from './components/common/DeleteConfirmationModal';
 import { Briefcase } from 'lucide-react';
 
-import { getAllUsers, getFamilyMembers, saveFamilyMembers, getUserSettings, saveUserSettings, isPasswordSet } from './data/orelioStore';
-import type { FamilyMember, UserSettings } from './data/types';
+import { 
+  getAllUsers, 
+  hasAnyUsers, 
+  setActiveUserId,
+  resetOrelioDatabase, 
+  getFamilyMembers, 
+  saveFamilyMembers, 
+  getUserSettings, 
+  saveUserSettings, 
+  isPasswordSet 
+} from './data/orelioStore';
+import type { FamilyMember, UserSettings, UserProfile } from './data/types';
 
 function App() {
+  const [isOnboarding, setIsOnboarding] = useState<boolean>(() => !hasAnyUsers());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (!hasAnyUsers()) {
+      return false;
+    }
     return localStorage.getItem('orelio_authenticated') !== 'false';
   });
   const [activeTab, setActiveTab] = useState('overview');
@@ -41,6 +56,7 @@ function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setIsOnboarding(false);
     localStorage.setItem('orelio_authenticated', 'false');
     setActiveTab('overview');
     handleSelectMemberId('all');
@@ -49,6 +65,7 @@ function App() {
 
   const handleSignIn = () => {
     setIsAuthenticated(true);
+    setIsOnboarding(false);
     localStorage.setItem('orelio_authenticated', 'true');
     setActiveTab('overview');
     handleSelectMemberId('all');
@@ -57,6 +74,40 @@ function App() {
     setSettings(getUserSettings());
     setPasswordConfigured(isPasswordSet());
   };
+
+  const handleOnboardingComplete = (user: UserProfile) => {
+    setActiveUserId(user.id);
+    setIsOnboarding(false);
+    handleSignIn();
+  };
+
+  const handleConfirmReset = () => {
+    setIsResetModalOpen(false);
+    resetOrelioDatabase();
+    setIsAuthenticated(false);
+    setIsOnboarding(true);
+    setActiveTab('overview');
+    handleSelectMemberId('all');
+    setMobileSidebarOpen(false);
+    setMembers([]);
+    setSettings(getUserSettings());
+    setPasswordConfigured(false);
+  };
+
+  useEffect(() => {
+    const handleDbUpdated = () => {
+      const usersExist = hasAnyUsers();
+      if (!usersExist) {
+        setIsAuthenticated(false);
+        setIsOnboarding(true);
+      }
+      setMembers(getFamilyMembers());
+      setSettings(getUserSettings());
+      setPasswordConfigured(isPasswordSet());
+    };
+    window.addEventListener('orelio_db_updated', handleDbUpdated);
+    return () => window.removeEventListener('orelio_db_updated', handleDbUpdated);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -71,6 +122,7 @@ function App() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -155,23 +207,6 @@ function App() {
                 </button>
               </div>
 
-              {/* Currency Symbols */}
-              <div className="p-4.5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="block font-bold text-orelio-navy text-sm">Currency Symbols</span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#74777F] bg-[#F2F4F5] border border-[#C3C6CE]/30 whitespace-nowrap">
-                      Fixed
-                    </span>
-                  </div>
-                  <span className="block text-xs text-orelio-gray font-medium leading-relaxed">
-                    Configure primary denomination. Currently fixed to Indian Rupees (INR) only.
-                  </span>
-                </div>
-                <span className="self-start sm:self-auto text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap">
-                  {settings.currency} ({settings.currencySymbol})
-                </span>
-              </div>
 
               {/* Master Password */}
               <div className="p-4.5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
@@ -210,17 +245,41 @@ function App() {
                 </button>
               </div>
 
-              {/* Application Version */}
-              <div className="p-4.5 sm:p-6 flex items-center justify-between gap-4">
+              {/* Danger Zone: Reset Ledger */}
+              <div className="p-4.5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 bg-[#FFF8F7]">
                 <div className="space-y-1 min-w-0 pr-2">
-                  <span className="block font-bold text-orelio-navy text-sm">Version</span>
-                  <span className="block text-xs text-orelio-gray font-medium leading-relaxed">Current application release build and status.</span>
+                  <div className="flex items-center gap-2">
+                    <span className="block font-bold text-[#BA1A1A] text-sm">Reset Ledger</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-[#BA1A1A] bg-white border border-[#BA1A1A]/20 whitespace-nowrap">
+                      Danger Zone
+                    </span>
+                  </div>
+                  <span className="block text-xs text-orelio-gray font-medium leading-relaxed">
+                    Permanently wipe all accounts, family members, holdings, and restart with a fresh ledger.
+                  </span>
                 </div>
-                <span className="text-xs font-bold text-orelio-navy bg-orelio-light-gray px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap">
-                  v0.1.0 <span className="text-[#006A65] font-extrabold ml-1">(Beta)</span>
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsResetModalOpen(true)}
+                  className="w-full sm:w-auto self-start sm:self-auto inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-[#BA1A1A]/30 bg-white text-[#BA1A1A] hover:bg-[#BA1A1A] hover:text-white text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-98 shrink-0 whitespace-nowrap"
+                >
+                  <span className="material-symbols-outlined select-none text-[16px]">delete_forever</span>
+                  <span>Reset All Data</span>
+                </button>
               </div>
             </div>
+
+            {/* Settings Page Footer */}
+            <footer className="pt-6 pb-2 text-center select-none">
+              <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#707975]">
+                <span>Orelio Wealth Ledger</span>
+                <span>•</span>
+                <span className="font-semibold text-orelio-navy">v0.1.0</span>
+                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold text-[#006A65] bg-[#E6F4F1] border border-[#006A65]/20">
+                  Beta
+                </span>
+              </div>
+            </footer>
           </div>
         );
 
@@ -254,8 +313,13 @@ function App() {
   };
 
   if (!isAuthenticated) {
-    if (getAllUsers().length === 0) {
-      return <OnboardingFlow onComplete={handleSignIn} isFirstUser={true} />;
+    if (isOnboarding || !hasAnyUsers() || getAllUsers().length === 0) {
+      return (
+        <OnboardingFlow 
+          onComplete={handleOnboardingComplete} 
+          isFirstUser={true} 
+        />
+      );
     }
     return <WelcomePage onSignIn={handleSignIn} />;
   }
@@ -335,6 +399,16 @@ function App() {
         onSuccess={() => {
           setPasswordConfigured(isPasswordSet());
         }}
+      />
+
+      {/* Reset Ledger Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        onConfirm={handleConfirmReset}
+        title="Reset All Ledger Data?"
+        subtitle="This will permanently delete all accounts, holdings, records, and preferences. You will return to the initial onboarding screen."
+        confirmText="Reset Everything"
       />
 
     </div>

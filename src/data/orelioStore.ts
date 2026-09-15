@@ -36,7 +36,7 @@ function getActiveUserId(db: { activeUserId?: string; users?: Record<string, any
     return db.activeUserId;
   }
   const firstId = db.users ? Object.keys(db.users)[0] : undefined;
-  return firstId || db.activeUserId || DEFAULT_USER_ID;
+  return firstId || '';
 }
 
 function sanitizeVault(vault: UserVaultData, userProfile?: UserProfile): UserVaultData {
@@ -186,8 +186,8 @@ export function getOrelioDatabase(): OrelioDatabase {
 }
 
 export function createEmptyVault(user?: UserProfile): UserVaultData {
-  const nameParts = (user?.name || 'Self').trim().split(' ');
-  const firstName = nameParts[0] || 'User';
+  const nameParts = (user?.name || '').trim().split(' ');
+  const firstName = nameParts[0] || (user ? 'User' : '');
   const lastName = nameParts.slice(1).join(' ') || '';
 
   let dmyDob = '';
@@ -200,18 +200,22 @@ export function createEmptyVault(user?: UserProfile): UserVaultData {
     }
   }
 
+  const familyMembers: FamilyMember[] = user
+    ? [
+        {
+          id: '1',
+          firstName: firstName || 'User',
+          lastName,
+          role: 'Self',
+          dob: dmyDob,
+          gender: user?.gender || 'Female',
+          isDependent: false
+        }
+      ]
+    : [];
+
   return {
-    familyMembers: [
-      {
-        id: '1',
-        firstName,
-        lastName,
-        role: 'Self',
-        dob: dmyDob,
-        gender: user?.gender || 'Female',
-        isDependent: false
-      }
-    ],
+    familyMembers,
     bankAccounts: [],
     deposits: [],
     stocks: [],
@@ -235,13 +239,13 @@ export function getActiveUser(dbInput?: OrelioDatabase): UserRecord {
   const db = dbInput || getOrelioDatabase();
   const activeId = getActiveUserId(db);
 
-  if (db.users && db.users[activeId]) {
+  if (activeId && db.users && db.users[activeId]) {
     return db.users[activeId];
   }
 
   const fallbackUser: UserRecord = {
     profile: {
-      id: activeId,
+      id: activeId || DEFAULT_USER_ID,
       name: 'User',
       email: '',
       currency: 'INR',
@@ -256,10 +260,6 @@ export function getActiveUser(dbInput?: OrelioDatabase): UserRecord {
     vault: createEmptyVault()
   };
 
-  if (!db.users || Array.isArray(db.users)) {
-    db.users = {};
-  }
-  db.users[activeId] = fallbackUser;
   return fallbackUser;
 }
 
@@ -319,21 +319,27 @@ export function saveOrelioDatabase(db: OrelioDatabase): void {
 }
 
 /**
- * Resets the active database back to the source-of-truth JSON file.
+ * Completely resets the active database to an empty state and clears localStorage.
  */
-export function resetToDatabaseDefaults(): OrelioDatabase {
-  const seed = cloneSeed();
-  memoryDatabase = seed;
+export function resetOrelioDatabase(): OrelioDatabase {
+  const emptyDb: OrelioDatabase = {
+    activeUserId: '',
+    users: {}
+  };
+  memoryDatabase = emptyDb;
 
   if (typeof localStorage !== 'undefined') {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('orelio_authenticated');
+      localStorage.removeItem('orelio_selected_member_id');
+      localStorage.clear();
     } catch {}
   }
 
   if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     try {
-      window.dispatchEvent(new CustomEvent('orelio_db_updated', { detail: seed }));
+      window.dispatchEvent(new CustomEvent('orelio_db_updated', { detail: emptyDb }));
     } catch {}
   }
 
@@ -343,11 +349,18 @@ export function resetToDatabaseDefaults(): OrelioDatabase {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(seed, null, 2)
+      body: JSON.stringify(emptyDb, null, 2)
     }).catch(() => {});
   }
 
-  return seed;
+  return emptyDb;
+}
+
+/**
+ * Resets the active database back to empty defaults.
+ */
+export function resetToDatabaseDefaults(): OrelioDatabase {
+  return resetOrelioDatabase();
 }
 
 // ----------------------------------------------------
@@ -370,21 +383,11 @@ export function getAllUsers(): UserProfile[] {
   const db = getOrelioDatabase();
   if (db.users && typeof db.users === 'object' && !Array.isArray(db.users)) {
     const list = Object.values(db.users).map((u) => u.profile).filter(Boolean);
-    if (list.length > 0) {
-      return list;
-    }
+    return list;
   } else if (Array.isArray(db.users) && (db.users as any).length > 0) {
     return db.users as any;
   }
-  const defaultUser: UserProfile = {
-    id: 'usr-default',
-    name: 'User',
-    email: 'user@orelio.vault',
-    currency: 'INR',
-    currencySymbol: '₹',
-    tier: 'STANDARD'
-  };
-  return [defaultUser];
+  return [];
 }
 
 export function getUserProfile(): UserProfile {
@@ -394,7 +397,7 @@ export function getUserProfile(): UserProfile {
     return db.users[activeId].profile;
   }
   return {
-    id: activeId,
+    id: activeId || DEFAULT_USER_ID,
     name: 'User',
     email: '',
     currency: 'INR',
@@ -502,14 +505,13 @@ export async function createNewUser(params: {
 
 export function isPasswordSet(userId?: string): boolean {
   const db = getOrelioDatabase();
-  const targetId = userId || db.activeUserId || Object.keys(db.users || {})[0];
+  const targetId = userId || (db.activeUserId && db.users?.[db.activeUserId] ? db.activeUserId : Object.keys(db.users || {})[0]);
   if (targetId && db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[targetId]) {
     const user = db.users[targetId];
     const hash = user.security?.passwordHash ?? user.profile?.passwordHash;
     return typeof hash === 'string' && hash.trim().length > 0;
   }
-  const sec = getSecurityConfig();
-  return typeof sec.passwordHash === 'string' && sec.passwordHash.trim().length > 0;
+  return false;
 }
 
 export async function verifyUserPassword(userId: string, password: string): Promise<boolean> {
@@ -549,13 +551,13 @@ export function saveUserSettings(settings: UserSettings): void {
 export function getSecurityConfig(): SecurityConfig {
   const db = getOrelioDatabase();
   const activeId = getActiveUserId(db);
-  if (db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]?.security) {
+  if (activeId && db.users && typeof db.users === 'object' && !Array.isArray(db.users) && db.users[activeId]?.security) {
     return db.users[activeId].security!;
   }
   return {
-    passwordHash: '5f3961209d482acecd35a444647c9490:bd9c21fe015b23d078efb6a2f5cda220c400b3b59db5bd87216964ae8b17f43c',
-    passwordHint: 'Default: orelio123',
-    lastChanged: 1788776000000
+    passwordHash: '',
+    passwordHint: '',
+    lastChanged: Date.now()
   };
 }
 
