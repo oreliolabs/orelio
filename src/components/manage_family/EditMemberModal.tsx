@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Info, X } from 'lucide-react';
 import type { FamilyMember } from './ManageFamily';
+import { SaveButton } from '../common/SaveButton';
+import { CancelButton } from '../common/CancelButton';
 
 interface EditMemberModalProps {
   isOpen: boolean;
@@ -26,11 +28,28 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
   const [showTooltip, setShowTooltip] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveClick = () => {
-    // Only animate if all required fields are filled
-    if (!formFirstName.trim() || !formLastName.trim() || !formDob.trim()) return;
-    setIsSaving(true);
-    setTimeout(() => setIsSaving(false), 700);
+  // Helper to convert DD/MM/YYYY to YYYY-MM-DD for date input
+  const toDateInputValue = (dmy: string): string => {
+    if (!dmy) return '';
+    if (dmy.includes('-')) return dmy;
+    const parts = dmy.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return dmy;
+  };
+
+  // Helper to convert YYYY-MM-DD back to DD/MM/YYYY
+  const toDisplayDmy = (ymd: string): string => {
+    if (!ymd) return '';
+    if (ymd.includes('/')) return ymd;
+    const parts = ymd.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+    }
+    return ymd;
   };
 
   // Sync state with selectedMember when it changes or modal opens
@@ -39,64 +58,55 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       setFormFirstName(selectedMember?.firstName || '');
       setFormLastName(selectedMember?.lastName || '');
       setFormRole(selectedMember?.role || 'Child');
-      setFormDob(selectedMember?.dob || '');
+      setFormDob(toDateInputValue(selectedMember?.dob || ''));
       setFormGender(selectedMember?.gender || 'Female');
       setFormIsDependent(selectedMember?.isDependent ?? false);
     }
   }, [isOpen, selectedMember]);
 
-  // Lock background scroll when modal is open
+  // Lock background scroll and handle escape key when modal is open
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       document.body.style.overflow = '';
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
-  const calculateAge = (dobString: string): number => {
-    try {
-      const parts = dobString.split('/');
-      if (parts.length !== 3) return 30;
-      const birthYear = parseInt(parts[2], 10);
-      const currentYear = new Date().getFullYear();
-      return Math.max(0, currentYear - birthYear);
-    } catch {
-      return 30;
-    }
-  };
+  }, [isOpen, onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formFirstName.trim() || !formLastName.trim() || !formDob.trim()) {
-      alert('Please fill out all fields.');
+    if (!formFirstName.trim() || !formDob.trim()) {
+      alert('Please fill out all required fields.');
       return;
     }
 
-    const calculatedAge = calculateAge(formDob);
-    let avatarGrad = 'from-teal-500 to-cyan-600';
-    if (formGender === 'Female') {
-      avatarGrad = 'from-pink-500 to-purple-600';
-    } else if (formRole === 'Child') {
-      avatarGrad = 'from-amber-400 to-orange-500';
-    }
+    setIsSaving(true);
+
+    const displayDob = toDisplayDmy(formDob);
 
     const memberData: FamilyMember = {
       id: selectedMember?.id || Date.now().toString(),
       firstName: formFirstName,
       lastName: formLastName,
       role: formRole,
-      dob: formDob,
-      age: calculatedAge,
+      dob: displayDob,
       isDependent: formIsDependent,
-      gender: formGender,
-      avatarColor: selectedMember?.avatarColor || avatarGrad
+      gender: formGender
     };
 
-    onSave(memberData);
+    // Brief save animation then call onSave
+    setTimeout(() => {
+      setIsSaving(false);
+      onSave(memberData);
+    }, 600);
   };
 
   if (!isOpen) return null;
@@ -110,27 +120,29 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-[#C3C6CE]/25 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-[360px] sm:max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-[#C3C6CE]/25 z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#C3C6CE]/15">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-b border-[#C3C6CE]/15">
           <h3 className="text-base font-bold text-orelio-navy">
             {isEditing ? 'Edit Member' : 'Add Family Member'}
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-orelio-gray hover:bg-orelio-light-gray hover:text-orelio-navy transition-colors"
+            className="p-1.5 rounded-lg text-orelio-gray hover:bg-orelio-light-gray hover:text-orelio-navy transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 sm:space-y-5">
 
           {/* Name fields */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">First Name</label>
+              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+                First Name <span className="text-[#BA1A1A] ml-0.5">*</span>
+              </label>
               <input
                 type="text"
                 required
@@ -142,10 +154,11 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">Last Name</label>
+              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+                Last Name
+              </label>
               <input
                 type="text"
-                required
                 value={formLastName}
                 onChange={(e) => setFormLastName(e.target.value)}
                 placeholder="Enter last name"
@@ -157,37 +170,57 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
           {/* Role selection & DOB */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">Relation</label>
-              <select
-                value={formRole}
-                onChange={(e) => setFormRole(e.target.value)}
-                className="w-full px-[11px] py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm text-orelio-navy font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all"
-              >
-                <option value="Spouse">Spouse</option>
-                <option value="Child">Child</option>
-                <option value="Mother">Mother</option>
-                <option value="Father">Father</option>
-                <option value="Sibling">Sibling</option>
-                <option value="Other">Other</option>
-              </select>
+              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+                Relation <span className="text-[#BA1A1A] ml-0.5">*</span>
+              </label>
+              <div className="relative flex items-center">
+                <select
+                  value={formRole}
+                  onChange={(e) => setFormRole(e.target.value)}
+                  className="w-full pl-3 pr-9 py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm text-orelio-navy font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all appearance-none cursor-pointer"
+                >
+                  <option value="Spouse">Spouse</option>
+                  <option value="Child">Child</option>
+                  <option value="Mother">Mother</option>
+                  <option value="Father">Father</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Other">Other</option>
+                </select>
+                <span className="material-symbols-outlined pointer-events-none absolute right-3 text-orelio-navy/70 select-none" style={{ fontSize: '18px' }}>
+                  expand_more
+                </span>
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">Date of Birth</label>
+              <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+                Date of Birth <span className="text-[#BA1A1A] ml-0.5">*</span>
+              </label>
               <input
-                type="text"
+                type="date"
                 required
                 value={formDob}
                 onChange={(e) => setFormDob(e.target.value)}
-                placeholder="DD/MM/YYYY"
-                className="w-full px-[11px] py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm text-orelio-navy font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all"
+                onClick={(e) => {
+                  try {
+                    (e.currentTarget as HTMLInputElement).showPicker?.();
+                  } catch {}
+                }}
+                max={new Date().toISOString().split('T')[0]}
+                className={`w-full px-[11px] py-[7px] rounded-xl bg-orelio-light-gray/60 border-2 border-[#C3C6CE]/15 hover:border-[#C3C6CE]/35 text-sm font-semibold focus:outline-none focus:bg-white focus:border-[#006A65] transition-all cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-50 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 ${
+                  !formDob
+                    ? 'text-orelio-navy/50 [&::-webkit-datetime-edit]:text-orelio-navy/50'
+                    : 'text-orelio-navy [&::-webkit-datetime-edit]:text-orelio-navy'
+                }`}
               />
             </div>
           </div>
 
           {/* Gender radio selectors */}
           <div className="space-y-1.5">
-            <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">Gender</label>
+            <label className="block text-[11px] font-bold text-orelio-gray tracking-wider uppercase">
+              Gender <span className="text-[#BA1A1A] ml-0.5">*</span>
+            </label>
             <div className="flex gap-4">
               {['Male', 'Female', 'Other'].map((g) => (
                 <label key={g} className="flex items-center gap-2 text-sm font-semibold text-orelio-navy cursor-pointer">
@@ -237,43 +270,15 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = ({
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C3C6CE]/15 mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-bold text-orelio-navy bg-transparent rounded-xl hover:bg-orelio-light-gray transition-colors"
-            >
-              Cancel
-            </button>
-            <button
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:items-center sm:justify-end sm:gap-3 pt-3 border-t border-[#C3C6CE]/15 mt-4">
+            <CancelButton onClick={onClose} className="w-full sm:w-auto" />
+            <SaveButton
               type="submit"
-              onClick={handleSaveClick}
-              className={`
-                relative overflow-hidden px-4 py-2 text-sm font-bold text-white bg-orelio-darkgreen rounded-xl
-                transition-all duration-150 ease-out select-none
-                hover:bg-orelio-darkgreen/90
-                ${isSaving ? 'scale-95 bg-orelio-darkgreen/80' : 'scale-100 active:scale-95'}
-              `}
+              isSaving={isSaving}
+              className="w-full sm:w-auto"
             >
-              <span className={`flex items-center gap-1.5 transition-all duration-200 ${isSaving ? 'opacity-80' : 'opacity-100'}`}>
-                <span
-                  className="material-symbols-outlined"
-                  style={{
-                    fontSize: '15px',
-                    opacity: isSaving ? 1 : 0,
-                    transform: isSaving ? 'scale(1)' : 'scale(0.5)',
-                    transition: 'opacity 0.2s ease, transform 0.2s ease',
-                    display: 'inline-block',
-                    width: isSaving ? '15px' : '0px',
-                    overflow: 'hidden',
-                    marginRight: isSaving ? '0' : '-4px',
-                  }}
-                >
-                  check
-                </span>
-                {isSaving ? 'Saving...' : 'Save Profile'}
-              </span>
-            </button>
+              Save Profile
+            </SaveButton>
           </div>
 
         </form>

@@ -43,6 +43,148 @@ body {
   }
 }
 
+/* Page & Step Transitions */
+.page-enter-forward {
+  animation: pageEnterForward 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.page-exit-forward {
+  animation: pageExitForward 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.page-enter-backward {
+  animation: pageEnterBackward 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.page-exit-backward {
+  animation: pageExitBackward 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.step-card-enter {
+  animation: stepCardEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.step-enter-forward {
+  animation: stepEnterForward 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.step-exit-forward {
+  animation: stepExitForward 0.16s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.step-enter-backward {
+  animation: stepEnterBackward 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.step-exit-backward {
+  animation: stepExitBackward 0.16s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+@keyframes pageEnterForward {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pageExitForward {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.98);
+  }
+}
+
+@keyframes pageEnterBackward {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pageExitBackward {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+}
+
+@keyframes stepCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes stepEnterForward {
+  from {
+    opacity: 0;
+    transform: translateX(32px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes stepExitForward {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.985);
+  }
+}
+
+@keyframes stepEnterBackward {
+  from {
+    opacity: 0;
+    transform: translateX(-32px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes stepExitBackward {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(28px) scale(0.985);
+  }
+}
+
 /* Scrollbar customizations */
 ::-webkit-scrollbar {
   width: 6px;
@@ -78,3 +220,30 @@ body {
   box-shadow: 0 8px 30px -4px rgba(10, 45, 39, 0.3);
   border-radius: 20px;
 }
+
+/* Hide native number input stepper / spin buttons */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Hide native calendar picker indicator on date inputs with .no-native-calendar */
+input[type="date"].no-native-calendar::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Filled Material Symbols variant */
+.material-symbols-filled {
+  font-variation-settings: 'FILL' 1;
+}
+

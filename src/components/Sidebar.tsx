@@ -1,22 +1,27 @@
 import React, { useState } from 'react';
+import { LogoutConfirmationModal } from './common/LogoutConfirmationModal';
+import { getUserProfile } from '../data/orelioStore';
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   isOpen,
-  setIsOpen
+  setIsOpen,
+  onLogout
 }) => {
   // Submenu states
   const [assetsOpen, setAssetsOpen] = useState(true);
   const [cashBankOpen, setCashBankOpen] = useState(false);
   const [lockerOpen, setLockerOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleTabClick = (tabName: string) => {
     setActiveTab(tabName);
@@ -40,16 +45,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       isOpen: assetsOpen,
       setIsOpen: setAssetsOpen,
       submenu: [
-        { name: 'Stocks', id: 'stocks' },
-        { name: 'Mutual Funds', id: 'mutual-funds' },
-        { name: 'Other Assets', id: 'other-assets' }
+        { name: 'Stocks & Mutual Funds', id: 'stocks' }
       ]
     },
-    {
-      name: 'Retirement',
-      icon: 'elderly',
-      id: 'retirement'
-    },
+    // This one is a P2
+    // {
+    //   name: 'Retirement', 
+    //   icon: 'elderly',
+    //   id: 'retirement'
+    // },
     {
       name: 'Cash & Bank',
       icon: 'account_balance',
@@ -80,9 +84,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       isOpen: lockerOpen,
       setIsOpen: setLockerOpen,
       submenu: [
-        { name: 'Documents', id: 'documents' },
+        // { name: 'Documents', id: 'documents' }, // This one is a P1
         { name: 'Notes', id: 'notes' },
-        { name: 'Passwords', id: 'passwords' }
+        // { name: 'Passwords', id: 'passwords' } // This one is a P1
       ]
     },
     {
@@ -113,13 +117,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Brand Logo & Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#C3C6CE]/20">
+        <div className="flex items-center justify-between px-6 h-[64px] border-b border-[#C3C6CE]/20 flex-shrink-0">
           <div className="flex items-center gap-3">
-            {/* Custom SVG logo representing a golden ledger stack from Menu.svg */}
-            <svg width="40" height="40" viewBox="26 34 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-              <rect x="26" y="34" width="40" height="40" rx="16" fill="black" />
-              <path d="M39 60V53H41V60H39ZM45 60V53H47V60H45ZM36 64V62H56V64H36ZM51 60V53H53V60H51ZM36 51V49L46 44L56 49V51H36Z" fill="white" />
-            </svg>
+            <div className="w-10 h-10 bg-black rounded-[14px] flex items-center justify-center p-2 flex-shrink-0">
+              <img src="/logo.svg" alt="Orelio Logo" className="w-full h-full object-contain" />
+            </div>
             <div>
               <span className="block text-lg font-bold tracking-tight text-black font-sans leading-none">Orelio</span>
               <span className="block text-[9px] font-bold tracking-widest text-[#707975] uppercase mt-1">Wealth Ledger</span>
@@ -140,17 +142,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             if (item.hasSubmenu) {
               return (
-                <div key={item.id} className="space-y-0.5">
+                <div key={item.id} className="space-y-0">
                   <button
                     onClick={() => item.setIsOpen(!item.isOpen)}
                     className={`
-                      w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
+                      group w-full flex items-center justify-between px-3 py-2 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
                       ${isTabActive ? 'text-black' : 'text-[#707975] hover:text-black'}
                     `}
                   >
                     <div className="flex items-center gap-3">
                       <span
-                        className={`material-symbols-outlined select-none ${isTabActive ? 'font-bold' : ''}`}
+                        className={`material-symbols-outlined select-none transition-transform duration-200 group-hover:scale-110 ${isTabActive ? 'font-bold' : ''}`}
                         style={{ fontSize: '20px' }}
                       >
                         {item.icon}
@@ -164,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   {/* Collapsible Submenu */}
                   {item.isOpen && (
-                    <div className="pl-11 pr-2 py-1 space-y-1 mt-0.5 transition-all duration-200">
+                    <div className="pl-11 pr-2 -mt-1 space-y-0.5 transition-all duration-200">
                       {item.submenu?.map((sub) => {
                         const isSubActive = activeTab === sub.id;
                         return (
@@ -172,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             key={sub.id}
                             onClick={() => handleTabClick(sub.id)}
                             className={`
-                              w-full text-left block py-1.5 text-[14px] font-semibold transition-colors duration-200
+                              w-full text-left block py-1.5 text-[16px] font-semibold transition-colors duration-200
                               ${isSubActive
                                 ? 'text-black font-bold'
                                 : 'text-[#707975] hover:text-black'
@@ -194,7 +196,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 key={item.id}
                 onClick={() => handleTabClick(item.id)}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
+                  group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-[16px] transition-colors duration-200 text-left
                   ${isTabActive
                     ? 'text-black'
                     : 'text-[#707975] hover:text-black'
@@ -202,7 +204,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 `}
               >
                 <span
-                  className={`material-symbols-outlined select-none ${isTabActive ? 'font-bold' : ''}`}
+                  className={`material-symbols-outlined select-none transition-transform duration-200 group-hover:scale-110 ${isTabActive ? 'font-bold' : ''}`}
                   style={{ fontSize: '20px' }}
                 >
                   {item.icon}
@@ -216,17 +218,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* User Footer Profile */}
         <div className="p-5 border-t border-[#C3C6CE]/20 bg-white">
           <div className="flex items-center gap-3">
-            <img
-              src="/alexander_bloom_avatar.png"
-              alt="Alexander Bloom"
-              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-            />
+            <div className="w-10 h-10 rounded-full bg-[#006A65] text-white flex items-center justify-center font-bold text-base select-none shrink-0 shadow-xs">
+              {getUserProfile().name.trim().charAt(0).toUpperCase() || 'U'}
+            </div>
             <div className="flex-1 min-w-0">
-              <span className="block text-sm font-bold text-black truncate leading-tight">Alexander Bloom</span>
-              <span className="block text-[9px] font-bold tracking-widest text-[#707975] uppercase mt-1">PREMIUM TIER</span>
+              <span className="block text-sm font-bold text-black truncate leading-tight">{getUserProfile().name}</span>
+              <button
+                type="button"
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="flex items-center gap-1 text-xs font-semibold text-[#707975] hover:text-[#BA1A1A] transition-colors mt-0.5 cursor-pointer group"
+                title="Log out of account"
+              >
+                <span className="material-symbols-outlined select-none" style={{ fontSize: '13px' }}>
+                  logout
+                </span>
+                <span>Log out</span>
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Logout Confirmation Modal */}
+        <LogoutConfirmationModal
+          isOpen={isLogoutModalOpen}
+          onClose={() => setIsLogoutModalOpen(false)}
+          userName={getUserProfile().name}
+          onConfirm={() => {
+            setIsLogoutModalOpen(false);
+            onLogout?.();
+          }}
+        />
       </aside>
     </>
   );
